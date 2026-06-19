@@ -1,0 +1,362 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ GEOGRAPHY ============
+
+model Country {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  code      String   @unique // e.g. "AU"
+  isDefault Boolean  @default(false)
+  cities    City[]
+  createdAt DateTime @default(now())
+}
+
+model City {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  countryId Int
+  country   Country  @relation(fields: [countryId], references: [id])
+  jobs      Job[]
+  ads       Ad[]
+  createdAt DateTime @default(now())
+
+  @@index([countryId])
+}
+
+// ============ JOB CATEGORIES ============
+
+model JobCategory {
+  id            Int              @id @default(autoincrement())
+  name          String           @unique
+  icon          String?          // emoji or icon name
+  displayOrder  Int              @default(0)
+  defaultImage  String?          // default image for this category
+  subCategories JobSubCategory[]
+  jobs          Job[]
+  ads           Ad[]
+  createdAt     DateTime         @default(now())
+}
+
+model JobSubCategory {
+  id         Int         @id @default(autoincrement())
+  name       String
+  slug       String      @unique
+  categoryId Int
+  category   JobCategory @relation(fields: [categoryId], references: [id])
+  jobs       Job[]
+  ads        Ad[]
+  createdAt  DateTime    @default(now())
+
+  @@index([categoryId])
+}
+
+// ============ USERS ============
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  mobile    String    @unique
+  username  String?
+  email     String?
+  role      UserRole  @default(USER)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+
+  jobs     Job[]
+  ads      Ad[]
+  reviews  Review[]
+  payments Payment[]
+  tickets  Ticket[]
+  messages Message[]
+  otpCodes OtpCode[]
+}
+
+model OtpCode {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  mobile    String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([mobile])
+}
+
+// ============ JOBS ============
+
+enum JobStatus {
+  PENDING       // در حال بررسی
+  APPROVED      // تایید اولیه
+  PAID          // پرداخت شده
+  FINAL         // تایید نهایی
+  REJECTED      // عدم تایید و حذف
+  NEEDS_EDIT    // عدم تایید و اصلاح
+  EXPIRED       // منقضی شده
+  DISABLED      // غیرفعال شده توسط ادمین
+}
+
+enum SubscriptionType {
+  SIX_MONTHS
+  TWELVE_MONTHS
+}
+
+enum BoostPeriod {
+  ONE_DAY
+  THREE_DAYS
+  SEVEN_DAYS
+}
+
+model Job {
+  id              Int              @id @default(autoincrement())
+  userId          Int
+  cityId          Int
+  categoryId      Int
+  subCategoryId   Int
+  title           String
+  description     String
+  phone           String?
+  address         String?
+  email           String?
+  website         String?
+  whatsapp        String?
+  telegram        String?
+  instagram       String?
+  workHours       String?
+  subscriptionType SubscriptionType
+  isVip           Boolean          @default(false)
+  isBoosted       Boolean          @default(false)
+  boostPeriod     BoostPeriod?
+  status          JobStatus        @default(PENDING)
+  adminNote       String?          // دلیل رد یا اصلاح
+  viewCount       Int              @default(0)
+  approvedAt      DateTime?
+  paidAt          DateTime?
+  finalApprovedAt DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id])
+  city        City           @relation(fields: [cityId], references: [id])
+  category    JobCategory    @relation(fields: [categoryId], references: [id])
+  subCategory JobSubCategory @relation(fields: [subCategoryId], references: [id])
+  images      JobImage[]
+  reviews     Review[]
+  payments    Payment[]
+
+  @@unique([userId, cityId]) // هر کاربر در هر شهر فقط یک شغل
+  @@index([categoryId])
+  @@index([subCategoryId])
+  @@index([cityId])
+  @@index([status])
+}
+
+model JobImage {
+  id        Int      @id @default(autoincrement())
+  jobId     Int
+  url       String
+  isMain    Boolean  @default(false)
+  order     Int      @default(0)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([jobId])
+}
+
+// ============ ADS ============
+
+enum AdType {
+  EMPLOYMENT      // استخدام
+  JOB_SEEKER      // جویای کار
+  COMMERCIAL      // تجاری پولی
+  COMMERCIAL_FREE // تجاری رایگان
+}
+
+enum AdStatus {
+  PENDING
+  APPROVED
+  PAID
+  FINAL
+  REJECTED
+  EXPIRED
+}
+
+model Ad {
+  id            Int            @id @default(autoincrement())
+  userId        Int
+  cityId        Int
+  categoryId    Int
+  subCategoryId Int
+  type          AdType
+  title         String
+  description   String
+  status        AdStatus       @default(PENDING)
+  adminNote     String?
+  expiresAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id])
+  city        City           @relation(fields: [cityId], references: [id])
+  category    JobCategory    @relation(fields: [categoryId], references: [id])
+  subCategory JobSubCategory @relation(fields: [subCategoryId], references: [id])
+  payments    Payment[]
+
+  @@index([type])
+  @@index([categoryId])
+  @@index([cityId])
+  @@index([status])
+}
+
+// ============ REVIEWS ============
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  jobId      Int
+  userId     Int
+  rating     Int      // 1-5
+  comment    String?
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([jobId])
+  @@index([isApproved])
+}
+
+// ============ BANNERS ============
+
+model Banner {
+  id              Int      @id @default(autoincrement())
+  imageUrl        String
+  link            String?
+  displayDuration Int      @default(5) // seconds
+  position        Int      @default(1) // 1, 2, 3
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+// ============ PAYMENTS ============
+
+enum PaymentMethod {
+  PAYPAL
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  userId      Int
+  jobId       Int?
+  adId        Int?
+  amount      Float
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  reference   String?       // PayPal ref or manual ref
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  job  Job?  @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  ad   Ad?   @relation(fields: [adId], references: [id], onDelete: SetNull)
+
+  logs PaymentLog[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PaymentLog {
+  id        Int      @id @default(autoincrement())
+  paymentId Int
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+// ============ SUPPORT ============
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+model Ticket {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  subject   String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id])
+  messages TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  content   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+// پیام‌های ارسال شده از ادمین به کاربران
+model Message {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ============ SYSTEM SETTINGS ============
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}

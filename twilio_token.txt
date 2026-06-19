@@ -1,0 +1,11 @@
+
+Twilio codes
+
+acc SID
+AC9aed356480d3e98fd3865282a0448e04
+
+Verify service SID
+VA30fde2faf8bb61af790a25ace9637e79
+
+Auth Token
+bc2a668f92cc706cf856b6e9461c700b
