@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
+import Image from "next/image";
+import logoDivar from "@/app/LOGO-Divar.jpg";
+
 export default function Header() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -82,20 +85,52 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        {/* Main Page Logo Container */}
+        {pathname === "/" && (
+          <div className="flex justify-center py-3 bg-white/50">
+            <Link href="/">
+              <Image
+                src={logoDivar}
+                alt="AUIR Logo"
+                className="w-24 h-auto md:w-32 rounded-xl shadow-sm"
+                priority
+              />
+            </Link>
+          </div>
+        )}
+
         {/* Top bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-2xl md:text-3xl font-black gradient-text tracking-tight">
-                AUIR
-              </span>
-              <span className="hidden sm:block text-xs text-gray-500 leading-tight">
-                مشاغل ایرانیان
-                <br />
-                استرالیا
-              </span>
-            </Link>
+            {/* Logo and City Selector */}
+            <div className={`flex items-center gap-4 ${pathname === "/" ? "invisible w-0 md:w-auto" : ""}`}>
+              <Link href="/" className="flex items-center gap-2 group">
+                <Image
+                  src={logoDivar}
+                  alt="AUIR Logo"
+                  className="w-10 h-auto md:w-12 rounded-lg"
+                />
+                <span className="hidden sm:block text-xs text-gray-500 leading-tight">
+                  مشاغل ایرانیان
+                  <br />
+                  استرالیا
+                </span>
+              </Link>
+
+              {/* City Selector Button */}
+              {pathname !== "/" && (
+                <button
+                  onClick={openCityModal}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all duration-200"
+                >
+                  <MapPin size={16} className="text-primary" />
+                  <span className="hidden sm:inline text-gray-700">
+                    {selectedCity ? selectedCity.name : "انتخاب شهر"}
+                  </span>
+                  <ChevronDown size={14} className="text-gray-400" />
+                </button>
+              )}
+            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
@@ -141,19 +176,8 @@ export default function Header() {
               )}
             </nav>
 
-            {/* Right side: City + Auth */}
+            {/* Right side: Auth */}
             <div className="flex items-center gap-2">
-              {/* City Selector Button */}
-              <button
-                onClick={openCityModal}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-all duration-200"
-              >
-                <MapPin size={16} className="text-primary" />
-                <span className="hidden sm:inline text-gray-700">
-                  {selectedCity ? selectedCity.name : "انتخاب شهر"}
-                </span>
-                <ChevronDown size={14} className="text-gray-400" />
-              </button>
 
               {/* Auth Button */}
               {status === "loading" ? (
@@ -175,15 +199,17 @@ export default function Header() {
                     className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200"
                   >
                     <User size={18} className="text-primary" />
-                    <span className="hidden sm:inline" dir={session.user.name && /[\u0600-\u06FF]/.test(session.user.name) ? "rtl" : "ltr"}>{session.user.name}</span>
+                    <span className="inline">دیوار من</span>
                   </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                    title="خروج"
-                  >
-                    <LogOut size={18} />
-                  </button>
+                  {pathname.startsWith("/profile") && (
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/' })}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      title="خروج"
+                    >
+                      <LogOut size={18} />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <Link

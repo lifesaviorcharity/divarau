@@ -364,7 +364,7 @@ export default function ProfilePage() {
 
           {/* Settings */}
           {activeTab === "settings" && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-2xl">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-base font-bold text-gray-800 mb-6 flex items-center gap-2">
                 <Settings size={20} className="text-primary" />
                 تنظیمات پروفایل

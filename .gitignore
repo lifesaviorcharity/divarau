@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore operational and admin files
+src/app/admin/
+src/app/payment/
+src/app/register-job/
+src/app/register-ad/
+src/app/api/admin/
+src/app/api/payment/
+src/app/api/cron/

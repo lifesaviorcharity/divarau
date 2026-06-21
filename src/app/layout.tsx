@@ -5,7 +5,7 @@ import LayoutWrapper from "@/components/LayoutWrapper";
 export const metadata: Metadata = {
   title: "مشاغل ایرانیان و فارسی‌زبانان استرالیا | AUIR",
   description:
-    "پل ارتباطی مؤثر میان ایرانیان مقیم استرالیا و کسب‌وکارهای ایرانی فعال در این کشور. پیدا کن، معرفی شو، ارتباط بگیر!",
+    "پل ارتباطی مؤثر میان ایرانیان مقیم استرالیا و کسب‌وکارهای ایرانی فعال در این کشور.جستجو کن، معرفی کن ، ارتباط بگیر!",
   keywords: [
     "مشاغل ایرانیان استرالیا",
     "Iranian businesses Australia",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "مشاغل ایرانیان و فارسی‌زبانان استرالیا",
-    description: "پیدا کن، معرفی شو، ارتباط بگیر!",
+    description: "جستجو کن، معرفی کن، ارتباط بگیر!",
     type: "website",
     locale: "fa_IR",
   },

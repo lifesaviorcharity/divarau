@@ -20,7 +20,7 @@ export default function HomePage() {
     fetch("/api/stats")
       .then(res => res.json())
       .then(data => {
-        if(!data.error) setStats(data);
+        if (!data.error) setStats(data);
       })
       .catch(console.error);
   }, []);
@@ -33,16 +33,16 @@ export default function HomePage() {
           {/* Slogan + Flags */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <span className="text-3xl">🇦🇺</span>
+              <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />
               <div className="text-center">
-                <p className="text-lg md:text-xl font-bold text-primary">
-                  پیدا کن، معرفی شو، ارتباط بگیر!
+                <p className="text-lg md:text-xl font-bold text-gray-700">
+                  جستجو کن، معرفی کن، ارتباط بگیر!
                 </p>
                 <p className="text-sm md:text-base text-gray-600 font-medium mt-1">
-                  مشاغل ایرانیان و فارسی‌زبانان استرالیا AUIR
+                  مشاغل ایرانیان و فارسی‌زبانان استرالیا
                 </p>
               </div>
-              <span className="text-3xl">🇮🇷</span>
+              <img src="https://flagcdn.com/w40/ir.png" alt="Iran Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />
             </div>
           </div>
 
