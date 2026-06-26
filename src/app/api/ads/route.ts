@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const subCategoryId = searchParams.get("subCategoryId");
     const type = searchParams.get("type"); // EMPLOYMENT, JOB_SEEKER, COMMERCIAL
     const status = searchParams.get("status") || "FINAL";
+    const q = searchParams.get("q");
 
     const where: any = { status };
 
@@ -20,6 +21,15 @@ export async function GET(request: Request) {
     if (categoryId) where.categoryId = parseInt(categoryId);
     if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
     if (type) where.type = type;
+    if (q) {
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { category: { name: { contains: q, mode: 'insensitive' } } },
+        { subCategory: { name: { contains: q, mode: 'insensitive' } } },
+        { city: { name: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
 
     const ads = await prisma.ad.findMany({
       where,

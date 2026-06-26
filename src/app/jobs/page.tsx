@@ -7,7 +7,7 @@ import JobCard, { JobCardData } from "@/components/JobCard";
 import AdCard, { AdCardData } from "@/components/AdCard";
 import { useCityStore } from "@/store/cityStore";
 import { useCategories } from "@/hooks/useCategories";
-import { ChevronLeft, Filter, SlidersHorizontal, X, Loader2 } from "lucide-react";
+import { ChevronLeft, Filter, SlidersHorizontal, X, Loader2, Search } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 
 
@@ -19,6 +19,7 @@ function JobsContent() {
   const { categories: jobCategories, isLoading: isCategoriesLoading } = useCategories();
 
   const categoryParam = searchParams.get("category");
+  const searchQuery = searchParams.get("q") || "";
   const parsedCategory = categoryParam ? parseInt(categoryParam, 10) : null;
   const initialCategoryIndex = 
     parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length 
@@ -35,9 +36,10 @@ function JobsContent() {
 
   useEffect(() => {
     setIsLoading(true);
+    const qParam = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : "";
     Promise.all([
-      fetch("/api/jobs").then(res => res.json()),
-      fetch("/api/ads").then(res => res.json())
+      fetch(`/api/jobs${qParam}`).then(res => res.json()),
+      fetch(`/api/ads${qParam}`).then(res => res.json())
     ]).then(([jobsRes, adsRes]) => {
       if(Array.isArray(jobsRes)) setJobsData(jobsRes);
       if(Array.isArray(adsRes)) setAdsData(adsRes);
@@ -46,7 +48,7 @@ function JobsContent() {
       console.error(err);
       setIsLoading(false);
     });
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!selectedCity) {
@@ -150,6 +152,23 @@ function JobsContent() {
             </>
           )}
         </div>
+
+        {/* Search Results Banner */}
+        {searchQuery && (
+          <div className="flex items-center justify-between bg-white rounded-xl border border-primary/20 px-4 py-3 mb-4 shadow-sm">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Search size={16} className="text-primary" />
+              <span>نتایج جستجو برای: <strong className="text-primary">«{searchQuery}»</strong></span>
+            </div>
+            <button
+              onClick={() => router.push('/jobs')}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-500 transition-colors"
+            >
+              <X size={14} />
+              پاک کردن
+            </button>
+          </div>
+        )}
 
         {/* Mobile Filter Button */}
         <button

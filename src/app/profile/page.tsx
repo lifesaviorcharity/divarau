@@ -16,8 +16,10 @@ import {
   Trash2,
   Loader2,
   Settings,
-  Save
+  Save,
+  ShieldAlert
 } from "lucide-react";
+import Link from "next/link";
 import { toJalali } from "@/lib/utils";
 
 type Tab = "jobs" | "ads" | "messages" | "tickets" | "settings";
@@ -182,11 +184,22 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
-          <a href="/" className="hover:text-primary">خانه</a>
-          <ChevronLeft size={12} />
-          <span className="text-gray-700">پروفایل کاربری</span>
+        {/* Breadcrumb & Admin Button */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Link href="/" className="hover:text-primary">خانه</Link>
+            <ChevronLeft size={12} />
+            <span className="text-gray-700">پروفایل کاربری</span>
+          </div>
+          {session.user.role === 'ADMIN' && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+            >
+              <ShieldAlert size={14} />
+              پنل مدیریت
+            </Link>
+          )}
         </div>
 
         {/* User Info */}
@@ -210,19 +223,19 @@ export default function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5 mb-6 overflow-x-auto">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5 mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap relative ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all relative ${
                 activeTab === tab.key
                   ? "bg-primary text-white shadow-sm"
                   : "text-gray-500 hover:text-primary hover:bg-gray-50"
               }`}
             >
               {tab.icon}
-              {tab.label}
+              <span className="text-center leading-tight">{tab.label}</span>
               {tab.badge > 0 && (
                 <span className={`absolute -top-1 -left-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
                   activeTab === tab.key ? "bg-white text-primary" : "bg-primary text-white"

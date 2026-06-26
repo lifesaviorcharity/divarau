@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useCityStore } from "@/store/cityStore";
 import CitySelector from "./CitySelector";
@@ -19,6 +19,7 @@ import {
   User,
   LogOut,
   ShieldAlert,
+  Search,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -27,11 +28,21 @@ import logoDivar from "@/app/LOGO-Divar.jpg";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdSubmenuOpen, setIsAdSubmenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { selectedCity, openCityModal, isCityModalOpen } = useCityStore();
   const adSubmenuRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/jobs?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
 
   // Close menus on route change
   useEffect(() => {
@@ -87,12 +98,12 @@ export default function Header() {
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         {/* Main Page Logo Container */}
         {pathname === "/" && (
-          <div className="flex justify-center py-3 bg-white/50">
+          <div className="hidden md:flex justify-center py-3 bg-white/50">
             <Link href="/">
               <Image
                 src={logoDivar}
                 alt="AUIR Logo"
-                className="w-24 h-auto md:w-32 rounded-xl shadow-sm"
+                className="w-32 h-auto rounded-xl shadow-sm"
                 priority
               />
             </Link>
@@ -101,10 +112,13 @@ export default function Header() {
 
         {/* Top bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center justify-between h-16 md:h-20 relative">
             {/* Logo and City Selector */}
-            <div className={`flex items-center gap-4 ${pathname === "/" ? "invisible w-0 md:w-auto" : ""}`}>
-              <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className={`md:static md:transform-none flex items-center gap-2 group ${pathname === "/" ? "md:hidden" : ""}`}
+              >
                 <Image
                   src={logoDivar}
                   alt="AUIR Logo"
@@ -176,6 +190,23 @@ export default function Header() {
               )}
             </nav>
 
+            {/* Search Bar - visible when desktop nav is hidden */}
+            <form
+              onSubmit={handleSearch}
+              className="flex-1 max-w-xs mx-2 lg:hidden"
+            >
+              <div className="relative">
+                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="جستجوی مشاغل و آگهی‌ها..."
+                  className="w-full pr-9 pl-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-gray-400 transition-all"
+                />
+              </div>
+            </form>
+
             {/* Right side: Auth */}
             <div className="flex items-center gap-2">
 
@@ -199,7 +230,7 @@ export default function Header() {
                     className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200"
                   >
                     <User size={18} className="text-primary" />
-                    <span className="inline">دیوار من</span>
+                    <span className="hidden sm:inline">دیوار من</span>
                   </Link>
                   {pathname.startsWith("/profile") && (
                     <button

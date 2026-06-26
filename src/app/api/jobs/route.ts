@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const subCategoryId = searchParams.get("subCategoryId");
     const status = searchParams.get("status") || "FINAL"; // Default to FINAL
     const isVip = searchParams.get("isVip");
+    const q = searchParams.get("q");
 
     const where: any = { status };
 
@@ -20,6 +21,16 @@ export async function GET(request: Request) {
     if (categoryId) where.categoryId = parseInt(categoryId);
     if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
     if (isVip !== null) where.isVip = isVip === "true";
+    if (q) {
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { address: { contains: q, mode: 'insensitive' } },
+        { category: { name: { contains: q, mode: 'insensitive' } } },
+        { subCategory: { name: { contains: q, mode: 'insensitive' } } },
+        { city: { name: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
 
     const jobs = await prisma.job.findMany({
       where,
