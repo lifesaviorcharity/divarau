@@ -11,12 +11,12 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-16">
+    <footer className="bg-gray-200 text-gray-300 mt-16">
       {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* About */}
-          <div>
+      {/* <div className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6 py-12"> */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10"> */}
+      {/* About */}
+      {/* <div>
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <span className="gradient-text">AUIR</span>
             </h3>
@@ -40,10 +40,10 @@ export default function Footer() {
                 <Send size={16} />
               </a>
             </div>
-          </div>
+          </div> */}
 
-          {/* Quick Links */}
-          <div>
+      {/* Quick Links */}
+      {/* <div>
             <h4 className="text-base font-bold text-white mb-4">
               دسترسی سریع
             </h4>
@@ -66,10 +66,10 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
-          {/* Popular Categories */}
-          <div>
+      {/* Popular Categories */}
+      {/* <div>
             <h4 className="text-base font-bold text-white mb-4">
               گروه‌های پرطرفدار
             </h4>
@@ -89,10 +89,10 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
-          {/* Contact */}
-          <div>
+      {/* Contact */}
+      {/* <div>
             <h4 className="text-base font-bold text-white mb-4">تماس با ما</h4>
             <div className="space-y-3">
               <a
@@ -121,13 +121,13 @@ export default function Footer() {
                 www.auir.com.au
               </a>
             </div>
-          </div>
-        </div>
-      </div>
+          </div> */}
+      {/* </div> */}
+      {/* </div> */}
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="border-t border-gray-200">
+        <div className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-gray-500 text-center sm:text-right">
             © {new Date().getFullYear()} مشاغل ایرانیان و فارسی‌زبانان
             استرالیا. تمامی حقوق محفوظ است.

@@ -39,13 +39,27 @@ export function toJalali(date: Date | string): string {
 }
 
 /**
+ * Convert Persian and Arabic digits to English digits
+ */
+export function toEnglishDigits(str: string): string {
+  const persianDigits = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
+  const arabicDigits = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
+  let result = str;
+  for (let i = 0; i < 10; i++) {
+    result = result.replace(persianDigits[i], i.toString()).replace(arabicDigits[i], i.toString());
+  }
+  return result;
+}
+
+/**
  * Normalize an Australian mobile number to E.164 format for Twilio.
  * Accepts: 04XX XXX XXX, 04XXXXXXXX, +614XXXXXXXX, 614XXXXXXXX
  * Returns: +614XXXXXXXX
  */
 export function normalizeAustralianMobile(phone: string): string {
+  const englishPhone = toEnglishDigits(phone || "");
   // Strip all non-digit characters except leading +
-  let cleaned = phone.replace(/[^\d+]/g, "");
+  let cleaned = englishPhone.replace(/[^\d+]/g, "");
 
   // If starts with +61, already international
   if (cleaned.startsWith("+61")) {

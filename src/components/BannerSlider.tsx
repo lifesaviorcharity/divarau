@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface BannerSlide {
@@ -10,36 +9,129 @@ interface BannerSlide {
   link?: string;
 }
 
-// Demo banners - will be replaced with data from DB
-const demoBanners: BannerSlide[] = [
-  {
-    id: 1,
-    imageUrl: "/banners/banner1.jpg",
-    link: "#",
-  },
-  {
-    id: 2,
-    imageUrl: "/banners/banner2.jpg",
-    link: "#",
-  },
-  {
-    id: 3,
-    imageUrl: "/banners/banner3.jpg",
-    link: "#",
-  },
-];
-
 interface BannerSliderProps {
   banners?: BannerSlide[];
   autoPlayInterval?: number; // seconds
+}
+
+function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[], autoPlayInterval?: number }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      if (isTransitioning) return;
+      setIsTransitioning(true);
+      setCurrentSlide(index);
+      setTimeout(() => setIsTransitioning(false), 800);
+    },
+    [isTransitioning]
+  );
+
+  const nextSlide = useCallback(() => {
+    if (banners.length <= 1) return;
+    goToSlide((currentSlide + 1) % banners.length);
+  }, [currentSlide, banners.length, goToSlide]);
+
+  const prevSlide = useCallback(() => {
+    if (banners.length <= 1) return;
+    goToSlide(currentSlide === 0 ? banners.length - 1 : currentSlide - 1);
+  }, [currentSlide, banners.length, goToSlide]);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(nextSlide, autoPlayInterval * 1000);
+    return () => clearInterval(interval);
+  }, [nextSlide, autoPlayInterval, banners.length]);
+
+  if (!banners || banners.length === 0) {
+    return (
+      <div className="relative w-full aspect-square bg-gray-100 rounded-2xl flex items-center justify-center shadow-sm">
+        <p className="text-gray-400 text-sm">جایگاه تبلیغات</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-lg group">
+      {banners.map((banner, index) => (
+        <div
+          key={banner.id}
+          className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+            index === currentSlide
+              ? "opacity-100 scale-100 z-10"
+              : "opacity-0 scale-105 z-0"
+          }`}
+        >
+          {banner.link ? (
+            <a href={banner.link} className="block w-full h-full relative group" target="_blank" rel="noopener noreferrer">
+              {banner.imageUrl ? (
+                <img src={banner.imageUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              ) : (
+                <div className="relative w-full h-full bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center">
+                  <p className="text-gray-500">بنر تبلیغاتی</p>
+                </div>
+              )}
+            </a>
+          ) : (
+            <div className="relative w-full h-full">
+              {banner.imageUrl ? (
+                <img src={banner.imageUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
+              ) : (
+                <div className="relative w-full h-full bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center">
+                  <p className="text-gray-500">بنر تبلیغاتی</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Navigation Arrows */}
+      {banners.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
+            aria-label="بنر قبلی"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
+            aria-label="بنر بعدی"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </>
+      )}
+
+      {/* Dots Indicator */}
+      {banners.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+          {banners.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => goToSlide(idx)}
+              className={`transition-all duration-300 rounded-full ${
+                idx === currentSlide
+                  ? "w-4 h-1.5 bg-white shadow-md"
+                  : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
+              }`}
+              aria-label={`برو به بنر ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function BannerSlider({
   autoPlayInterval = 5,
 }: BannerSliderProps) {
   const [banners, setBanners] = useState<BannerSlide[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -60,112 +152,30 @@ export default function BannerSlider({
       });
   }, []);
 
-  const goToSlide = useCallback(
-    (index: number) => {
-      if (isTransitioning) return;
-      setIsTransitioning(true);
-      setCurrentSlide(index);
-      setTimeout(() => setIsTransitioning(false), 800);
-    },
-    [isTransitioning]
-  );
-
-  const nextSlide = useCallback(() => {
-    goToSlide((currentSlide + 1) % banners.length);
-  }, [currentSlide, banners.length, goToSlide]);
-
-  const prevSlide = useCallback(() => {
-    goToSlide(currentSlide === 0 ? banners.length - 1 : currentSlide - 1);
-  }, [currentSlide, banners.length, goToSlide]);
-
-  useEffect(() => {
-    if (banners.length <= 1) return;
-    const interval = setInterval(nextSlide, autoPlayInterval * 1000);
-    return () => clearInterval(interval);
-  }, [nextSlide, autoPlayInterval, banners.length]);
-
-  if (isLoading) return <div className="w-full aspect-[3/1] md:aspect-[4/1] bg-gray-100 rounded-2xl animate-pulse"></div>;
+  if (isLoading) return <div className="w-full aspect-square md:aspect-[3/1] bg-gray-100 rounded-2xl animate-pulse"></div>;
   if (!Array.isArray(banners) || banners.length === 0) return null;
 
+  // Desktop splits based on math formula:
+  // Banner1: indexes 0, 3, 6... (i % 3 === 0)
+  // Banner2: indexes 1, 4, 7... (i % 3 === 1)
+  // Banner3: indexes 2, 5, 8... (i % 3 === 2)
+  const banner1 = banners.filter((_, i) => i % 3 === 0);
+  const banner2 = banners.filter((_, i) => i % 3 === 1);
+  const banner3 = banners.filter((_, i) => i % 3 === 2);
+
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group">
-      {/* Slides Container */}
-      <div className="relative aspect-[3/1] md:aspect-[4/1] bg-gray-100">
-        {banners.map((banner, index) => (
-          <div
-            key={banner.id}
-            className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-              index === currentSlide
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-105"
-            }`}
-          >
-            {banner.link ? (
-              <a href={banner.link} className="block w-full h-full">
-                <div className="relative w-full h-full bg-gradient-to-l from-primary/20 via-accent/10 to-secondary/20 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">
-                      {index === 0 ? "🎉" : index === 1 ? "💼" : "🌟"}
-                    </div>
-                    <p className="text-gray-600 font-medium text-lg">
-                      {index === 0
-                        ? "جایگاه تبلیغات ۱"
-                        : index === 1
-                          ? "جایگاه تبلیغات ۲"
-                          : "جایگاه تبلیغات ۳"}
-                    </p>
-                    <p className="text-gray-400 text-sm mt-1">
-                      تصویر بنر تبلیغاتی در اینجا قرار می‌گیرد
-                    </p>
-                  </div>
-                </div>
-              </a>
-            ) : (
-              <div className="relative w-full h-full bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center">
-                <p className="text-gray-500">بنر تبلیغاتی</p>
-              </div>
-            )}
-          </div>
-        ))}
+    <div className="w-full">
+      {/* Mobile View: Single 1x1 slider with all banners */}
+      <div className="block md:hidden">
+        <SquareSlider banners={banners} autoPlayInterval={autoPlayInterval} />
       </div>
 
-      {/* Navigation Arrows */}
-      {banners.length > 1 && (
-        <>
-          <button
-            onClick={prevSlide}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-primary opacity-0 group-hover:opacity-100 transition-all duration-300"
-            aria-label="بنر قبلی"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-primary opacity-0 group-hover:opacity-100 transition-all duration-300"
-            aria-label="بنر بعدی"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </>
-      )}
-
-      {/* Dots Indicator */}
-      {banners.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`transition-all duration-300 rounded-full ${
-                index === currentSlide
-                  ? "w-8 h-2.5 bg-primary shadow-md"
-                  : "w-2.5 h-2.5 bg-white/70 hover:bg-white"
-              }`}
-              aria-label={`بنر ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
+      {/* Desktop View: Grid of 3 square sliders */}
+      <div className="hidden md:grid grid-cols-3 gap-4 lg:gap-6">
+        <SquareSlider banners={banner1} autoPlayInterval={autoPlayInterval} />
+        <SquareSlider banners={banner2} autoPlayInterval={autoPlayInterval} />
+        <SquareSlider banners={banner3} autoPlayInterval={autoPlayInterval} />
+      </div>
     </div>
   );
 }

@@ -28,21 +28,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-gray-50 to-white pt-8 pb-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="relative bg-white pt-8 pb-4">
+        <div className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6">
           {/* Slogan + Flags */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />
+              <img src="https://flagcdn.com/w40/ir.png" alt="Iran Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />
               <div className="text-center">
-                <p className="text-lg md:text-xl font-bold text-gray-700">
+                <p className="text-sm md:text-base text-gray-700">
                   جستجو کن، معرفی کن، ارتباط بگیر!
                 </p>
-                <p className="text-sm md:text-base text-gray-600 font-medium mt-1">
+                <p className="text-sm md:text-base text-gray-700 mt-1">
                   مشاغل ایرانیان و فارسی‌زبانان استرالیا
                 </p>
               </div>
-              <img src="https://flagcdn.com/w40/ir.png" alt="Iran Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />
+              <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />
             </div>
           </div>
 
@@ -78,14 +78,14 @@ export default function HomePage() {
       </section>
 
       {/* Job Categories Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6">
         <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
           <JobCategoriesGrid />
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-14 bg-gradient-to-b from-white to-gray-50">
+      {/* <section className="py-14 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -138,12 +138,12 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-primary via-primary-dark to-secondary p-8 md:p-12 text-center text-white shadow-2xl shadow-primary/20">
+          <div className="relative overflow-hidden rounded-3xl bg-secondary-light2 p-8 md:p-12 text-center text-white shadow-2xl shadow-primary/20">
             {/* Decorative circles */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />
             <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/5 rounded-full" />

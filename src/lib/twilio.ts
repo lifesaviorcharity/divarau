@@ -1,10 +1,18 @@
 import twilio from "twilio";
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID!;
-const authToken = process.env.TWILIO_AUTH_TOKEN!;
-const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID!;
+let client: twilio.Twilio | null = null;
 
-const client = twilio(accountSid, authToken);
+function getTwilioClient() {
+  if (!client) {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    if (!accountSid || !authToken) {
+      throw new Error("Twilio credentials are not set in environment variables");
+    }
+    client = twilio(accountSid, authToken);
+  }
+  return client;
+}
 
 export type VerifyResult = {
   success: boolean;
@@ -25,7 +33,13 @@ export async function sendVerificationCode(
   }
 
   try {
-    const verification = await client.verify.v2
+    const twilioClient = getTwilioClient();
+    const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+    if (!verifyServiceSid) {
+      throw new Error("TWILIO_VERIFY_SERVICE_SID is not set");
+    }
+
+    const verification = await twilioClient.verify.v2
       .services(verifyServiceSid)
       .verifications.create({
         to: mobile,
@@ -37,7 +51,7 @@ export async function sendVerificationCode(
     }
 
     return { success: false, error: "خطا در ارسال کد تأیید." };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Twilio Send Error:", error);
 
     // Handle specific Twilio errors
@@ -59,6 +73,15 @@ export async function sendVerificationCode(
           error: "شماره موبایل نامعتبر است.",
         };
       }
+      
+      // Unverified number (Trial account)
+      if (twilioError.code === 21608 || twilioError.message?.includes("unverified")) {
+        return {
+          success: false,
+          error: "حساب Twilio شما آزمایشی است و امکان ارسال پیامک فقط به شماره‌های تأیید شده در Twilio وجود دارد.",
+        };
+      }
+
       return {
         success: false,
         error: twilioError.message || "خطا در ارسال کد تأیید. لطفاً دوباره تلاش کنید.",
@@ -67,7 +90,7 @@ export async function sendVerificationCode(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "خطا در ارسال کد تأیید. لطفاً دوباره تلاش کنید.",
+      error: error instanceof Error ? error.message : "خطا در ارتباط با سرور پیامک.",
     };
   }
 }
@@ -88,7 +111,13 @@ export async function checkVerificationCode(
   }
 
   try {
-    const verificationCheck = await client.verify.v2
+    const twilioClient = getTwilioClient();
+    const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+    if (!verifyServiceSid) {
+      throw new Error("TWILIO_VERIFY_SERVICE_SID is not set");
+    }
+
+    const verificationCheck = await twilioClient.verify.v2
       .services(verifyServiceSid)
       .verificationChecks.create({
         to: mobile,
