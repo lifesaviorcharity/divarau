@@ -25,11 +25,11 @@ export default function JobCard({ job, onClick }: JobCardProps) {
   return (
     <button
       onClick={() => onClick?.(job.id)}
-      className="w-full bg-white rounded-xl border border-gray-100 hover:border-primary/30 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group text-right card-hover"
+      className="w-full bg-white rounded-xl border border-gray-100 hover:border-gray-300 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group text-right card-hover"
     >
-      <div className="flex flex-col sm:flex-row gap-3 p-3">
+      <div className="flex flex-row-reverse gap-3 p-3">
         {/* Image */}
-        <div className="w-full sm:w-24 h-24 md:h-24 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative">
+        <div className="w-32 h-32 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative">
           {job.imageUrl ? (
             <img
               src={job.imageUrl}

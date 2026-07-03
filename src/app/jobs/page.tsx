@@ -21,11 +21,11 @@ function JobsContent() {
   const categoryParam = searchParams.get("category");
   const searchQuery = searchParams.get("q") || "";
   const parsedCategory = categoryParam ? parseInt(categoryParam, 10) : null;
-  const initialCategoryIndex = 
-    parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length 
-      ? parsedCategory 
+  const initialCategoryIndex =
+    parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length
+      ? parsedCategory
       : null;
-      
+
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number | null>(initialCategoryIndex);
   const [selectedSubCategorySlug, setSelectedSubCategorySlug] = useState<string | null>(null);
   const [activeAdTab, setActiveAdTab] = useState<"commercial" | "employment" | "job_seeker">("commercial");
@@ -41,8 +41,8 @@ function JobsContent() {
       fetch(`/api/jobs${qParam}`).then(res => res.json()),
       fetch(`/api/ads${qParam}`).then(res => res.json())
     ]).then(([jobsRes, adsRes]) => {
-      if(Array.isArray(jobsRes)) setJobsData(jobsRes);
-      if(Array.isArray(adsRes)) setAdsData(adsRes);
+      if (Array.isArray(jobsRes)) setJobsData(jobsRes);
+      if (Array.isArray(adsRes)) setAdsData(adsRes);
       setIsLoading(false);
     }).catch(err => {
       console.error(err);
@@ -65,9 +65,9 @@ function JobsContent() {
 
   useEffect(() => {
     const parsedCategory = categoryParam ? parseInt(categoryParam, 10) : null;
-    const initialCategoryIndex = 
-      parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length 
-        ? parsedCategory 
+    const initialCategoryIndex =
+      parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length
+        ? parsedCategory
         : null;
     setSelectedCategoryIndex(initialCategoryIndex);
   }, [categoryParam]);
@@ -82,8 +82,8 @@ function JobsContent() {
   const filteredJobs = jobsData.map(job => {
     const reviews = job.reviews || [];
     const reviewCount = reviews.length;
-    const avgRating = reviewCount > 0 
-      ? Math.round(reviews.reduce((acc: number, cur: any) => acc + cur.rating, 0) / reviewCount) 
+    const avgRating = reviewCount > 0
+      ? Math.round(reviews.reduce((acc: number, cur: any) => acc + cur.rating, 0) / reviewCount)
       : 5; // Default to 5 if no reviews
 
     return {
@@ -106,7 +106,7 @@ function JobsContent() {
   });
 
   const getAdTypeKey = (typeStr: string): "commercial" | "employment" | "job_seeker" => {
-    switch(typeStr) {
+    switch (typeStr) {
       case 'EMPLOYMENT': return 'employment';
       case 'JOB_SEEKER': return 'job_seeker';
       case 'COMMERCIAL': return 'commercial';
@@ -248,7 +248,7 @@ function JobsContent() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 min-h-[200px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 min-h-[100px]">
                 {isLoading ? (
                   <div className="col-span-full flex items-center justify-center">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -279,11 +279,10 @@ function JobsContent() {
                   <button
                     key={tab.key}
                     onClick={() => setActiveAdTab(tab.key)}
-                    className={`flex-1 py-2.5 text-xs md:text-sm font-medium rounded-xl transition-all duration-200 ${
-                      activeAdTab === tab.key
-                        ? "bg-primary text-white shadow-sm"
-                        : "text-gray-500 hover:text-primary hover:bg-gray-50"
-                    }`}
+                    className={`flex-1 py-2.5 text-xs md:text-sm font-medium rounded-xl transition-all duration-200 ${activeAdTab === tab.key
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-gray-500 hover:text-primary hover:bg-gray-50"
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -292,7 +291,7 @@ function JobsContent() {
 
               {/* Tab Content */}
               <div className="bg-white rounded-b-2xl border border-gray-100 border-t-0 p-3 md:p-4">
-                <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 animate-fade-in min-h-[200px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 animate-fade-in min-h-[100px]">
                   {isLoading ? (
                     <div className="col-span-full flex items-center justify-center">
                       <Loader2 className="w-8 h-8 text-primary animate-spin" />

@@ -30,10 +30,10 @@ export default function AdCard({ ad, onClick }: AdCardProps) {
   return (
     <button
       onClick={() => onClick?.(ad.id)}
-      className="w-full bg-white rounded-xl border border-gray-100 hover:border-primary/20 p-4 text-right transition-all duration-200 hover:shadow-md card-hover"
+      className="w-full bg-white rounded-xl border border-gray-200 hover:border-gray-300 p-4 text-right transition-all duration-200 hover:shadow-md card-hover"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
-        <h3 className="text-sm font-bold text-gray-800 truncate w-full sm:flex-1">
+      <div className="flex flex-row items-start justify-between gap-2 mb-2">
+        <h3 className="text-sm font-bold text-gray-800 truncate flex-1">
           {ad.title}
         </h3>
         <span

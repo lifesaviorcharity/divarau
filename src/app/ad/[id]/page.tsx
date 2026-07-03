@@ -64,8 +64,8 @@ export default function AdDetailPage() {
             <span className="text-gray-700 truncate max-w-[150px] sm:max-w-xs">{ad.title}</span>
           </div>
 
-          <button 
-            onClick={() => router.back()} 
+          <button
+            onClick={() => router.back()}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <ArrowRight size={16} />
@@ -94,7 +94,7 @@ export default function AdDetailPage() {
           </div>
 
           {/* Contact Button */}
-          <button
+          {/* <button
             onClick={() => isFinal && setShowContact(!showContact)}
             disabled={!isFinal}
             className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${
@@ -104,7 +104,7 @@ export default function AdDetailPage() {
             }`}
           >
             {isFinal ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}
-          </button>
+          </button> */}
 
           {/* Contact Details */}
           {showContact && isFinal && (
