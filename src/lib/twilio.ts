@@ -169,7 +169,8 @@ export async function sendMessage(mobile: string, body: string): Promise<boolean
   }
 
   try {
-    await client.messages.create({
+    const twilioClient = getTwilioClient();
+    await twilioClient.messages.create({
       body,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: mobile,
