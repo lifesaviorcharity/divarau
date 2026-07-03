@@ -111,7 +111,7 @@ export default function Header() {
         )}
 
         {/* Top bar */}
-        <div className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-15 relative border-b border-gray-200">
             {/* Logo and City Selector */}
             <div className="flex items-center gap-4">
@@ -267,7 +267,7 @@ export default function Header() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="lg:hidden border-t border-gray-100 animate-fade-in">
-            <nav className="max-w-full md:max-w-[70%] mx-auto px-4 py-3 space-y-1">
+            <nav className="max-w-7xl mx-auto px-4 py-3 space-y-1">
               {menuItems.map((item) =>
                 item.hasSubmenu ? (
                   <div key={item.label}>

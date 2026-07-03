@@ -4,7 +4,13 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   try {
     const banners = await prisma.banner.findMany({
-      where: { isActive: true },
+      where: { 
+        isActive: true,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } }
+        ]
+      },
       orderBy: { displayOrder: 'asc' }
     });
 

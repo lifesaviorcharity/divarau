@@ -13,7 +13,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-200 text-gray-300 mt-16">
       {/* Main Footer */}
-      {/* <div className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6 py-12"> */}
+      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12"> */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10"> */}
       {/* About */}
       {/* <div>
@@ -127,7 +127,7 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-200">
-        <div className="max-w-full md:max-w-[70%] mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-gray-500 text-center sm:text-right">
             © {new Date().getFullYear()} مشاغل ایرانیان و فارسی‌زبانان
             استرالیا. تمامی حقوق محفوظ است.

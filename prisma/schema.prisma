@@ -251,6 +251,8 @@ model Banner {
   position        Int      @default(1) // 1, 2, 3
   displayOrder    Int      @default(0)
   isActive        Boolean  @default(true)
+  durationDays    Int      @default(30) // number of days to show the banner
+  expiresAt       DateTime?
   createdAt       DateTime @default(now())
 }
 

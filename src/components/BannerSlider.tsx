@@ -153,7 +153,7 @@ export default function BannerSlider({
   }, []);
 
   if (isLoading) return <div className="w-full aspect-square md:aspect-[3/1] bg-gray-100 rounded-2xl animate-pulse"></div>;
-  if (!Array.isArray(banners) || banners.length === 0) return null;
+  if (!Array.isArray(banners)) return null;
 
   // Desktop splits based on math formula:
   // Banner1: indexes 0, 3, 6... (i % 3 === 0)
