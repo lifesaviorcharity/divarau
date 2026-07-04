@@ -25,7 +25,7 @@ export default function JobCard({ job, onClick }: JobCardProps) {
   return (
     <button
       onClick={() => onClick?.(job.id)}
-      className="w-full bg-white rounded-xl border border-gray-100 hover:border-gray-300 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group text-right card-hover"
+      className="w-full bg-white rounded-xl border border-gray-100 hover:border-gray-300 hover:cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group text-right card-hover"
     >
       <div className="flex flex-row-reverse gap-3 p-3">
         {/* Image */}
@@ -51,7 +51,7 @@ export default function JobCard({ job, onClick }: JobCardProps) {
         {/* Info */}
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-bold text-gray-800 truncate group-hover:text-primary transition-colors">
+            <h3 className="text-sm font-bold text-gray-800 truncate group-hover:text-gray-800 transition-colors">
               {job.title}
             </h3>
             <p className="text-xs text-gray-500 mt-0.5 truncate">

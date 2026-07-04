@@ -194,7 +194,7 @@ export default function ProfilePage() {
           {session.user.role === 'ADMIN' && (
             <Link
               href="/admin"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+              className="flex md:hidden items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
             >
               <ShieldAlert size={14} />
               پنل مدیریت

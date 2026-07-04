@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import CategorySidebar from "@/components/CategorySidebar";
 import JobCard, { JobCardData } from "@/components/JobCard";
@@ -10,7 +10,19 @@ import { useCategories } from "@/hooks/useCategories";
 import { ChevronLeft, Filter, SlidersHorizontal, X, Loader2, Search } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 
+const INITIAL_LOAD = 12; // Fill ~1 page
+const SCROLL_BATCH = 6; // Items per lazy-load batch
+const PAUSE_AT = 30; // Show "load more" button after this many
 
+const getAdTypeKey = (typeStr: string): "commercial" | "employment" | "job_seeker" => {
+  switch (typeStr) {
+    case 'EMPLOYMENT': return 'employment';
+    case 'JOB_SEEKER': return 'job_seeker';
+    case 'COMMERCIAL': return 'commercial';
+    case 'COMMERCIAL_FREE': return 'commercial';
+    default: return 'commercial';
+  }
+};
 
 function JobsContent() {
   const searchParams = useSearchParams();
@@ -30,35 +42,93 @@ function JobsContent() {
   const [selectedSubCategorySlug, setSelectedSubCategorySlug] = useState<string | null>(null);
   const [activeAdTab, setActiveAdTab] = useState<"commercial" | "employment" | "job_seeker">("commercial");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  const [jobsData, setJobsData] = useState<any[]>([]);
-  const [adsData, setAdsData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
+  // Jobs pagination state
+  const [jobsData, setJobsData] = useState<any[]>([]);
+  const [jobsTotal, setJobsTotal] = useState(0);
+  const [jobsHasMore, setJobsHasMore] = useState(false);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  const [loadMoreClicked, setLoadMoreClicked] = useState(false);
+
+  // Ads state (kept simple, no pagination)
+  const [adsData, setAdsData] = useState<any[]>([]);
+  const [isLoadingAds, setIsLoadingAds] = useState(true);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const selectedCategory = selectedCategoryIndex !== null ? jobCategories[selectedCategoryIndex] : null;
+  const selectedSubCategory = selectedCategory?.subCategories.find(sub => sub.slug === selectedSubCategorySlug) || null;
+
+  // Fetch jobs with pagination
+  const fetchJobs = useCallback(async (skip: number, take: number, reset = false) => {
+    let url = `/api/jobs?take=${take}&skip=${skip}`;
+    if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
+    if (selectedCity?.id) url += `&cityId=${selectedCity.id}`;
+    if (selectedCategory?.id) url += `&categoryId=${selectedCategory.id}`;
+    if (selectedSubCategory?.id) url += `&subCategoryId=${selectedSubCategory.id}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.jobs) {
+      setJobsData(prev => {
+        if (reset) return data.jobs;
+        const newJobs = data.jobs.filter((newJob: any) => !prev.some((oldJob) => oldJob.id === newJob.id));
+        return [...prev, ...newJobs];
+      });
+      setJobsTotal(data.total);
+      setJobsHasMore(data.hasMore);
+    }
+  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
+
+  // Initial load
   useEffect(() => {
-    setIsLoading(true);
-    const qParam = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : "";
-    Promise.all([
-      fetch(`/api/jobs${qParam}`).then(res => res.json()),
-      fetch(`/api/ads${qParam}`).then(res => res.json())
-    ]).then(([jobsRes, adsRes]) => {
-      if (Array.isArray(jobsRes)) setJobsData(jobsRes);
-      if (Array.isArray(adsRes)) setAdsData(adsRes);
-      setIsLoading(false);
-    }).catch(err => {
-      console.error(err);
-      setIsLoading(false);
-    });
-  }, [searchQuery]);
+    setIsLoadingJobs(true);
+    setJobsData([]);
+    setAutoScrollEnabled(true);
+    setLoadMoreClicked(false);
+    fetchJobs(0, INITIAL_LOAD, true).finally(() => setIsLoadingJobs(false));
+  }, [searchQuery, fetchJobs]);
+
+  // Load ads (no pagination)
+  useEffect(() => {
+    setIsLoadingAds(true);
+    let url = `/api/ads?`;
+    if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
+    if (selectedCity?.id) url += `cityId=${selectedCity.id}&`;
+    if (selectedCategory?.id) url += `categoryId=${selectedCategory.id}&`;
+    if (selectedSubCategory?.id) url += `subCategoryId=${selectedSubCategory.id}&`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAdsData(data);
+          // Auto-switch to a tab that has results if current tab is empty
+          if (data.length > 0) {
+            setActiveAdTab((prevTab) => {
+              const hasCurrentTabAds = data.some((ad: any) => getAdTypeKey(ad.type) === prevTab);
+              if (!hasCurrentTabAds) {
+                return getAdTypeKey(data[0].type);
+              }
+              return prevTab;
+            });
+          }
+        }
+        setIsLoadingAds(false);
+      })
+      .catch(() => setIsLoadingAds(false));
+  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
   useEffect(() => {
     if (!selectedCity) {
       const timer = setTimeout(() => {
-        // Double check after hydration using getState
         const currentCity = useCityStore.getState().selectedCity;
         if (!currentCity) {
           openCityModal();
         }
-      }, 500); // Small delay to allow hydration
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [selectedCity, openCityModal]);
@@ -72,19 +142,52 @@ function JobsContent() {
     setSelectedCategoryIndex(initialCategoryIndex);
   }, [categoryParam]);
 
-  const selectedCategory = selectedCategoryIndex !== null ? jobCategories[selectedCategoryIndex] : null;
-  const selectedSubCategory = selectedCategory?.subCategories.find(sub => sub.slug === selectedSubCategorySlug) || null;
+  // Load more jobs handler
+  const loadMoreJobs = useCallback(async () => {
+    if (isLoadingMore || !jobsHasMore) return;
+    setIsLoadingMore(true);
+    await fetchJobs(jobsData.length, SCROLL_BATCH);
+    setIsLoadingMore(false);
+  }, [isLoadingMore, jobsHasMore, jobsData.length, fetchJobs]);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    if (!autoScrollEnabled || !jobsHasMore || isLoadingJobs) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          // Pause auto-scroll after PAUSE_AT items (only on first pass)
+          if (jobsData.length >= PAUSE_AT && !loadMoreClicked) {
+            setAutoScrollEnabled(false);
+            return;
+          }
+          loadMoreJobs();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [autoScrollEnabled, jobsHasMore, isLoadingJobs, isLoadingMore, jobsData.length, loadMoreClicked, loadMoreJobs]);
+
+  // (Moved selectedCategory and selectedSubCategory to the top)
 
   const handleJobClick = (id: number) => {
     router.push(`/job/${id}`);
   };
 
+  // Format data (filtering is now done entirely on the server)
   const filteredJobs = jobsData.map(job => {
     const reviews = job.reviews || [];
     const reviewCount = reviews.length;
     const avgRating = reviewCount > 0
       ? Math.round(reviews.reduce((acc: number, cur: any) => acc + cur.rating, 0) / reviewCount)
-      : 5; // Default to 5 if no reviews
+      : 5;
 
     return {
       id: job.id,
@@ -98,21 +201,9 @@ function JobsContent() {
       timeAgo: timeAgo(job.createdAt),
       isVip: job.isVip,
     };
-  }).filter((job) => {
-    const categoryMatches = selectedCategory ? job.category === selectedCategory.name : true;
-    const subCategoryMatches = selectedSubCategory ? job.subCategory === selectedSubCategory.name : true;
-    const cityMatches = selectedCity ? job.city === selectedCity.name : true;
-    return categoryMatches && subCategoryMatches && cityMatches;
   });
 
-  const getAdTypeKey = (typeStr: string): "commercial" | "employment" | "job_seeker" => {
-    switch (typeStr) {
-      case 'EMPLOYMENT': return 'employment';
-      case 'JOB_SEEKER': return 'job_seeker';
-      case 'COMMERCIAL': return 'commercial';
-      default: return 'commercial';
-    }
-  };
+  // (getAdTypeKey moved outside component)
 
   const filteredAds = adsData.map(ad => ({
     id: ad.id,
@@ -124,11 +215,7 @@ function JobsContent() {
     city: ad.city?.name || "",
     timeAgo: timeAgo(ad.createdAt),
   })).filter((ad) => {
-    const typeMatches = ad.type === activeAdTab;
-    const categoryMatches = selectedCategory ? ad.category === selectedCategory.name : true;
-    const subCategoryMatches = selectedSubCategory ? ad.subCategory === selectedSubCategory.name : true;
-    const cityMatches = selectedCity ? ad.city === selectedCity.name : true;
-    return typeMatches && categoryMatches && subCategoryMatches && cityMatches;
+    return ad.type === activeAdTab; // City and category filtering is already done on the server
   });
 
   const adTabs = [
@@ -137,21 +224,13 @@ function JobsContent() {
     { key: "job_seeker" as const, label: "آگهی‌های جویای کار" },
   ];
 
+  // Should we show the "Load More" button?
+  const showLoadMoreButton = !autoScrollEnabled && jobsHasMore && !loadMoreClicked;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
-          <a href="/" className="hover:text-primary transition-colors">خانه</a>
-          <ChevronLeft size={12} />
-          <span className="text-gray-700 font-medium">مشاهده مشاغل و آگهی‌ها</span>
-          {selectedCity && (
-            <>
-              <ChevronLeft size={12} />
-              <span className="text-primary font-medium">{selectedCity.name}</span>
-            </>
-          )}
-        </div>
+
 
         {/* Search Results Banner */}
         {searchQuery && (
@@ -182,7 +261,7 @@ function JobsContent() {
         <div className="flex gap-6">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="sticky top-24">
+            <div className="sticky top-2">
               <CategorySidebar
                 selectedCategoryIndex={selectedCategoryIndex}
                 selectedSubCategorySlug={selectedSubCategorySlug}
@@ -236,21 +315,9 @@ function JobsContent() {
           <div className="flex-1 min-w-0 space-y-6">
             {/* Jobs Section */}
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <span className="text-xl">{selectedCategory?.icon || "📁"}</span>
-                  مشاغل {selectedCategory?.name || "همه گروه‌ها"}
-                  {selectedCity && (
-                    <span className="text-xs text-gray-400 font-normal">
-                      در {selectedCity.name}
-                    </span>
-                  )}
-                </h2>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 min-h-[100px]">
-                {isLoading ? (
-                  <div className="col-span-full flex items-center justify-center">
+                {isLoadingJobs ? (
+                  <div className="col-span-full flex items-center justify-center py-20">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                   </div>
                 ) : filteredJobs.length > 0 ? (
@@ -264,24 +331,46 @@ function JobsContent() {
                 )}
               </div>
 
-              <div className="mt-4 text-center">
-                <button className="px-6 py-2 text-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-xl transition-colors">
-                  نمایش بیشتر
-                </button>
-              </div>
+              {/* Loading more spinner */}
+              {isLoadingMore && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+                </div>
+              )}
+
+              {/* Intersection Observer sentinel for auto-scroll */}
+              {autoScrollEnabled && jobsHasMore && !isLoadingJobs && (
+                <div ref={sentinelRef} className="h-1" />
+              )}
+
+              {/* Load More button - appears after PAUSE_AT items */}
+              {showLoadMoreButton && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => {
+                      setLoadMoreClicked(true);
+                      setAutoScrollEnabled(true);
+                      loadMoreJobs();
+                    }}
+                    className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                  >
+                    نمایش بیشتر ({jobsTotal - jobsData.length} مورد دیگر)
+                  </button>
+                </div>
+              )}
             </section>
 
             {/* Ads Section */}
             <section>
               {/* Tab Headers */}
-              <div className="flex items-center gap-1 bg-white rounded-t-2xl border border-gray-100 border-b-0 p-1">
+              <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 border-t-0 border-b-0">
                 {adTabs.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveAdTab(tab.key)}
-                    className={`flex-1 py-2.5 text-xs md:text-sm font-medium rounded-xl transition-all duration-200 ${activeAdTab === tab.key
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-gray-500 hover:text-primary hover:bg-gray-50"
+                    className={`flex-1 py-2.5 text-xs md:text-sm font-medium rounded-t-md transition-all duration-100 ${activeAdTab === tab.key
+                      ? "bg-white text-primary border-t-1 border-primary"
+                      : "text-gray-500 bg-gray-100 hover:text-primary hover:bg-gray-50"
                       }`}
                   >
                     {tab.label}
@@ -290,9 +379,9 @@ function JobsContent() {
               </div>
 
               {/* Tab Content */}
-              <div className="bg-white rounded-b-2xl border border-gray-100 border-t-0 p-3 md:p-4">
+              <div className="bg-white rounded-b-lg border border-gray-200 border-t-0 p-3 md:p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 animate-fade-in min-h-[100px]">
-                  {isLoading ? (
+                  {isLoadingAds ? (
                     <div className="col-span-full flex items-center justify-center">
                       <Loader2 className="w-8 h-8 text-primary animate-spin" />
                     </div>
@@ -309,7 +398,7 @@ function JobsContent() {
 
                 {filteredAds.length > 0 && (
                   <div className="mt-4 text-center">
-                    <button className="px-6 py-2 text-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-xl transition-colors">
+                    <button className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-primary/10 rounded-xl transition-colors">
                       نمایش آگهی‌های بیشتر
                     </button>
                   </div>

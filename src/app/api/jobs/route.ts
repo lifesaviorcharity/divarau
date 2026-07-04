@@ -15,6 +15,9 @@ export async function GET(request: Request) {
     const isVip = searchParams.get("isVip");
     const q = searchParams.get("q");
 
+    const skip = parseInt(searchParams.get("skip") || "0");
+    const take = parseInt(searchParams.get("take") || "0"); // 0 means no limit (backward compat)
+
     const where: any = { status };
 
     if (cityId) where.cityId = parseInt(cityId);
@@ -32,11 +35,12 @@ export async function GET(request: Request) {
       ];
     }
 
-    const jobs = await prisma.job.findMany({
+    const queryOptions: any = {
       where,
       orderBy: [
         { isBoosted: 'desc' }, // Boosted first
         { finalApprovedAt: 'desc' }, // Then by latest approval
+        { id: 'desc' }, // Tie-breaker for deterministic sorting
       ],
       include: {
         city: true,
@@ -47,8 +51,24 @@ export async function GET(request: Request) {
           select: { rating: true }
         }
       }
-    });
+    };
 
+    if (take > 0) {
+      queryOptions.skip = skip;
+      queryOptions.take = take;
+      const [jobs, total] = await Promise.all([
+        prisma.job.findMany(queryOptions),
+        prisma.job.count({ where }),
+      ]);
+      return NextResponse.json({
+        jobs,
+        total,
+        hasMore: skip + take < total,
+      });
+    }
+
+    // Backward compatible: no pagination, return flat array
+    const jobs = await prisma.job.findMany(queryOptions);
     return NextResponse.json(jobs);
   } catch (error) {
     console.error("Jobs API Error:", error);
@@ -67,7 +87,7 @@ export async function POST(request: Request) {
     }
 
     const data = await request.json();
-    
+
     // Convert to numbers where appropriate
     const cityId = parseInt(data.cityId);
     const categoryId = parseInt(data.categoryId);

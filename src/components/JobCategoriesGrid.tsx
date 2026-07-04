@@ -15,7 +15,7 @@ export default function JobCategoriesGrid() {
   };
 
   return (
-    <section className="py-10">
+    <section className="py-6">
       <h2 className="text-xl md:text-2xl text-center text-gray-800 font-light mb-8">
         فهرست گروه‌های شغلی
       </h2>

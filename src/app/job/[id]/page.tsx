@@ -77,8 +77,8 @@ export default function JobDetailPage() {
             <span className="text-gray-700 truncate max-w-[150px] sm:max-w-xs">{job.title}</span>
           </div>
 
-          <button 
-            onClick={() => router.back()} 
+          <button
+            onClick={() => router.back()}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <ArrowRight size={16} />
@@ -116,11 +116,10 @@ export default function JobDetailPage() {
             <button
               onClick={() => isFinal && setShowContact(!showContact)}
               disabled={!isFinal}
-              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${
-                isFinal
+              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${isFinal
                   ? "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
+                }`}
             >
               {isFinal ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}
             </button>
@@ -244,9 +243,8 @@ export default function JobDetailPage() {
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      i === currentImage ? "border-primary shadow-md" : "border-gray-200 opacity-60"
-                    }`}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${i === currentImage ? "border-primary shadow-md" : "border-gray-200 opacity-60"
+                      }`}
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -260,133 +258,133 @@ export default function JobDetailPage() {
         {isFinal && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Reviews List */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-primary">دیدگاه‌ها</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-black text-gray-800">{job.rating}</span>
-                <span className="text-xs text-gray-400">از ۵</span>
-              </div>
-            </div>
-
-            {/* Overall Rating */}
-            <div className="flex items-center gap-2 mb-2">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={18}
-                  className={i < Math.round(job.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
-                />
-              ))}
-              <span className="text-xs text-gray-400">از مجموع {job.reviewCount} امتیاز</span>
-            </div>
-
-            {/* Register Review Button */}
-            <button
-              onClick={() => {
-                setShowReviewForm(true);
-                document.getElementById('review-form-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-full py-2.5 mb-6 border-2 border-primary/20 text-primary text-sm font-semibold rounded-xl hover:bg-primary/5 transition-colors"
-            >
-              ثبت دیدگاه
-            </button>
-
-            {/* Reviews List (Only show if enabled) */}
-            {job.reviewsEnabled && (
-              <div className="space-y-4">
-                {job.reviews?.length > 0 ? job.reviews.map((review: any) => (
-                  <div key={review.id} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-gray-800">{review.user?.username || "کاربر سایت"}</span>
-                      <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={12}
-                            className={i < review.rating ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-600">{review.comment}</p>
-                  </div>
-                )) : (
-                  <p className="text-xs text-gray-400 text-center py-4">هنوز دیدگاهی ثبت نشده است.</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Review Form */}
-          <div id="review-form-section" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-base font-bold text-gray-800 mb-4">ثبت نظر شما</h3>
-
-            {!session ? (
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <UserCircle className="text-primary" size={24} />
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-primary">دیدگاه‌ها</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-gray-800">{job.rating}</span>
+                  <span className="text-xs text-gray-400">از ۵</span>
                 </div>
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                  جهت ثبت نظر با حساب کاربری خود وارد شوید و در صورتیکه حساب کاربری ندارید اقدام به ایجاد آن نمایید.
-                </p>
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md hover:shadow-lg"
-                >
-                  ورود / ایجاد حساب کاربری
-                </button>
               </div>
-            ) : (
-              <>
-                {/* Star Rating Input */}
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <button key={i} onClick={() => setNewRating(i + 1)} className="transition-transform hover:scale-110">
-                      <Star size={28}
-                        className={i < newRating ? "text-amber-400 fill-amber-400" : "text-gray-300 fill-gray-300"}
-                      />
-                    </button>
-                  ))}
-                </div>
 
-                {/* Comment (Hide if reviews disabled) */}
-                {job.reviewsEnabled && (
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="نظر خود را بنویسید..."
-                    className="w-full h-32 px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none transition-all mb-4"
+              {/* Overall Rating */}
+              <div className="flex items-center gap-2 mb-2">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={18}
+                    className={i < Math.round(job.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
                   />
-                )}
+                ))}
+                <span className="text-xs text-gray-400">از مجموع {job.reviewCount} امتیاز</span>
+              </div>
 
-                <button 
-                  onClick={async () => {
-                    if (newRating === 0) {
-                      alert("لطفاً امتیاز خود را ثبت کنید");
-                      return;
-                    }
-                    try {
-                      const res = await fetch(`/api/jobs/${job.id}/reviews`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ rating: newRating, comment: job.reviewsEnabled ? newComment : null })
-                      });
-                      if (res.ok) {
-                        alert(job.reviewsEnabled ? "نظر شما با موفقیت ثبت شد و پس از تایید نمایش داده خواهد شد." : "امتیاز شما با موفقیت ثبت شد.");
-                        setNewRating(0);
-                        setNewComment("");
-                      } else {
-                        alert("خطا در ثبت اطلاعات");
+              {/* Register Review Button */}
+              <button
+                onClick={() => {
+                  setShowReviewForm(true);
+                  document.getElementById('review-form-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full py-2.5 mb-6 border-2 border-primary/20 text-primary text-sm font-semibold rounded-xl hover:bg-primary/5 transition-colors"
+              >
+                ثبت دیدگاه
+              </button>
+
+              {/* Reviews List (Only show if enabled) */}
+              {job.reviewsEnabled && (
+                <div className="space-y-4">
+                  {job.reviews?.length > 0 ? job.reviews.map((review: any) => (
+                    <div key={review.id} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-bold text-gray-800">{review.user?.username || "کاربر سایت"}</span>
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={12}
+                              className={i < review.rating ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600">{review.comment}</p>
+                    </div>
+                  )) : (
+                    <p className="text-xs text-gray-400 text-center py-4">هنوز دیدگاهی ثبت نشده است.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Review Form */}
+            <div id="review-form-section" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="text-base font-bold text-gray-800 mb-4">ثبت نظر شما</h3>
+
+              {!session ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <UserCircle className="text-primary" size={24} />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    جهت ثبت نظر با حساب کاربری خود وارد شوید و در صورتیکه حساب کاربری ندارید اقدام به ایجاد آن نمایید.
+                  </p>
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md hover:shadow-lg"
+                  >
+                    ورود / ایجاد حساب کاربری
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Star Rating Input */}
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <button key={i} onClick={() => setNewRating(i + 1)} className="transition-transform hover:scale-110">
+                        <Star size={28}
+                          className={i < newRating ? "text-amber-400 fill-amber-400" : "text-gray-300 fill-gray-300"}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Comment (Hide if reviews disabled) */}
+                  {job.reviewsEnabled && (
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="نظر خود را بنویسید..."
+                      className="w-full h-32 px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none transition-all mb-4"
+                    />
+                  )}
+
+                  <button
+                    onClick={async () => {
+                      if (newRating === 0) {
+                        alert("لطفاً امتیاز خود را ثبت کنید");
+                        return;
                       }
-                    } catch (e) {
-                      alert("خطا در ارتباط با سرور");
-                    }
-                  }}
-                  className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md hover:shadow-lg"
-                >
-                  {job.reviewsEnabled ? "ثبت نظر" : "ثبت امتیاز"}
-                </button>
-              </>
-            )}
+                      try {
+                        const res = await fetch(`/api/jobs/${job.id}/reviews`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ rating: newRating, comment: job.reviewsEnabled ? newComment : null })
+                        });
+                        if (res.ok) {
+                          alert(job.reviewsEnabled ? "نظر شما با موفقیت ثبت شد و پس از تایید نمایش داده خواهد شد." : "امتیاز شما با موفقیت ثبت شد.");
+                          setNewRating(0);
+                          setNewComment("");
+                        } else {
+                          alert("خطا در ثبت اطلاعات");
+                        }
+                      } catch (e) {
+                        alert("خطا در ارتباط با سرور");
+                      }
+                    }}
+                    className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md hover:shadow-lg"
+                  >
+                    {job.reviewsEnabled ? "ثبت نظر" : "ثبت امتیاز"}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
         )}
       </div>
 

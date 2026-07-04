@@ -54,9 +54,9 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
     <div className="relative w-full h-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex flex-col items-center justify-center shadow-sm border-2 border-dashed border-gray-200">
       <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-3">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21 15 16 10 5 21"/>
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
         </svg>
       </div>
       <p className="text-gray-400 text-sm font-bold">محل آگهی شما</p>
@@ -69,15 +69,14 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
   }
 
   return (
-    <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-lg group bg-white">
+    <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-sm group bg-white">
       {banners.map((banner, index) => (
         <div
           key={banner.id}
-          className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-            index === currentSlide
+          className={`absolute inset-0 transition-all duration-700 ease-in-out ${index === currentSlide
               ? "opacity-100 scale-100 z-10"
               : "opacity-0 scale-105 z-0"
-          }`}
+            }`}
         >
           {banner.link ? (
             <a href={banner.link} className="block w-full h-full relative group" target="_blank" rel="noopener noreferrer">
@@ -128,11 +127,10 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
             <button
               key={idx}
               onClick={() => goToSlide(idx)}
-              className={`transition-all duration-300 rounded-full ${
-                idx === currentSlide
+              className={`transition-all duration-300 rounded-full ${idx === currentSlide
                   ? "w-4 h-1.5 bg-white shadow-md"
                   : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
-              }`}
+                }`}
               aria-label={`برو به بنر ${idx + 1}`}
             />
           ))}

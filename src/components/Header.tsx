@@ -122,7 +122,7 @@ export default function Header() {
                 <Image
                   src={logoDivar}
                   alt="AUIR Logo"
-                  className="w-10 h-auto md:w-12 rounded-lg"
+                  className="w-14 h-auto md:w-16 rounded-lg"
                 />
                 <span className="hidden sm:block text-xs text-gray-500 leading-tight">
                   مشاغل ایرانیان
