@@ -44,24 +44,26 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
     return () => clearInterval(interval);
   }, [nextSlide, autoPlayInterval, banners.length]);
 
-  if (!banners || banners.length === 0) {
-    return (
-      <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex flex-col items-center justify-center shadow-sm border-2 border-dashed border-gray-200">
-        <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </div>
-        <p className="text-gray-400 text-sm font-bold">محل آگهی شما</p>
-        <p className="text-gray-300 text-[10px] mt-1">Your Ad Here</p>
+  const EmptyPlaceholder = () => (
+    <div className="relative w-full h-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex flex-col items-center justify-center shadow-sm border-2 border-dashed border-gray-200">
+      <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-3">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
       </div>
-    );
+      <p className="text-gray-400 text-sm font-bold">محل آگهی شما</p>
+      <p className="text-gray-300 text-[10px] mt-1">Your Ad Here</p>
+    </div>
+  );
+
+  if (!banners || banners.length === 0) {
+    return <EmptyPlaceholder />;
   }
 
   return (
-    <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-lg group">
+    <div className="relative w-full aspect-square overflow-hidden rounded-2xl shadow-lg group bg-white">
       {banners.map((banner, index) => (
         <div
           key={banner.id}
@@ -76,9 +78,7 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
               {banner.imageUrl ? (
                 <img src={banner.imageUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               ) : (
-                <div className="relative w-full h-full bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center">
-                  <p className="text-gray-500">بنر تبلیغاتی</p>
-                </div>
+                <EmptyPlaceholder />
               )}
             </a>
           ) : (
@@ -86,9 +86,7 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
               {banner.imageUrl ? (
                 <img src={banner.imageUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
               ) : (
-                <div className="relative w-full h-full bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center">
-                  <p className="text-gray-500">بنر تبلیغاتی</p>
-                </div>
+                <EmptyPlaceholder />
               )}
             </div>
           )}
