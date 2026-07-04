@@ -14,6 +14,12 @@ interface BannerSliderProps {
   autoPlayInterval?: number; // seconds
 }
 
+const BannerImage = ({ src, alt, className, fallback }: { src?: string, alt: string, className?: string, fallback: React.ReactNode }) => {
+  const [error, setError] = useState(false);
+  if (!src || src.trim() === "" || error) return <>{fallback}</>;
+  return <img src={src} alt={alt} className={className} onError={() => setError(true)} />;
+};
+
 function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[], autoPlayInterval?: number }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -75,19 +81,21 @@ function SquareSlider({ banners, autoPlayInterval = 5 }: { banners: BannerSlide[
         >
           {banner.link ? (
             <a href={banner.link} className="block w-full h-full relative group" target="_blank" rel="noopener noreferrer">
-              {banner.imageUrl ? (
-                <img src={banner.imageUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              ) : (
-                <EmptyPlaceholder />
-              )}
+              <BannerImage
+                src={banner.imageUrl}
+                alt={`Banner ${index + 1}`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                fallback={<EmptyPlaceholder />}
+              />
             </a>
           ) : (
             <div className="relative w-full h-full">
-              {banner.imageUrl ? (
-                <img src={banner.imageUrl} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
-              ) : (
-                <EmptyPlaceholder />
-              )}
+              <BannerImage
+                src={banner.imageUrl}
+                alt={`Banner ${index + 1}`}
+                className="w-full h-full object-cover"
+                fallback={<EmptyPlaceholder />}
+              />
             </div>
           )}
         </div>
