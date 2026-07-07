@@ -24,8 +24,8 @@ export default function CommercialAdPage() {
   const availableSubCategories = selectedCategory
     ? selectedCategory.name === "خدمات عمومی"
       ? selectedCategory.subCategories.filter(
-          (sub) => sub.slug !== "vehicles" && sub.slug !== "home-kitchen"
-        )
+        (sub) => sub.slug !== "vehicles" && sub.slug !== "home-kitchen"
+      )
       : selectedCategory.subCategories
     : [];
 
@@ -65,7 +65,7 @@ export default function CommercialAdPage() {
 
       const data = await res.json();
       if (res.ok) {
-        alert("آگهی تجاری شما ثبت شد. پس از بررسی در حساب کاربری شما قابل مشاهده خواهد بود.");
+        alert("آگهی تجاری شما ثبت شد. پس از تایید، در حساب کاربری شما قابل مشاهده و پرداخت خواهد بود.");
         router.push("/profile");
       } else {
         alert(data.error || "خطا در ثبت آگهی.");
@@ -176,9 +176,8 @@ export default function CommercialAdPage() {
             {/* Buttons */}
             <div className="flex gap-3 pt-2">
               <button onClick={handleSubmit} disabled={!isLoggedIn || isSubmitting}
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
-                  isLoggedIn && !isSubmitting ? "bg-primary text-white hover:bg-primary-dark shadow-lg" : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                }`}>
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${isLoggedIn && !isSubmitting ? "bg-primary text-white hover:bg-primary-dark shadow-lg" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  }`}>
                 {isSubmitting ? "در حال ثبت..." : "ثبت آگهی"}
               </button>
               <button onClick={handleClear}
