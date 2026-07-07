@@ -159,7 +159,7 @@ export default function RegisterJobPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="w-full lg:w-[80%] mx-auto px-4 sm:px-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
           <a href="/" className="hover:text-primary">خانه</a>
@@ -254,8 +254,8 @@ export default function RegisterJobPage() {
                     <p className="text-sm font-bold text-gray-800">اشتراک ۶ ماهه</p>
                     <p className="text-[10px] text-gray-500 mt-1">مدت زمان: ۱۸۰ روز</p>
                     <p className="text-xs text-green-600 font-bold mt-1 flex justify-center gap-1" dir="rtl">
-                      <span>مجموع هزینه:</span>
-                      <span dir="ltr">${total6}</span>
+                      <span>هزینه:</span>
+                      <span dir="ltr">${price6}</span>
                     </p>
                   </button>
                   <button onClick={() => setSubscriptionType("12")}
@@ -264,8 +264,8 @@ export default function RegisterJobPage() {
                     <p className="text-sm font-bold text-gray-800">اشتراک ۱۲ ماهه</p>
                     <p className="text-[10px] text-gray-500 mt-1">مدت زمان: ۳۶۵ روز</p>
                     <p className="text-xs text-green-600 font-bold mt-1 flex justify-center gap-1" dir="rtl">
-                      <span>مجموع هزینه:</span>
-                      <span dir="ltr">${total12}</span>
+                      <span>هزینه:</span>
+                      <span dir="ltr">${price12}</span>
                     </p>
                   </button>
                 </div>
