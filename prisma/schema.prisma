@@ -158,8 +158,6 @@ model Job {
   images      JobImage[]
   reviews     Review[]
   payments    Payment[]
-
-  @@unique([userId, cityId]) // هر کاربر در هر شهر فقط یک شغل
   @@index([categoryId])
   @@index([subCategoryId])
   @@index([cityId])

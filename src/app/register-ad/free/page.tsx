@@ -73,6 +73,10 @@ export default function FreeAdPage() {
       if (res.ok) {
         alert("آگهی شما با موفقیت ثبت شد و پس از بررسی نمایش داده خواهد شد.");
         router.push("/profile");
+      } else if (data.code === "FREE_AD_LIMIT_REACHED") {
+        if (confirm(data.error + "\n\nآیا مایلید به صفحه ثبت آگهی تجاری (پولی) منتقل شوید؟")) {
+          router.push("/register-ad/commercial");
+        }
       } else {
         alert(data.error || "خطا در ثبت آگهی.");
       }

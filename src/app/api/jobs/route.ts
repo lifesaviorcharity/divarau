@@ -100,20 +100,6 @@ export async function POST(request: Request) {
     // Ensure userId is a number
     const userId = parseInt(session.user.id as string, 10);
 
-    // Check if user already has a job in this city
-    const existingJob = await prisma.job.findFirst({
-      where: {
-        userId: userId,
-        cityId: cityId,
-      }
-    });
-
-    if (existingJob) {
-      return NextResponse.json(
-        { error: "شما قبلاً یک شغل در این شهر ثبت کرده‌اید." },
-        { status: 400 }
-      );
-    }
 
     const job = await prisma.job.create({
       data: {

@@ -68,20 +68,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "لطفا فیلدهای الزامی را پر کنید." }, { status: 400 });
     }
 
-    // Check if user already has an active ad of this type
-    const existingAd = await prisma.ad.findFirst({
-      where: {
-        userId: parseInt(session.user.id),
-        type: data.type,
-        status: { notIn: ['EXPIRED', 'REJECTED'] }
-      }
-    });
+    // Enforce free ad limit if the ad is not a paid commercial ad
+    if (data.type !== 'COMMERCIAL') {
+      const freeAdLimitSetting = await prisma.systemSetting.findUnique({
+        where: { key: 'freeAdLimit' }
+      });
+      const limit = freeAdLimitSetting ? parseInt(freeAdLimitSetting.value, 10) : 3;
 
-    if (existingAd) {
-      return NextResponse.json(
-        { error: "شما قبلاً یک آگهی فعال از این نوع ثبت کرده‌اید." },
-        { status: 400 }
-      );
+      if (!isNaN(limit) && limit > 0) {
+        const userFreeAdsCount = await prisma.ad.count({
+          where: {
+            userId: parseInt(session.user.id),
+            type: { not: 'COMMERCIAL' },
+            status: { notIn: ['REJECTED'] }
+          }
+        });
+
+        if (userFreeAdsCount >= limit) {
+          return NextResponse.json(
+            {
+              error: `شما به حداکثر مجاز ثبت آگهی رایگان (${limit} آگهی) رسیده‌اید. لطفاً جهت ثبت آگهی‌های بیشتر از بخش آگهی تجاری (پولی) استفاده کنید.`,
+              code: "FREE_AD_LIMIT_REACHED"
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const ad = await prisma.ad.create({
