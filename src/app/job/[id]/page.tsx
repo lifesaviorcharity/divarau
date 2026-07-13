@@ -116,9 +116,11 @@ export default function JobDetailPage() {
             <button
               onClick={() => isFinal && setShowContact(!showContact)}
               disabled={!isFinal}
-              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${isFinal
-                  ? "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${!isFinal
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : showContact
+                  ? "bg-primary-darker text-white shadow-inner"
+                  : "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl"
                 }`}
             >
               {isFinal ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}

@@ -2,6 +2,7 @@
 
 @theme inline {
   --color-primary: #c0392b;
+  --color-primary-darker: #7D251C;
   --color-primary-dark: #a93226;
   --color-primary-light: #e74c3c;
   --color-secondary: #2c3e50;
@@ -9,7 +10,11 @@
   --color-primary-dark2: #A9A9A9;
   --color-primary-light2: #E7E7E7;
   --color-list-backgnd: #FAFAFA;
+  --color-list-backgnd2: #FEFAF4;
   --color-list-title: #EEEEEE;
+  --color-list-title-bej1: #FEF9F2;
+  --color-list-title-bej2: #FEF2E2;
+  --color-list-title-bej3: #F5EADC;
   --color-secondary2: #505050;
   --color-secondary-light2: #707070;
   --color-accent: #e67e22;

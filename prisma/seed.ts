@@ -23,7 +23,7 @@ async function main() {
   for (const city of australianCities) {
     await prisma.city.upsert({
       where: { slug: city.slug },
-      update: {},
+      update: { name: city.name },
       create: {
         name: city.name,
         slug: city.slug,

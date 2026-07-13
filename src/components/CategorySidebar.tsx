@@ -90,7 +90,7 @@ export default function CategorySidebar({
       : "جستجو دسته‌های شغلی...";
 
   return (
-    <div className="bg-[var(--color-list-backgnd)] rounded-md border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-[var(--color-list-backgnd2)] rounded-md border border-gray-100 shadow-sm overflow-hidden">
       <button
         onClick={() => {
           setExpandedCategory(null);
@@ -98,8 +98,8 @@ export default function CategorySidebar({
           onSelectSubCategory(null, null);
         }}
         className={`w-full flex items-center justify-between px-4 py-3 transition-all duration-200 border-b border-gray-100 cursor-pointer group text-right ${selectedCategoryIndex === null
-          ? "bg-gray-200 text-gray-900 border-r-3 border-r-gray-500 font-bold"
-          : "bg-gray-100 text-gray-700 hover:bg-list-title hover:text-gray-900 border-r-3 border-r-transparent"
+          ? "bg-list-title-bej3 text-gray-900 border-r-3 border-r-gray-500 font-bold"
+          : "bg-list-title-bej2 text-gray-700 hover:bg-list-title-bej1 hover:text-gray-900 border-r-3 border-r-transparent"
           }`}
       >
         <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export default function CategorySidebar({
       </button>
 
       {/* Search */}
-      <div className="px-3 py-1.5 border-b border-gray-50 bg-list-backgnd">
+      <div className="px-3 py-1.5 border-b border-gray-50 bg-2">
         <div className="relative">
           <Search
             size={16}
@@ -145,7 +145,7 @@ export default function CategorySidebar({
                   <button
                     onClick={() => handleCategoryClick(category.originalIndex)}
                     className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium transition-all duration-200 border-b border-gray-50 ${isSelected
-                      ? "bg-gray-200 text-primary border-r-3 border-r-primary"
+                      ? "bg-list-title-bej3 text-primary border-r-3 border-r-primary"
                       : "text-gray-700 hover:bg-list-title hover:text-gray-900"
                       }`}
                   >
@@ -197,7 +197,7 @@ export default function CategorySidebar({
       </div>
 
       {/* Global Jobs/Ads Search - only visible on desktop (lg) */}
-      <div className="hidden lg:block p-2 border-t border-gray-100 bg-white">
+      <div className="hidden lg:block p-2 border-t border-gray-100 bg-list-title-bej1">
         <form onSubmit={handleGlobalSearchSubmit} className="relative">
           <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -205,7 +205,7 @@ export default function CategorySidebar({
             placeholder="جستجوی مشاغل و آگهی‌ها..."
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
-            className="w-full pr-9 pl-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-gray-400 transition-all text-right"
+            className="w-full pr-9 pl-3 py-2 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-gray-400 transition-all text-right"
           />
         </form>
       </div>

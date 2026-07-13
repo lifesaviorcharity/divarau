@@ -369,8 +369,8 @@ function JobsContent() {
                     key={tab.key}
                     onClick={() => setActiveAdTab(tab.key)}
                     className={`flex-1 py-2.5 text-xs md:text-sm font-medium rounded-t-md transition-all duration-100 ${activeAdTab === tab.key
-                      ? "bg-white text-primary border-t-1 border-primary"
-                      : "text-gray-500 bg-gray-100 hover:text-primary hover:bg-gray-50"
+                      ? "bg-white border-t-1 border-primary"
+                      : "text-gray-500 bg-gray-100 hover:font-bold hover:bg-gray-50"
                       }`}
                   >
                     {tab.label}
