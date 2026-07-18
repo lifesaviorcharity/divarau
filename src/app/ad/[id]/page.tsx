@@ -16,7 +16,6 @@ export default function AdDetailPage() {
   const { data: session } = useSession();
   const [ad, setAd] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showContact, setShowContact] = useState(false);
 
   useEffect(() => {
     if (!params.id) return;
@@ -93,34 +92,10 @@ export default function AdDetailPage() {
             </span>
           </div>
 
-          {/* Contact Button */}
-          <button
-            onClick={() => isFinal && setShowContact(!showContact)}
-            disabled={!isFinal}
-            className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${!isFinal
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : showContact
-                  ? "bg-primary-dark text-white shadow-inner scale-[0.98]"
-                  : "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl"
-              }`}
-          >
-            {isFinal ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}
-          </button>
 
-          {/* Contact Details */}
-          {showContact && isFinal && (
-            <div className="border border-gray-100 rounded-xl p-5 mb-6 space-y-4 animate-scale-in bg-gray-50/50">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-700">شماره تماس:</span>
-                <a href={`tel:${ad.user?.mobile || "نامشخص"}`} className="text-sm text-primary font-medium dir-ltr">
-                  {ad.user?.mobile || "نامشخص"}
-                </a>
-              </div>
-            </div>
-          )}
 
           {/* Description */}
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-200 pt-4">
             <h3 className="text-sm font-bold text-gray-800 mb-2">توضیحات:</h3>
             <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{ad.description}</p>
           </div>

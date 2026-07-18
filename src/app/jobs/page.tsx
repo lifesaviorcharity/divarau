@@ -32,14 +32,13 @@ function JobsContent() {
 
   const categoryParam = searchParams.get("category");
   const searchQuery = searchParams.get("q") || "";
+  const subCategoryParam = searchParams.get("sub");
   const parsedCategory = categoryParam ? parseInt(categoryParam, 10) : null;
-  const initialCategoryIndex =
+  const selectedCategoryIndex =
     parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length
       ? parsedCategory
       : null;
-
-  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number | null>(initialCategoryIndex);
-  const [selectedSubCategorySlug, setSelectedSubCategorySlug] = useState<string | null>(null);
+  const selectedSubCategorySlug = subCategoryParam;
   const [activeAdTab, setActiveAdTab] = useState<"commercial" | "employment" | "job_seeker">("commercial");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
@@ -133,14 +132,7 @@ function JobsContent() {
     }
   }, [selectedCity, openCityModal]);
 
-  useEffect(() => {
-    const parsedCategory = categoryParam ? parseInt(categoryParam, 10) : null;
-    const initialCategoryIndex =
-      parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length
-        ? parsedCategory
-        : null;
-    setSelectedCategoryIndex(initialCategoryIndex);
-  }, [categoryParam]);
+
 
   // Load more jobs handler
   const loadMoreJobs = useCallback(async () => {
@@ -266,12 +258,28 @@ function JobsContent() {
                 selectedCategoryIndex={selectedCategoryIndex}
                 selectedSubCategorySlug={selectedSubCategorySlug}
                 onSelectCategory={(i) => {
-                  setSelectedCategoryIndex(i);
-                  setSelectedSubCategorySlug(null);
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (i !== null) {
+                    params.set("category", i.toString());
+                  } else {
+                    params.delete("category");
+                  }
+                  params.delete("sub");
+                  router.push(`/jobs?${params.toString()}`, { scroll: false });
                 }}
                 onSelectSubCategory={(catIdx, subSlug) => {
-                  setSelectedCategoryIndex(catIdx);
-                  setSelectedSubCategorySlug(subSlug);
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (catIdx !== null) {
+                    params.set("category", catIdx.toString());
+                  } else {
+                    params.delete("category");
+                  }
+                  if (subSlug !== null) {
+                    params.set("sub", subSlug);
+                  } else {
+                    params.delete("sub");
+                  }
+                  router.push(`/jobs?${params.toString()}`, { scroll: false });
                 }}
               />
             </div>
@@ -298,12 +306,28 @@ function JobsContent() {
                   selectedCategoryIndex={selectedCategoryIndex}
                   selectedSubCategorySlug={selectedSubCategorySlug}
                   onSelectCategory={(i) => {
-                    setSelectedCategoryIndex(i);
-                    setSelectedSubCategorySlug(null);
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (i !== null) {
+                      params.set("category", i.toString());
+                    } else {
+                      params.delete("category");
+                    }
+                    params.delete("sub");
+                    router.push(`/jobs?${params.toString()}`, { scroll: false });
                   }}
                   onSelectSubCategory={(catIdx, subSlug) => {
-                    setSelectedCategoryIndex(catIdx);
-                    setSelectedSubCategorySlug(subSlug);
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (catIdx !== null) {
+                      params.set("category", catIdx.toString());
+                    } else {
+                      params.delete("category");
+                    }
+                    if (subSlug !== null) {
+                      params.set("sub", subSlug);
+                    } else {
+                      params.delete("sub");
+                    }
+                    router.push(`/jobs?${params.toString()}`, { scroll: false });
                     setShowMobileSidebar(false);
                   }}
                 />
@@ -311,8 +335,7 @@ function JobsContent() {
             </div>
           )}
 
-          {/* Main Content */}
-          <div className="flex-1 min-w-0 space-y-6">
+          <div className="flex-1 min-w-0 flex flex-col space-y-6 min-h-[calc(100vh-130px)]">
             {/* Jobs Section */}
             <section>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 min-h-[100px]">
@@ -361,7 +384,7 @@ function JobsContent() {
             </section>
 
             {/* Ads Section */}
-            <section>
+            <section className="mt-auto">
               {/* Tab Headers */}
               <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 border-t-0 border-b-0">
                 {adTabs.map((tab) => (

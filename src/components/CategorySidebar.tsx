@@ -33,6 +33,14 @@ export default function CategorySidebar({
     "category"
   );
 
+  useEffect(() => {
+    if (selectedCategoryIndex !== null) {
+      setExpandedCategory(selectedCategoryIndex);
+    } else {
+      setExpandedCategory(null);
+    }
+  }, [selectedCategoryIndex]);
+
   // Sync state with URL search param
   useEffect(() => {
     setGlobalSearch(qQuery);
@@ -90,114 +98,115 @@ export default function CategorySidebar({
       : "جستجو دسته‌های شغلی...";
 
   return (
-    <div className="bg-[var(--color-list-backgnd2)] rounded-md border border-gray-100 shadow-sm overflow-hidden">
-      <button
-        onClick={() => {
-          setExpandedCategory(null);
-          onSelectCategory(null);
-          onSelectSubCategory(null, null);
-        }}
-        className={`w-full flex items-center justify-between px-4 py-3 transition-all duration-200 border-b border-gray-100 cursor-pointer group text-right ${selectedCategoryIndex === null
-          ? "bg-list-title-bej3 text-gray-900 border-r-3 border-r-gray-500 font-bold"
-          : "bg-list-title-bej2 text-gray-700 hover:bg-list-title-bej1 hover:text-gray-900 border-r-3 border-r-transparent"
-          }`}
-      >
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold">
-            همه گروه‌های شغلی
-          </h3>
-        </div>
-      </button>
-
-      {/* Search */}
-      <div className="px-3 py-1.5 border-b border-gray-50 bg-2">
-        <div className="relative">
-          <Search
-            size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pr-9 pl-3 py-2 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all"
-          />
-        </div>
-      </div>
-
-      {/* Category List */}
-      <div className="max-h-[calc(100vh-250px)] overflow-y-auto">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-10">
-            <Loader2 className="animate-spin text-primary" size={24} />
+    <div className="space-y-3">
+      <div className="bg-[var(--color-list-backgnd2)] rounded-md border border-gray-100 shadow-sm overflow-hidden">
+        <button
+          onClick={() => {
+            setExpandedCategory(null);
+            onSelectSubCategory(null, null);
+          }}
+          className={`w-full flex items-center justify-between px-4 py-2.5 transition-all duration-200 border-b border-gray-100 cursor-pointer group text-right ${selectedCategoryIndex === null
+            ? "bg-list-title-bej3 text-gray-900 border-r-3 border-r-gray-500 font-bold"
+            : "bg-list-title-bej2 text-gray-700 hover:bg-list-title-bej1 hover:text-gray-900 border-r-3 border-r-transparent"
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold">
+              همه گروه‌های شغلی
+            </h3>
           </div>
-        ) : (
-          <>
+        </button>
 
-            {filteredCategories.map((category) => {
-              const isExpanded = expandedCategory === category.originalIndex;
-              const isSelected = selectedCategoryIndex === category.originalIndex;
+        {/* Search */}
+        <div className="px-3 py-1.5 border-b border-gray-50 bg-2">
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pr-9 pl-3 py-2 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all"
+            />
+          </div>
+        </div>
 
-              return (
-                <div key={category.originalIndex}>
-                  {/* Category Item */}
-                  <button
-                    onClick={() => handleCategoryClick(category.originalIndex)}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium transition-all duration-200 border-b border-gray-50 ${isSelected
-                      ? "bg-list-title-bej3 text-primary border-r-3 border-r-primary"
-                      : "text-gray-700 hover:bg-list-title hover:text-gray-900"
-                      }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-lg">{category.icon}</span>
-                      <span className="text-xs md:text-sm">{category.name}</span>
-                    </span>
-                    {category.subCategories.length > 0 && (
-                      <ChevronDown
-                        size={14}
-                        className={`transition-transform duration-200 text-gray-400 ${isExpanded ? "rotate-180" : ""
-                          }`}
-                      />
+        {/* Category List */}
+        <div className="max-h-[calc(100vh-180px)] overflow-y-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="animate-spin text-primary" size={24} />
+            </div>
+          ) : (
+            <>
+
+              {filteredCategories.map((category) => {
+                const isExpanded = expandedCategory === category.originalIndex;
+                const isSelected = selectedCategoryIndex === category.originalIndex;
+
+                return (
+                  <div key={category.originalIndex}>
+                    {/* Category Item */}
+                    <button
+                      onClick={() => handleCategoryClick(category.originalIndex)}
+                      className={`w-full flex items-center justify-between px-4 py-1.5 text-sm font-medium transition-all duration-200 border-b border-gray-50 ${isSelected
+                        ? "bg-list-title-bej3 text-primary border-r-3 border-r-primary"
+                        : "text-gray-700 hover:bg-list-title hover:text-gray-900"
+                        }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg">{category.icon}</span>
+                        <span className="text-xs md:text-sm">{category.name}</span>
+                      </span>
+                      {category.subCategories.length > 0 && (
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform duration-200 text-gray-400 ${isExpanded ? "rotate-180" : ""
+                            }`}
+                        />
+                      )}
+                    </button>
+
+                    {/* SubCategories */}
+                    {isExpanded && category.subCategories.length > 0 && (
+                      <div className="bg-gray-50/50 animate-fade-in">
+                        {category.subCategories.map((sub) => {
+                          const isSubSelected =
+                            selectedSubCategorySlug === sub.slug;
+                          return (
+                            <button
+                              key={sub.slug}
+                              onClick={() =>
+                                handleSubCategoryClick(
+                                  category.originalIndex,
+                                  sub.slug
+                                )
+                              }
+                              className={`w-full flex items-center gap-2 px-8 py-2 text-xs transition-all duration-150 ${isSubSelected
+                                ? "bg-list-title text-gray-900 font-semibold"
+                                : "text-gray-600 hover:bg-gray-100 hover:font-bold"
+                                }`}
+                            >
+                              {/* <ChevronLeft size={12} /> */}
+                              {sub.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </button>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
 
-                  {/* SubCategories */}
-                  {isExpanded && category.subCategories.length > 0 && (
-                    <div className="bg-gray-50/50 animate-fade-in">
-                      {category.subCategories.map((sub) => {
-                        const isSubSelected =
-                          selectedSubCategorySlug === sub.slug;
-                        return (
-                          <button
-                            key={sub.slug}
-                            onClick={() =>
-                              handleSubCategoryClick(
-                                category.originalIndex,
-                                sub.slug
-                              )
-                            }
-                            className={`w-full flex items-center gap-2 px-8 py-2 text-xs transition-all duration-150 ${isSubSelected
-                              ? "bg-list-title text-gray-900 font-semibold"
-                              : "text-gray-600 hover:bg-gray-100 hover:font-bold"
-                              }`}
-                          >
-                            {/* <ChevronLeft size={12} /> */}
-                            {sub.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </>
-        )}
       </div>
-
       {/* Global Jobs/Ads Search - only visible on desktop (lg) */}
-      <div className="hidden lg:block p-2 border-t border-gray-100 bg-list-title-bej1">
+      <div className="hidden lg:block p-2 bg-[var(--color-list-backgnd2)] rounded-md border border-gray-100 shadow-sm">
         <form onSubmit={handleGlobalSearchSubmit} className="relative">
           <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input

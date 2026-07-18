@@ -159,7 +159,7 @@ export default function RegisterJobPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
-      <div className="w-full lg:w-[80%] mx-auto px-4 sm:px-6">
+      <div className="w-full lg:w-[95%] mx-auto px-4 sm:px-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
           <a href="/" className="hover:text-primary">خانه</a>
@@ -185,10 +185,10 @@ export default function RegisterJobPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Image Upload Section (Left in RTL means order-2) */}
           <div className="lg:col-span-1 order-2 lg:order-2">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-24">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               {/* Main Image Preview */}
               <div className="aspect-square bg-gray-100 rounded-xl mb-4 flex items-center justify-center overflow-hidden relative">
                 {images.length > 0 ? (
@@ -309,7 +309,7 @@ export default function RegisterJobPage() {
           </div>
 
           {/* Form Section (Right in RTL means order-1) */}
-          <div className="lg:col-span-2 order-1 lg:order-1">
+          <div className="lg:col-span-1 order-1 lg:order-1">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h2 className="text-xl font-black text-primary mb-6">فرم تعریف شغل جدید</h2>
 
