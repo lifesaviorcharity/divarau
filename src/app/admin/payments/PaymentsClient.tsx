@@ -31,11 +31,46 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: a
     }
   };
 
+  const handleExportExcel = () => {
+    if (filteredPayments.length === 0) {
+      alert("هیچ داده‌ای برای خروجی وجود ندارد.");
+      return;
+    }
+
+    const headers = ["شناسه", "کاربر", "بابت", "مبلغ ($)", "روش پرداخت", "شماره مرجع", "وضعیت", "تاریخ"];
+    
+    const rows = filteredPayments.map((p) => [
+      p.id,
+      `"${(p.user || '').replace(/"/g, '""')}"`,
+      `"${(p.item || '').replace(/"/g, '""')}"`,
+      p.amount,
+      p.method === "PAYPAL" ? "PayPal" : "دستی",
+      `"${(p.refId || '').replace(/"/g, '""')}"`,
+      `"${getStatusInfo(p.status).label}"`,
+      `"${toJalali(new Date(p.createdAt))}"`,
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `payments-report-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">مدیریت پرداخت‌ها</h1>
-        <button className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors shadow-md">
+        <button
+          onClick={handleExportExcel}
+          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors shadow-md cursor-pointer"
+          title="دانلود خروجی اکسل (CSV)"
+        >
           <Download size={16} />
           خروجی Excel
         </button>
