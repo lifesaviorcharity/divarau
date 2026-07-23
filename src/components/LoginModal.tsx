@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Phone, Shield, Loader2, X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { formatPersianNumber } from "@/lib/utils";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -14,6 +15,18 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
+  const [sessionDuration, setSessionDuration] = useState("30");
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.sessionDuration) {
+          setSessionDuration(data.sessionDuration);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -165,6 +178,14 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
             >
               {isLoading ? <Loader2 size={18} className="animate-spin mx-auto" /> : "ورود / ثبت‌نام سریع"}
             </button>
+
+            {/* Trust info */}
+            <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-xl mt-2">
+              <Shield size={14} className="text-blue-500 mt-0.5 shrink-0" />
+              <p className="text-[11px] text-blue-600 leading-5">
+                پس از ورود به مدت {formatPersianNumber(sessionDuration)} روز نیازی به دریافت مجدد کد تأیید نخواهید داشت.
+              </p>
+            </div>
           </div>
         )}
 

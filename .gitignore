@@ -41,7 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Ignore operational and admin files
-src/app/admin/
-src/app/api/admin/
-src/app/api/cron/
+#src/app/admin/
+#src/app/api/admin/
+#src/app/api/cron/
 twilio_token.txt
