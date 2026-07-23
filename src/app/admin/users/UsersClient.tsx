@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Eye, CheckCircle, XCircle, Trash2, Shield, UserCheck, X, Briefcase, FileText, RefreshCw } from "lucide-react";
 import { toJalali } from "@/lib/utils";
 
@@ -9,6 +9,10 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
   const [users, setUsers] = useState(initialUsers);
   const [viewUser, setViewUser] = useState<any | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
 
   const filteredUsers = users.filter((u) =>
     u.mobile.includes(searchTerm) || (u.username && u.username.includes(searchTerm))

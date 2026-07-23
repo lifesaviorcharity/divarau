@@ -1,6 +1,9 @@
 import prisma from "@/lib/prisma";
 import MessagesClient from "./MessagesClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminMessagesPage() {
   const tickets = await prisma.ticket.findMany({
     include: {

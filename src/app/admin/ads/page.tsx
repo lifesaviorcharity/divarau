@@ -1,6 +1,9 @@
 import prisma from "@/lib/prisma";
 import AdsClient from "./AdsClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminAdsPage() {
   const ads = await prisma.ad.findMany({
     include: {

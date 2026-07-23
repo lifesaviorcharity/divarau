@@ -1,6 +1,9 @@
 import prisma from "@/lib/prisma";
 import BannersClient from "./BannersClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminBannersPage() {
   const banners = await prisma.banner.findMany({
     orderBy: { createdAt: 'desc' }

@@ -64,6 +64,18 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return url;
+      try {
+        const parsed = new URL(url);
+        if (typeof window !== "undefined") {
+          if (parsed.origin === window.location.origin) return url;
+        }
+        return parsed.pathname + parsed.search + parsed.hash;
+      } catch {
+        return "/";
+      }
+    },
     async jwt({ token, user, trigger, session }) {
       if (trigger === "update" && session?.name) {
         token.name = session.name;

@@ -234,7 +234,10 @@ export default function Header() {
                   </Link>
                   {pathname.startsWith("/profile") && (
                     <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                      onClick={async () => {
+                        await signOut({ redirect: false });
+                        window.location.href = "/";
+                      }}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                       title="خروج"
                     >

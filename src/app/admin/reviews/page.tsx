@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import ReviewsClient from "./ReviewsClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminReviewsPage() {
   const session = await getServerSession(authOptions);
 

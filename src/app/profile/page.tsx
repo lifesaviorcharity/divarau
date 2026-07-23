@@ -214,7 +214,10 @@ export default function ProfilePage() {
             </div>
           </div>
           <button 
-            onClick={() => signOut({ callbackUrl: '/' })}
+            onClick={async () => {
+              await signOut({ redirect: false });
+              window.location.href = "/";
+            }}
             className="flex items-center gap-1.5 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors"
           >
             <LogOut size={16} />

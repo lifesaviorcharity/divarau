@@ -1,6 +1,9 @@
 import prisma from "@/lib/prisma";
 import PaymentsClient from "./PaymentsClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminPaymentsPage() {
   const payments = await prisma.payment.findMany({
     include: {
