@@ -44,11 +44,15 @@ export default function AdminReportsPage() {
 
   const maxChart = data?.chartData ? Math.max(1, ...data.chartData.map((d) => d.jobs), ...data.chartData.map((d) => d.ads)) : 1;
 
+  const handleExportPDF = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">گزارش‌ها و آمار</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 print:hidden">
           <div className="flex items-center bg-gray-100 rounded-xl p-0.5">
             {[
               { key: "week" as const, label: "هفته" },
@@ -63,9 +67,13 @@ export default function AdminReportsPage() {
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors shadow-md">
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors shadow-md cursor-pointer"
+            title="خروجی PDF / چاپ"
+          >
             <Download size={14} />
-            PDF
+            خروجی PDF
           </button>
         </div>
       </div>
@@ -98,41 +106,90 @@ export default function AdminReportsPage() {
       ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Chart (Bar visualization) */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Calendar size={16} className="text-primary" />
-            روند ماهانه ثبت مشاغل و آگهی‌ها
-          </h3>
-          <div className="space-y-3 min-h-[150px]">
-            {loading ? (
-              <div className="flex justify-center items-center h-full pt-10"><Loader2 className="animate-spin text-primary" size={24} /></div>
-            ) : data?.chartData.map((d) => (
-              <div key={d.label} className="flex items-center gap-3">
-                <span className="text-[10px] font-semibold text-gray-500 w-16 text-right">{d.label}</span>
-                <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 py-1 border-r-2 border-gray-100 pr-2">
-                  <div className="h-5 bg-primary rounded-l-lg transition-all duration-500 flex items-center justify-end px-1.5 overflow-hidden"
-                    style={{ width: `${Math.max(3, (d.jobs / maxChart) * 90)}%` }}>
-                    {d.jobs > 0 && <span className="text-[9px] text-white font-bold">{d.jobs}</span>}
-                  </div>
-                  <div className="h-5 bg-blue-500 rounded-l-lg transition-all duration-500 flex items-center justify-end px-1.5 overflow-hidden"
-                    style={{ width: `${Math.max(3, (d.ads / maxChart) * 90)}%` }}>
-                    {d.ads > 0 && <span className="text-[9px] text-white font-bold">{d.ads}</span>}
-                  </div>
-                </div>
+        {/* Monthly Chart (Stacked Vertical Bar Visualization) */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Calendar size={16} className="text-primary" />
+              روند ثبت مشاغل و آگهی‌ها
+            </h3>
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-primary shrink-0" />
+                <span className="text-[11px] font-medium text-gray-600">مشاغل</span>
               </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100">
-            <div className="flex items-center gap-1.5">
-              <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, backgroundColor: '#c0392b', flexShrink: 0 }} />
-              <span className="text-[11px] text-gray-500">مشاغل</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, backgroundColor: '#3b82f6', flexShrink: 0 }} />
-              <span className="text-[11px] text-gray-500">آگهی‌ها</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-blue-500 shrink-0" />
+                <span className="text-[11px] font-medium text-gray-600">آگهی‌ها</span>
+              </div>
             </div>
           </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-48">
+              <Loader2 className="animate-spin text-primary" size={24} />
+            </div>
+          ) : data?.chartData && data.chartData.length > 0 ? (
+            <div className="space-y-2">
+              {/* Stacked Vertical Chart Bars */}
+              <div className="h-44 flex items-end justify-between gap-1.5 border-b border-gray-200 pb-1 px-1 pt-6">
+                {data.chartData.map((d) => {
+                  const total = d.jobs + d.ads;
+                  const maxTotal = Math.max(1, ...data.chartData.map((item) => item.jobs + item.ads));
+                  const barHeight = Math.max(4, (total / maxTotal) * 100);
+
+                  return (
+                    <div key={d.label} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                      {/* Hover Tooltip */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-11 z-20 bg-gray-900 text-white text-[10px] py-1 px-2.5 rounded-lg shadow-xl pointer-events-none whitespace-nowrap flex flex-col items-center gap-0.5">
+                        <span className="font-bold text-amber-300">{d.label}</span>
+                        <span>مشاغل: {d.jobs} | آگهی‌ها: {d.ads}</span>
+                      </div>
+
+                      {/* Total count badge */}
+                      {total > 0 && (
+                        <span className="text-[9px] font-bold text-gray-500 mb-1 group-hover:text-primary transition-colors">
+                          {total}
+                        </span>
+                      )}
+
+                      {/* Stacked Bar */}
+                      <div
+                        className="w-full max-w-[26px] bg-gray-100 rounded-t-lg overflow-hidden flex flex-col justify-end transition-all duration-500 group-hover:ring-2 group-hover:ring-primary/20"
+                        style={{ height: `${total > 0 ? barHeight : 2}%` }}
+                      >
+                        {/* Ads segment (top) */}
+                        {d.ads > 0 && (
+                          <div
+                            className="w-full bg-blue-500 transition-all duration-500"
+                            style={{ height: `${(d.ads / total) * 100}%` }}
+                          />
+                        )}
+                        {/* Jobs segment (bottom) */}
+                        {d.jobs > 0 && (
+                          <div
+                            className="w-full bg-primary transition-all duration-500"
+                            style={{ height: `${(d.jobs / total) * 100}%` }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* X-Axis Labels */}
+              <div className="flex justify-between items-center gap-1.5 px-1 text-[10px] font-semibold text-gray-500">
+                {data.chartData.map((d) => (
+                  <span key={d.label} className="flex-1 text-center truncate">
+                    {d.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 text-center py-12">اطلاعاتی یافت نشد</p>
+          )}
         </div>
 
         {/* Category Stats */}

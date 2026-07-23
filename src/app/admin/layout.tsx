@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="flex items-start min-h-screen bg-gray-50">
       {/* Desktop Sidebar - always visible on lg+ */}
       <aside
-        className="hidden lg:flex shrink-0"
+        className="hidden lg:flex shrink-0 print:hidden"
         style={{
           position: 'sticky',
           top: 0,
@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Mobile Sidebar Overlay - only on mobile */}
       {isMobileMenuOpen && (
         <div
-          className="lg:hidden"
+          className="lg:hidden print:hidden"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
           onClick={() => setIsMobileMenuOpen(false)}
         >
@@ -167,7 +167,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-30">
+        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-30 print:hidden">
           <div className="flex items-center gap-3">
             <button
               className="lg:hidden p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg"

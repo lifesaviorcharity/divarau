@@ -137,44 +137,44 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
 
       {/* Bulk Delete Section for Approved Tab */}
       {activeTab === "approved" && (
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex flex-col md:flex-row gap-3 items-end md:items-center">
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-red-800 mb-1">حذف گروهی نظرات تایید شده بر اساس:</label>
-            <div className="flex gap-2">
-              <select 
-                value={bulkFilterType} 
-                onChange={(e) => { setBulkFilterType(e.target.value as any); setBulkFilterValue(""); }}
-                className="px-3 py-2 text-sm bg-white border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
-              >
-                <option value="category">گروه شغلی</option>
-                <option value="subCategory">دسته شغلی</option>
-                <option value="job">عنوان شغلی</option>
-              </select>
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
+          <label className="block text-xs font-semibold text-red-800 mb-1.5">حذف گروهی نظرات تایید شده بر اساس:</label>
+          <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+            <select 
+              value={bulkFilterType} 
+              onChange={(e) => { setBulkFilterType(e.target.value as any); setBulkFilterValue(""); }}
+              className="px-3 py-2 text-sm bg-white border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
+            >
+              <option value="category">گروه شغلی</option>
+              <option value="subCategory">دسته شغلی</option>
+              <option value="job">عنوان شغلی</option>
+            </select>
 
-              <select
-                value={bulkFilterValue}
-                onChange={(e) => setBulkFilterValue(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-white border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
-              >
-                <option value="">-- انتخاب کنید --</option>
-                {bulkFilterType === "category" && categories.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-                {bulkFilterType === "subCategory" && subCategories.map((s: any) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-                {bulkFilterType === "job" && jobs.map((j: any) => (
-                  <option key={j.id} value={j.id}>{j.name}</option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={bulkFilterValue}
+              onChange={(e) => setBulkFilterValue(e.target.value)}
+              className="flex-1 px-3 py-2 text-sm bg-white border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
+            >
+              <option value="">-- انتخاب کنید --</option>
+              {bulkFilterType === "category" && categories.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+              {bulkFilterType === "subCategory" && subCategories.map((s: any) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+              {bulkFilterType === "job" && jobs.map((j: any) => (
+                <option key={j.id} value={j.id}>{j.name}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleBulkDelete}
+              className="px-5 py-2 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors shrink-0 flex items-center justify-center gap-1.5"
+            >
+              <Trash2 size={16} />
+              حذف گروهی
+            </button>
           </div>
-          <button
-            onClick={handleBulkDelete}
-            className="px-6 py-2 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors"
-          >
-            حذف گروهی
-          </button>
         </div>
       )}
 

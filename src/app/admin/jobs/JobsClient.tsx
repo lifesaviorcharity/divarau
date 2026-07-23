@@ -136,9 +136,9 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">کاربر</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">شهر</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">دسته</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">وضعیت</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">تاریخ</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500">عملیات</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">وضعیت</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">تاریخ</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">عملیات</th>
               </tr>
             </thead>
             <tbody>
@@ -149,8 +149,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   <td className="px-4 py-3 text-gray-600">{job.user}</td>
                   <td className="px-4 py-3 text-gray-600">{job.city}</td>
                   <td className="px-4 py-3 text-gray-600">{job.category}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-[10px] font-semibold rounded-lg ${getStatusInfo(job.status).color}`}>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-[10px] font-semibold rounded-lg whitespace-nowrap inline-block ${getStatusInfo(job.status).color}`}>
                       {getStatusInfo(job.status).label}
                     </span>
                   </td>

@@ -205,10 +205,10 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">عنوان</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">کاربر</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">شهر</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">نوع</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">وضعیت</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">تاریخ</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500">عملیات</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">نوع</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">وضعیت</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">تاریخ</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">عملیات</th>
               </tr>
             </thead>
             <tbody>
@@ -218,11 +218,11 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
                   <td className="px-4 py-3 font-semibold text-gray-800">{ad.title}</td>
                   <td className="px-4 py-3 text-gray-600">{ad.user}</td>
                   <td className="px-4 py-3 text-gray-600">{ad.city}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-[10px] font-semibold rounded-lg ${getAdTypeInfo(ad.type).color}`}>{getAdTypeInfo(ad.type).label}</span>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-[10px] font-semibold rounded-lg whitespace-nowrap inline-block ${getAdTypeInfo(ad.type).color}`}>{getAdTypeInfo(ad.type).label}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-[10px] font-semibold rounded-lg ${getStatusInfo(ad).color}`}>{getStatusInfo(ad).label}</span>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-[10px] font-semibold rounded-lg whitespace-nowrap inline-block ${getStatusInfo(ad).color}`}>{getStatusInfo(ad).label}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{toJalali(new Date(ad.createdAt))}</td>
                   <td className="px-4 py-3">
