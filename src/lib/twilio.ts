@@ -2,6 +2,13 @@ import twilio from "twilio";
 
 let client: twilio.Twilio | null = null;
 
+function isBypassTwilio(): boolean {
+  const envVal = process.env.USE_REAL_OTP?.trim().toLowerCase();
+  if (envVal === "false" || envVal === "0" || envVal === "off") return true;
+  if (envVal === "true" || envVal === "1" || envVal === "on") return false;
+  return process.env.NODE_ENV === "development";
+}
+
 function getTwilioClient() {
   if (!client) {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -26,9 +33,9 @@ export type VerifyResult = {
 export async function sendVerificationCode(
   mobile: string
 ): Promise<VerifyResult> {
-  // Bypass Twilio in development environment unless USE_REAL_OTP is set
-  if (process.env.NODE_ENV === "development" && process.env.USE_REAL_OTP !== "true") {
-    console.log(`[DEV BYPASS] Mock OTP sent to ${mobile}. Use 123456 to login.`);
+  // Bypass Twilio if USE_REAL_OTP is false or in development by default
+  if (isBypassTwilio()) {
+    console.log(`[OTP BYPASS] Mock OTP sent to ${mobile}. Use 123456 to login.`);
     return { success: true };
   }
 
@@ -103,9 +110,9 @@ export async function checkVerificationCode(
   mobile: string,
   code: string
 ): Promise<VerifyResult> {
-  // Bypass Twilio in development environment unless USE_REAL_OTP is set
-  if (process.env.NODE_ENV === "development" && process.env.USE_REAL_OTP !== "true") {
-    console.log(`[DEV BYPASS] Verifying mock OTP ${code} for ${mobile}`);
+  // Bypass Twilio if USE_REAL_OTP is false or in development by default
+  if (isBypassTwilio()) {
+    console.log(`[OTP BYPASS] Verifying mock OTP ${code} for ${mobile}`);
     if (code === "123456") return { success: true };
     return { success: false, error: "کد تأیید نامعتبر است (برای محیط توسعه از 123456 استفاده کنید)." };
   }
@@ -163,8 +170,8 @@ export async function checkVerificationCode(
  * Send a custom SMS message.
  */
 export async function sendMessage(mobile: string, body: string): Promise<boolean> {
-  if (process.env.NODE_ENV === "development" && process.env.USE_REAL_OTP !== "true") {
-    console.log(`[DEV BYPASS] SMS to ${mobile}:\n${body}`);
+  if (isBypassTwilio()) {
+    console.log(`[SMS BYPASS] Message to ${mobile}:\n${body}`);
     return true;
   }
 
