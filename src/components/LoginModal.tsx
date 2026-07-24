@@ -46,7 +46,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   }, [countdown]);
 
   const handleSendOTP = useCallback(async () => {
-    if (!mobile || mobile.replace(/\D/g, "").length < 10) {
+    if (!mobile || mobile.replace(/\D/g, "").length < 8) {
       setError("لطفاً شماره موبایل معتبر وارد کنید");
       return;
     }
@@ -60,7 +60,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
         body: JSON.stringify({ mobile }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setStep("otp");
         setCountdown(RESEND_COOLDOWN_SECONDS);
@@ -68,8 +68,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       } else {
         setError(data.error || "خطایی رخ داد.");
       }
-    } catch {
-      setError("خطا در ارتباط با سرور");
+    } catch (err: any) {
+      setError(err?.message || "خطا در ارتباط با سرور");
     } finally {
       setIsLoading(false);
     }

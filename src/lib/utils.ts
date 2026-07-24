@@ -52,34 +52,49 @@ export function toEnglishDigits(str: string): string {
 }
 
 /**
- * Normalize an Australian mobile number to E.164 format for Twilio.
- * Accepts: 04XX XXX XXX, 04XXXXXXXX, +614XXXXXXXX, 614XXXXXXXX
- * Returns: +614XXXXXXXX
+ * Normalize a mobile number to E.164 format.
+ * Accepts: 04XX XXX XXX, 04XXXXXXXX, +614XXXXXXXX, 614XXXXXXXX, 09XXXXXXXXX, +98XXXXXXXXXX
+ * Returns: +614XXXXXXXX or +989XXXXXXXXX or +E164
  */
 export function normalizeAustralianMobile(phone: string): string {
   const englishPhone = toEnglishDigits(phone || "");
-  // Strip all non-digit characters except leading +
   let cleaned = englishPhone.replace(/[^\d+]/g, "");
 
-  // If starts with +61, already international
-  if (cleaned.startsWith("+61")) {
-    cleaned = cleaned.slice(3); // remove +61
-  } else if (cleaned.startsWith("61") && cleaned.length >= 11) {
-    cleaned = cleaned.slice(2); // remove 61
+  if (!cleaned) {
+    throw new Error("لطفاً شماره موبایل را وارد کنید.");
+  }
+
+  // If starts with +, maintain E.164 format
+  if (cleaned.startsWith("+")) {
+    if (cleaned.length >= 8) return cleaned;
+  }
+
+  if (cleaned.startsWith("61") && cleaned.length >= 11) {
+    cleaned = cleaned.slice(2);
   } else if (cleaned.startsWith("0")) {
-    cleaned = cleaned.slice(1); // remove leading 0
+    cleaned = cleaned.slice(1);
   }
 
-  // At this point we should have 9 digits starting with 4
-  if (!/^4\d{8}$/.test(cleaned)) {
-    throw new Error("شماره موبایل استرالیایی نامعتبر است.");
+  // Australian mobile: 9 digits starting with 4 (e.g., 412345678)
+  if (/^4\d{8}$/.test(cleaned)) {
+    return `+61${cleaned}`;
   }
 
-  return `+61${cleaned}`;
+  // Iranian mobile: 10 digits starting with 9 (e.g., 9123456789)
+  if (/^9\d{9}$/.test(cleaned)) {
+    return `+98${cleaned}`;
+  }
+
+  // General international digit sequence (8 to 15 digits)
+  if (/^\d{8,15}$/.test(cleaned)) {
+    return `+${cleaned}`;
+  }
+
+  throw new Error("شماره موبایل نامعتبر است. لطفاً شماره معتبر وارد کنید.");
 }
 
 /**
- * Validate whether a string looks like a valid Australian mobile number.
+ * Validate whether a string looks like a valid mobile number.
  */
 export function isValidAustralianMobile(phone: string): boolean {
   try {

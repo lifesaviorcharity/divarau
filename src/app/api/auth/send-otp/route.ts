@@ -4,16 +4,17 @@ import { normalizeAustralianMobile, isValidAustralianMobile } from "@/lib/utils"
 
 export async function POST(request: Request) {
   try {
-    const { mobile } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const { mobile } = body;
 
     if (!mobile || !isValidAustralianMobile(mobile)) {
       return NextResponse.json(
-        { error: "لطفاً یک شماره موبایل استرالیایی معتبر وارد کنید." },
+        { error: "لطفاً یک شماره موبایل معتبر وارد کنید." },
         { status: 400 }
       );
     }
 
-    // Normalize to E.164 format for Twilio
+    // Normalize to E.164 format for Twilio / system
     const normalizedMobile = normalizeAustralianMobile(mobile);
 
     // Send verification via Twilio Verify
@@ -30,11 +31,11 @@ export async function POST(request: Request) {
       { error: result.error || "خطایی در ارسال کد تأیید رخ داد." },
       { status: 400 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Send OTP Error:", error);
     return NextResponse.json(
-      { error: "خطایی در ارسال کد تأیید رخ داد." },
-      { status: 500 }
+      { error: error?.message || "خطایی در ارسال کد تأیید رخ داد." },
+      { status: 400 }
     );
   }
 }
