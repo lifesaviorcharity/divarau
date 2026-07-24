@@ -121,9 +121,8 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
               <button
                 key={ticket.id}
                 onClick={() => setSelectedTicket(ticket)}
-                className={`w-full text-right bg-white rounded-xl border p-4 transition-all hover:shadow-md ${
-                  selectedTicket?.id === ticket.id ? "border-primary shadow-md" : "border-gray-100"
-                }`}
+                className={`w-full text-right bg-white rounded-xl border p-4 transition-all hover:shadow-md ${selectedTicket?.id === ticket.id ? "border-primary shadow-md" : "border-gray-100"
+                  }`}
               >
                 <div className="flex items-start justify-between mb-2">
                   <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${ticket.status === 'OPEN' ? 'bg-red-100 text-red-700' : ticket.status === 'CLOSED' ? 'bg-gray-100 text-gray-600' : 'bg-blue-100 text-blue-700'}`}>
@@ -168,11 +167,10 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
               <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto">
                 {(selectedTicket.messages || []).map((m: any, i: number) => (
                   <div key={i} className={`flex ${m.isAdmin ? "justify-start" : "justify-end"}`}>
-                    <div className={`rounded-2xl p-4 max-w-[80%] text-xs leading-relaxed ${
-                      m.isAdmin
-                        ? "bg-primary/10 rounded-tl-sm text-gray-800 border border-primary/20"
-                        : "bg-gray-100 rounded-tr-sm text-gray-800"
-                    }`}>
+                    <div className={`rounded-2xl p-4 max-w-[80%] text-xs leading-relaxed ${m.isAdmin
+                      ? "bg-blue-100 rounded-tl-sm text-gray-800 border border-gray-300"
+                      : "bg-gray-100 rounded-tr-sm text-gray-800 border border-gray-300"
+                      }`}>
                       <p className="whitespace-pre-wrap">{m.content}</p>
                       <p className="text-[10px] text-gray-400 mt-2 text-left">
                         {m.isAdmin ? "ادمین پشتیبانی" : selectedTicket.user} — {toJalali(new Date(m.createdAt))}
