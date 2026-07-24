@@ -3,35 +3,56 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request: Request) {
   try {
-    // 48 hours ago
-    const threshold = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const { searchParams } = new URL(request.url);
+    const authHeader = request.headers.get("authorization");
+    const secretParam = searchParams.get("secret");
+    const secret = process.env.CRON_SECRET;
 
-    // Find jobs that are APPROVED (تایید اولیه) but their approvedAt was more than 48 hours ago
-    const expiredJobs = await prisma.job.findMany({
+    if (secret && secretParam !== secret && authHeader !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const now = new Date();
+    const threshold48h = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    // 1. Mark active jobs that reached expiresAt as EXPIRED
+    const expiredByDate = await prisma.job.updateMany({
       where: {
-        status: "APPROVED",
-        approvedAt: {
-          lt: threshold
-        }
+        status: { in: ["FINAL", "PAID", "APPROVED"] },
+        expiresAt: { lt: now }
+      },
+      data: {
+        status: "EXPIRED"
       }
     });
 
-    if (expiredJobs.length > 0) {
-      const expiredJobIds = expiredJobs.map(job => job.id);
-      
-      // Delete or mark them as EXPIRED/REJECTED. Let's delete them as requested: "بصورت اتوماتیک توسط سیستم پاک می شود"
-      await prisma.job.deleteMany({
-        where: {
-          id: { in: expiredJobIds }
-        }
+    // 2. Delete initial APPROVED jobs that were never paid within 48 hours
+    const unpaidJobs = await prisma.job.findMany({
+      where: {
+        status: "APPROVED",
+        OR: [
+          { approvedAt: { lt: threshold48h } },
+          { approvedAt: null, createdAt: { lt: threshold48h } }
+        ]
+      }
+    });
+
+    let deletedUnpaidCount = 0;
+    if (unpaidJobs.length > 0) {
+      const unpaidJobIds = unpaidJobs.map(job => job.id);
+      const res = await prisma.job.deleteMany({
+        where: { id: { in: unpaidJobIds } }
       });
-      
-      console.log(`Cron: Deleted ${expiredJobs.length} expired APPROVED jobs.`);
+      deletedUnpaidCount = res.count;
     }
 
-    return NextResponse.json({ success: true, deletedCount: expiredJobs.length });
+    return NextResponse.json({
+      success: true,
+      expiredJobsCount: expiredByDate.count,
+      deletedUnpaidJobsCount: deletedUnpaidCount
+    });
   } catch (error) {
-    console.error("Cron Cleanup Error:", error);
-    return NextResponse.json({ error: "خطا در پاکسازی" }, { status: 500 });
+    console.error("Cron Jobs Cleanup Error:", error);
+    return NextResponse.json({ error: "خطا در پاکسازی مشاغل" }, { status: 500 });
   }
 }

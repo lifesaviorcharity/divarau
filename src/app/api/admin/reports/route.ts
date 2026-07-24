@@ -108,7 +108,37 @@ export async function GET(request: Request) {
       select: { createdAt: true, amount: true }
     });
 
-    // Bucket into 6 intervals depending on period
+const JALALI_MONTHS = [
+  "فروردین",
+  "اردیبهشت",
+  "خرداد",
+  "تیر",
+  "مرداد",
+  "شهریور",
+  "مهر",
+  "آبان",
+  "آذر",
+  "دی",
+  "بهمن",
+  "اسفند",
+];
+
+function getJalaliMonthIndex(date: Date): number {
+  try {
+    const formatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { month: "numeric" });
+    const formatted = formatter.format(date);
+    const englishDigits = formatted
+      .replace(/[۰-۹]/g, (d) => (d.charCodeAt(0) - 1776).toString())
+      .replace(/[٠-٩]/g, (d) => (d.charCodeAt(0) - 1632).toString());
+    const m = parseInt(englishDigits, 10);
+    if (!isNaN(m) && m >= 1 && m <= 12) {
+      return m - 1;
+    }
+  } catch (e) {}
+  return 0;
+}
+
+    // Bucket into intervals depending on period
     let buckets: any[] = [];
     if (period === "week") {
       // 7 days
@@ -119,15 +149,16 @@ export async function GET(request: Request) {
         buckets.push({ label, date: d.toISOString().split('T')[0], jobs: 0, ads: 0, revenue: 0 });
       }
     } else if (period === "year") {
-      // 12 months
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const label = new Intl.DateTimeFormat('fa-IR', { month: 'long' }).format(d);
-        buckets.push({ label, month: d.getMonth(), year: d.getFullYear(), jobs: 0, ads: 0, revenue: 0 });
-      }
+      // 12 Jalali months from Farvardin (0) to Esfand (11)
+      buckets = JALALI_MONTHS.map((label, idx) => ({
+        label,
+        jalaliIndex: idx,
+        jobs: 0,
+        ads: 0,
+        revenue: 0,
+      }));
     } else {
-      // Month: roughly 4 weeks (just split into 4 buckets or 30 days... let's do 4 weeks)
+      // Month: roughly 4 weeks
       for (let i = 3; i >= 0; i--) {
         buckets.push({ label: `هفته ${4 - i}`, weekIndex: i, jobs: 0, ads: 0, revenue: 0 });
       }
@@ -138,7 +169,7 @@ export async function GET(request: Request) {
         const dateStr = date.toISOString().split('T')[0];
         return buckets.findIndex(b => b.date === dateStr);
       } else if (period === "year") {
-        return buckets.findIndex(b => b.month === date.getMonth() && b.year === date.getFullYear());
+        return getJalaliMonthIndex(date);
       } else {
         // Month: week index based on how many days ago
         const daysAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));

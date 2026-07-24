@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BarChart3, TrendingUp, Users, Briefcase, FileText, CreditCard, MapPin, Calendar, Download, Loader2 } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Briefcase, FileText, CreditCard, MapPin, Calendar, Download, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ReportData {
   summary: {
@@ -23,6 +23,7 @@ export default function AdminReportsPage() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("month");
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAllZeroCities, setShowAllZeroCities] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,9 +61,8 @@ export default function AdminReportsPage() {
               { key: "year" as const, label: "سال" },
             ].map((p) => (
               <button key={p.key} onClick={() => setPeriod(p.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                  period === p.key ? "bg-white text-primary shadow-sm" : "text-gray-500"
-                }`}>
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${period === p.key ? "bg-white text-primary shadow-sm" : "text-gray-500"
+                  }`}>
                 {p.label}
               </button>
             ))}
@@ -130,7 +130,7 @@ export default function AdminReportsPage() {
               <Loader2 className="animate-spin text-primary" size={24} />
             </div>
           ) : data?.chartData && data.chartData.length > 0 ? (
-            <div className="space-y-2">
+            <div className={`space-y-2 ${period === "year" ? "mb-8" : "mb-5"}`} dir="ltr">
               {/* Stacked Vertical Chart Bars */}
               <div className="h-44 flex items-end justify-between gap-1.5 border-b border-gray-200 pb-1 px-1 pt-6">
                 {data.chartData.map((d) => {
@@ -173,18 +173,22 @@ export default function AdminReportsPage() {
                           />
                         )}
                       </div>
+
+                      {/* X-Axis Label (Tilted only for Yearly view) */}
+                      <div className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none ${period === "year" ? "-bottom-9" : "-bottom-7"}`}>
+                        <span
+                          className={`inline-block text-[10px] font-semibold text-gray-600 ${period === "year"
+                            ? "transform -rotate-[40deg] origin-center"
+                            : "text-center"
+                            }`}
+                          dir="rtl"
+                        >
+                          {d.label}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
-              </div>
-
-              {/* X-Axis Labels */}
-              <div className="flex justify-between items-center gap-1.5 px-1 text-[10px] font-semibold text-gray-500">
-                {data.chartData.map((d) => (
-                  <span key={d.label} className="flex-1 text-center truncate">
-                    {d.label}
-                  </span>
-                ))}
               </div>
             </div>
           ) : (
@@ -214,63 +218,142 @@ export default function AdminReportsPage() {
               </div>
             ))}
             {data?.categoryStats.length === 0 && !loading && (
-               <p className="text-xs text-gray-400 text-center py-10">اطلاعاتی یافت نشد</p>
+              <p className="text-xs text-gray-400 text-center py-10">اطلاعاتی یافت نشد</p>
             )}
           </div>
         </div>
       </div>
 
       {/* City Stats Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="px-5 py-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
             <MapPin size={16} className="text-green-600" />
             آمار به تفکیک شهر
           </h3>
+          {data?.cityStats && data.cityStats.length > 0 && (
+            <span className="text-xs text-gray-500 font-medium">
+              مجموع {data.cityStats.length} شهر
+            </span>
+          )}
         </div>
         <div style={{ overflowX: 'scroll', WebkitOverflowScrolling: 'touch' }}>
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">شهر</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">مشاغل</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">آگهی‌ها</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">کاربران</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500">سهم مشاغل</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">شهر</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">مشاغل</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">آگهی‌ها</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">کاربران</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">سهم مشاغل</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">سهم آگهی‌ها</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">سهم کل</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center">
+                  <td colSpan={7} className="py-12 text-center">
                     <Loader2 className="animate-spin text-green-600 mx-auto" size={24} />
                   </td>
                 </tr>
-              ) : data?.cityStats.map((city) => {
-                const totalJobs = data.cityStats.reduce((s, c) => s + c.jobs, 0);
-                const pct = totalJobs > 0 ? Math.round((city.jobs / totalJobs) * 100) : 0;
+              ) : (() => {
+                if (!data?.cityStats || data.cityStats.length === 0) {
+                  return (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-xs text-gray-400">اطلاعاتی یافت نشد</td>
+                    </tr>
+                  );
+                }
+
+                const totalJobsAll = data.cityStats.reduce((s, c) => s + c.jobs, 0);
+                const totalAdsAll = data.cityStats.reduce((s, c) => s + c.ads, 0);
+                const totalAll = totalJobsAll + totalAdsAll;
+
+                const activeCities = data.cityStats.filter((c) => c.jobs > 0 || c.ads > 0);
+                const zeroCities = data.cityStats.filter((c) => c.jobs === 0 && c.ads === 0);
+
+                // Show active cities plus first 0-activity city by default, or all if expanded
+                const visibleCities = showAllZeroCities
+                  ? data.cityStats
+                  : [...activeCities, ...zeroCities.slice(0, 1)];
+
+                const hiddenZeroCount = Math.max(0, zeroCities.length - 1);
+
                 return (
-                  <tr key={city.city} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-gray-800">{city.city}</td>
-                    <td className="px-4 py-3 text-gray-600">{city.jobs}</td>
-                    <td className="px-4 py-3 text-gray-600">{city.ads}</td>
-                    <td className="px-4 py-3 text-gray-600">{city.users > 0 ? city.users : '—'}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-gray-100 rounded-full h-2 overflow-hidden">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-xs text-gray-500">{pct}%</span>
-                      </div>
-                    </td>
-                  </tr>
+                  <>
+                    {visibleCities.map((city) => {
+                      const jobsPct = totalJobsAll > 0 ? Math.round((city.jobs / totalJobsAll) * 100) : 0;
+                      const adsPct = totalAdsAll > 0 ? Math.round((city.ads / totalAdsAll) * 100) : 0;
+                      const cityTotal = city.jobs + city.ads;
+                      const totalPct = totalAll > 0 ? Math.round((cityTotal / totalAll) * 100) : 0;
+                      const isZeroActivity = city.jobs === 0 && city.ads === 0;
+
+                      return (
+                        <tr key={city.city} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${isZeroActivity ? 'bg-gray-50/30' : ''}`}>
+                          <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">{city.city}</td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{city.jobs}</td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{city.ads}</td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{city.users > 0 ? city.users : '—'}</td>
+
+                          {/* سهم مشاغل */}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${jobsPct}%` }} />
+                              </div>
+                              <span className="text-xs text-gray-600 font-semibold">{jobsPct}%</span>
+                            </div>
+                          </td>
+
+                          {/* سهم آگهی‌ها */}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full transition-all duration-300" style={{ width: `${adsPct}%` }} />
+                              </div>
+                              <span className="text-xs text-gray-600 font-semibold">{adsPct}%</span>
+                            </div>
+                          </td>
+
+                          {/* سهم کل (مشاغل + آگهی‌ها) */}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full bg-indigo-600 rounded-full transition-all duration-300" style={{ width: `${totalPct}%` }} />
+                              </div>
+                              <span className="text-xs text-gray-600 font-semibold">{totalPct}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {hiddenZeroCount > 0 && (
+                      <tr className="bg-gray-50/80 border-b border-gray-100 print:hidden">
+                        <td colSpan={7} className="text-center py-3 px-4">
+                          <button
+                            onClick={() => setShowAllZeroCities(!showAllZeroCities)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-primary transition-colors cursor-pointer"
+                          >
+                            {showAllZeroCities ? (
+                              <>
+                                <ChevronUp size={14} />
+                                مخفی‌سازی شهرهای بدون فعالیت ({hiddenZeroCount} شهر)
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown size={14} />
+                                مشاهده {hiddenZeroCount} شهر دیگر بدون فعالیت (بدون آگهی و شغل)
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 );
-              })}
-              {data?.cityStats.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-xs text-gray-400">اطلاعاتی یافت نشد</td>
-                </tr>
-              )}
+              })()}
             </tbody>
           </table>
         </div>
