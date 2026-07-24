@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { runJobsCleanup } from "@/lib/cleanup";
 
 export async function GET(request: Request) {
   try {
@@ -12,45 +12,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const now = new Date();
-    const threshold48h = new Date(Date.now() - 48 * 60 * 60 * 1000);
-
-    // 1. Mark active jobs that reached expiresAt as EXPIRED
-    const expiredByDate = await prisma.job.updateMany({
-      where: {
-        status: { in: ["FINAL", "PAID", "APPROVED"] },
-        expiresAt: { lt: now }
-      },
-      data: {
-        status: "EXPIRED"
-      }
-    });
-
-    // 2. Delete initial APPROVED jobs that were never paid within 48 hours
-    const unpaidJobs = await prisma.job.findMany({
-      where: {
-        status: "APPROVED",
-        OR: [
-          { approvedAt: { lt: threshold48h } },
-          { approvedAt: null, createdAt: { lt: threshold48h } }
-        ]
-      }
-    });
-
-    let deletedUnpaidCount = 0;
-    if (unpaidJobs.length > 0) {
-      const unpaidJobIds = unpaidJobs.map(job => job.id);
-      const res = await prisma.job.deleteMany({
-        where: { id: { in: unpaidJobIds } }
-      });
-      deletedUnpaidCount = res.count;
-    }
-
-    return NextResponse.json({
-      success: true,
-      expiredJobsCount: expiredByDate.count,
-      deletedUnpaidJobsCount: deletedUnpaidCount
-    });
+    const result = await runJobsCleanup();
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Cron Jobs Cleanup Error:", error);
     return NextResponse.json({ error: "خطا در پاکسازی مشاغل" }, { status: 500 });

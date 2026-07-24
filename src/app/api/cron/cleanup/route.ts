@@ -1,21 +1,26 @@
 import { NextResponse } from "next/server";
+import { runJobsCleanup, runAdsCleanup } from "@/lib/cleanup";
 
 export async function GET(request: Request) {
   try {
-    const origin = new URL(request.url).origin;
+    const { searchParams } = new URL(request.url);
+    const authHeader = request.headers.get("authorization");
+    const secretParam = searchParams.get("secret");
+    const secret = process.env.CRON_SECRET;
 
-    const [jobsRes, adsRes] = await Promise.all([
-      fetch(`${origin}/api/cron/jobs-cleanup`, { headers: request.headers }),
-      fetch(`${origin}/api/cron/commercial-ads-cleanup`, { headers: request.headers })
+    if (secret && secretParam !== secret && authHeader !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const [jobsResult, adsResult] = await Promise.all([
+      runJobsCleanup(),
+      runAdsCleanup()
     ]);
-
-    const jobsData = await jobsRes.json();
-    const adsData = await adsRes.json();
 
     return NextResponse.json({
       success: true,
-      jobs: jobsData,
-      ads: adsData
+      jobs: jobsResult,
+      ads: adsResult
     });
   } catch (error) {
     console.error("Master Cron Cleanup Error:", error);
