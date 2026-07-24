@@ -121,7 +121,7 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
               <button
                 key={ticket.id}
                 onClick={() => setSelectedTicket(ticket)}
-                className={`w-full text-right bg-white rounded-xl border p-4 transition-all hover:shadow-md ${selectedTicket?.id === ticket.id ? "border-primary shadow-md" : "border-gray-100"
+                className={`w-full text-right bg-white rounded-xl border p-4 transition-all hover:shadow-md ${selectedTicket?.id === ticket.id ? "border-primary shadow-md" : "border-gray-200"
                   }`}
               >
                 <div className="flex items-start justify-between mb-2">
