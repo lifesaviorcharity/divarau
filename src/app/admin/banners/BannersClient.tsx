@@ -82,13 +82,13 @@ export default function BannersClient({ initialBanners }: { initialBanners: any[
         body: JSON.stringify(editBannerData)
       });
       if (res.ok) {
-        setBanners((prev) => prev.map((b) => b.id === editingBanner.id ? { 
-          ...b, 
-          ...editBannerData, 
-          status: editBannerData.isActive ? "ACTIVE" : "INACTIVE" 
+        setBanners((prev) => prev.map((b) => b.id === editingBanner.id ? {
+          ...b,
+          ...editBannerData,
+          status: editBannerData.isActive ? "ACTIVE" : "INACTIVE"
         } : b));
         setEditingBanner(null);
-        alert("بنر با موفقیت ویرایش شد.");
+        // alert("بنر با موفقیت ویرایش شد.");
       } else {
         alert("خطا در بروزرسانی.");
       }
@@ -315,8 +315,8 @@ export default function BannersClient({ initialBanners }: { initialBanners: any[
               {banners.map((banner, idx) => (
                 <tr key={banner.id} className={`border-b border-gray-50 transition-colors ${banner.status === "ACTIVE" ? "hover:bg-gray-50/50" : "bg-gray-50/30 opacity-60"}`}>
                   <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
-                  <td className="px-4 py-3">
-                    <div className="w-28 h-10 rounded-lg bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center overflow-hidden">
+                  <td className="px-4 py-1">
+                    <div className="w-20 h-15 rounded-lg bg-gradient-to-l from-primary/10 to-accent/10 flex items-center justify-center overflow-hidden">
                       {banner.imageUrl ? (
                         <img src={banner.imageUrl} alt="banner" className="w-full h-full object-cover" />
                       ) : (
