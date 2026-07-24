@@ -64,7 +64,7 @@ export default function JobEditClient({ job, categories, cities }: { job: any, c
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">شهر</label>
           <select name="cityId" defaultValue={job.cityId} required className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none bg-white">
-            {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {cities.map(c => <option key={c.id} value={c.id}>{c.name} {c.slug ? `(${c.slug})` : ""}</option>)}
           </select>
         </div>
         <div>

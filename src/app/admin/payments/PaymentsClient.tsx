@@ -87,6 +87,7 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: a
           <p className="text-2xl font-black text-amber-600">${totalPending.toFixed(2)}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <p className="text-xs text-gray-500 mb-1">تعداد کل تراکنش‌ها</p>
           <p className="text-2xl font-black text-gray-800">{initialPayments.length}</p>
         </div>
       </div>

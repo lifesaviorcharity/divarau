@@ -33,9 +33,13 @@ export default function CitySelector() {
       });
   }, []);
 
-  const filteredCities = (Array.isArray(cities) ? cities : []).filter((city) =>
-    city.name.includes(searchTerm)
-  );
+  const filteredCities = (Array.isArray(cities) ? cities : []).filter((city) => {
+    const term = searchTerm.toLowerCase().trim();
+    return (
+      city.name.toLowerCase().includes(term) ||
+      (city.slug && city.slug.toLowerCase().includes(term))
+    );
+  });
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -105,7 +109,12 @@ export default function CitySelector() {
                   >
                     <span className="flex items-center gap-2">
                       <MapPin size={14} />
-                      {city.name}
+                      <span>{city.name}</span>
+                      {city.slug && (
+                        <span className={`text-[11px] font-mono dir-ltr ${isSelected ? "text-white/80" : "text-gray-400"}`}>
+                          ({city.slug})
+                        </span>
+                      )}
                     </span>
                     {isSelected && <Check size={16} />}
                   </button>
