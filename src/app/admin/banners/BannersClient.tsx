@@ -173,7 +173,7 @@ export default function BannersClient({ initialBanners }: { initialBanners: any[
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">مدیریت بنرها</h1>
         <button onClick={() => { setShowAddForm(!showAddForm); setEditingBanner(null); }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md">
+          className="flex items-center gap-1.5 px-4 py-2 bg-secondary text-white text-sm font-bold rounded-xl hover:bg-secondary-dark transition-colors shadow-md">
           <Plus size={16} />
           افزودن بنر جدید
         </button>

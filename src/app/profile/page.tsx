@@ -30,15 +30,53 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>("jobs");
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketMessage, setTicketMessage] = useState("");
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
+  const [ticketError, setTicketError] = useState("");
+  const [ticketSuccess, setTicketSuccess] = useState("");
+  const [expandedTicketId, setExpandedTicketId] = useState<number | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Settings Form State
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const { update } = useSession();
+
+  const handleCreateTicket = async () => {
+    if (!ticketSubject.trim() || !ticketMessage.trim()) {
+      setTicketError("لطفاً موضوع و متن پیام را وارد کنید.");
+      return;
+    }
+    setIsSubmittingTicket(true);
+    setTicketError("");
+    setTicketSuccess("");
+
+    try {
+      const res = await fetch("/api/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: ticketSubject, message: ticketMessage })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTicketSubject("");
+        setTicketMessage("");
+        setTicketSuccess("تیکت پشتیبانی شما با موفقیت ثبت شد.");
+        setProfileData((prev: any) => ({
+          ...prev,
+          tickets: [data.ticket, ...(prev?.tickets || [])]
+        }));
+      } else {
+        setTicketError(data.error || "خطا در ثبت تیکت");
+      }
+    } catch {
+      setTicketError("خطا در ارتباط با سرور");
+    } finally {
+      setIsSubmittingTicket(false);
+    }
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -103,10 +141,10 @@ export default function ProfilePage() {
 
   const handleDeleteJob = async (jobId: number, status: string) => {
     const isPaid = status === "FINAL" || status === "PAID";
-    const msg = isPaid 
-      ? "مبلغ پرداخت شده قابل بازگشت نیست و آیا از حذف اطلاعات اطمینان دارید؟" 
+    const msg = isPaid
+      ? "مبلغ پرداخت شده قابل بازگشت نیست و آیا از حذف اطلاعات اطمینان دارید؟"
       : "آیا از حذف این شغل اطمینان دارید؟";
-    
+
     if (!confirm(msg)) return;
     try {
       const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
@@ -126,8 +164,8 @@ export default function ProfilePage() {
 
   const handleDeleteAd = async (adId: number, status: string) => {
     const isPaid = status === "FINAL" || status === "PAID";
-    const msg = isPaid 
-      ? "مبلغ پرداخت شده قابل بازگشت نیست و آیا از حذف اطلاعات اطمینان دارید؟" 
+    const msg = isPaid
+      ? "مبلغ پرداخت شده قابل بازگشت نیست و آیا از حذف اطلاعات اطمینان دارید؟"
       : "آیا از حذف این آگهی اطمینان دارید؟";
 
     if (!confirm(msg)) return;
@@ -160,7 +198,7 @@ export default function ProfilePage() {
     if (status === 'REJECTED' && item.adminNote && item.adminNote.startsWith('[NEEDS_EDIT]')) {
       return { label: 'نیاز به اصلاح', color: 'bg-orange-100 text-orange-700' };
     }
-    
+
     switch (status) {
       case 'FINAL': return { label: 'تایید نهایی', color: 'bg-green-100 text-green-700' };
       case 'APPROVED': return { label: 'تایید اولیه', color: 'bg-blue-100 text-blue-700' };
@@ -172,7 +210,7 @@ export default function ProfilePage() {
   };
 
   const getAdTypeLabel = (type: string) => {
-    switch(type) {
+    switch (type) {
       case 'EMPLOYMENT': return 'استخدام';
       case 'JOB_SEEKER': return 'جویای کار';
       case 'COMMERCIAL': return 'تجاری';
@@ -213,7 +251,7 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-500 text-left" dir="ltr">{session.user.mobile}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={async () => {
               await signOut({ redirect: false });
               window.location.href = "/";
@@ -231,18 +269,16 @@ export default function ProfilePage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all relative ${
-                activeTab === tab.key
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-gray-500 hover:text-primary hover:bg-gray-50"
-              }`}
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all relative ${activeTab === tab.key
+                ? "bg-secondary text-white shadow-sm"
+                : "text-gray-500 hover:text-primary hover:bg-gray-50"
+                }`}
             >
               {tab.icon}
               <span className="text-center leading-tight">{tab.label}</span>
               {tab.badge > 0 && (
-                <span className={`absolute -top-1 -left-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                  activeTab === tab.key ? "bg-white text-primary" : "bg-primary text-white"
-                }`}>
+                <span className={`absolute -top-1 -left-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${activeTab === tab.key ? "bg-white text-primary" : "bg-primary text-white"
+                  }`}>
                   {tab.badge}
                 </span>
               )}
@@ -261,37 +297,38 @@ export default function ProfilePage() {
                 profileData?.jobs?.map((job: any) => {
                   const statusInfo = getStatusInfo(job);
                   return (
-                  <div key={job.id} className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg shrink-0">🏢</div>
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-800">{job.title}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-gray-400">شهر: {job.city?.name}</span>
-                          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${statusInfo.color}`}>{statusInfo.label}</span>
+                    <div key={job.id} className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg shrink-0">🏢</div>
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-800">{job.title}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-gray-400">شهر: {job.city?.name}</span>
+                            <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${statusInfo.color}`}>{statusInfo.label}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => router.push(`/job/${job.id}`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="مشاهده">
-                        <Eye size={16} />
-                      </button>
-                      {(job.status === "FINAL" || job.status === "NEEDS_EDIT") && (
-                        <button onClick={() => router.push(`/job/${job.id}/edit`)} className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="ویرایش">
-                          <Edit size={16} />
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => router.push(`/job/${job.id}`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="مشاهده">
+                          <Eye size={16} />
                         </button>
-                      )}
-                      {job.status === "APPROVED" && (
-                        <button onClick={() => handlePayJob(job.id)} className="p-2 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-xs font-bold whitespace-nowrap" title="پرداخت">
-                          پرداخت
+                        {(job.status === "FINAL" || job.status === "NEEDS_EDIT") && (
+                          <button onClick={() => router.push(`/job/${job.id}/edit`)} className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="ویرایش">
+                            <Edit size={16} />
+                          </button>
+                        )}
+                        {job.status === "APPROVED" && (
+                          <button onClick={() => handlePayJob(job.id)} className="p-2 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-xs font-bold whitespace-nowrap" title="پرداخت">
+                            پرداخت
+                          </button>
+                        )}
+                        <button onClick={() => handleDeleteJob(job.id, job.status)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="حذف">
+                          <Trash2 size={16} />
                         </button>
-                      )}
-                      <button onClick={() => handleDeleteJob(job.id, job.status)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="حذف">
-                        <Trash2 size={16} />
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                )})
+                  )
+                })
               )}
             </div>
           )}
@@ -305,29 +342,30 @@ export default function ProfilePage() {
                 profileData?.ads?.map((ad: any) => {
                   const statusInfo = getStatusInfo(ad);
                   return (
-                  <div key={ad.id} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                    <div>
-                      <h3 className="text-sm font-bold text-gray-800">{ad.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-gray-400">نوع: {getAdTypeLabel(ad.type)}</span>
-                        <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${statusInfo.color}`}>{statusInfo.label}</span>
+                    <div key={ad.id} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-800">{ad.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-gray-400">نوع: {getAdTypeLabel(ad.type)}</span>
+                          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${statusInfo.color}`}>{statusInfo.label}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {ad.status === "APPROVED" && ad.type === "COMMERCIAL" && (
+                          <button onClick={() => handlePayAd(ad.id)} className="p-2 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-xs font-bold whitespace-nowrap" title="پرداخت">
+                            پرداخت
+                          </button>
+                        )}
+                        <button onClick={() => router.push(`/ad/${ad.id}`)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="مشاهده">
+                          <Eye size={16} />
+                        </button>
+                        <button onClick={() => handleDeleteAd(ad.id, ad.status)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="حذف">
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {ad.status === "APPROVED" && ad.type === "COMMERCIAL" && (
-                        <button onClick={() => handlePayAd(ad.id)} className="p-2 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-xs font-bold whitespace-nowrap" title="پرداخت">
-                          پرداخت
-                        </button>
-                      )}
-                      <button onClick={() => router.push(`/ad/${ad.id}`)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="مشاهده">
-                        <Eye size={16} />
-                      </button>
-                      <button onClick={() => handleDeleteAd(ad.id, ad.status)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="حذف">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                )})
+                  )
+                })
               )}
             </div>
           )}
@@ -356,24 +394,125 @@ export default function ProfilePage() {
 
           {/* Tickets */}
           {activeTab === "tickets" && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-base font-bold text-gray-800 mb-4">ثبت تیکت جدید</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">موضوع</label>
-                  <input type="text" value={ticketSubject} onChange={(e) => setTicketSubject(e.target.value)}
-                    placeholder="موضوع تیکت"
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 className="text-base font-bold text-gray-800 mb-4">ثبت تیکت جدید</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">موضوع</label>
+                    <input
+                      type="text"
+                      value={ticketSubject}
+                      onChange={(e) => {
+                        setTicketSubject(e.target.value);
+                        setTicketError("");
+                        setTicketSuccess("");
+                      }}
+                      placeholder="موضوع تیکت"
+                      className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">پیام</label>
+                    <textarea
+                      value={ticketMessage}
+                      onChange={(e) => {
+                        setTicketMessage(e.target.value);
+                        setTicketError("");
+                        setTicketSuccess("");
+                      }}
+                      placeholder="پیام خود را بنویسید..."
+                      className="w-full h-32 px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                    />
+                  </div>
+
+                  {ticketError && (
+                    <p className="text-xs text-red-500 font-medium">{ticketError}</p>
+                  )}
+                  {ticketSuccess && (
+                    <p className="text-xs text-green-600 font-medium">{ticketSuccess}</p>
+                  )}
+
+                  <button
+                    onClick={handleCreateTicket}
+                    disabled={isSubmittingTicket}
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md disabled:opacity-50"
+                  >
+                    {isSubmittingTicket && <Loader2 size={16} className="animate-spin" />}
+                    ارسال تیکت
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">پیام</label>
-                  <textarea value={ticketMessage} onChange={(e) => setTicketMessage(e.target.value)}
-                    placeholder="پیام خود را بنویسید..."
-                    className="w-full h-32 px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none" />
-                </div>
-                <button className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md">
-                  ارسال تیکت
-                </button>
+              </div>
+
+              {/* Tickets List */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 className="text-base font-bold text-gray-800 mb-4">تیکت‌های پشتیبانی من</h3>
+                {(!profileData?.tickets || profileData.tickets.length === 0) ? (
+                  <div className="text-center py-8 text-gray-400 text-xs">
+                    هیچ تیکت پشتیبانی ثبت نشده است.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {profileData.tickets.map((t: any) => {
+                      const isExpanded = expandedTicketId === t.id;
+                      const statusMap: Record<string, { label: string; style: string }> = {
+                        OPEN: { label: "باز", style: "bg-red-100 text-red-700" },
+                        IN_PROGRESS: { label: "در حال بررسی", style: "bg-blue-100 text-blue-700" },
+                        REPLIED: { label: "پاسخ داده شده", style: "bg-blue-100 text-blue-700" },
+                        CLOSED: { label: "بسته شده", style: "bg-gray-100 text-gray-600" }
+                      };
+                      const statusInfo = statusMap[t.status] || { label: t.status, style: "bg-gray-100 text-gray-600" };
+
+                      return (
+                        <div key={t.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                          <button
+                            onClick={() => setExpandedTicketId(isExpanded ? null : t.id)}
+                            className="w-full p-4 bg-gray-50/50 hover:bg-gray-50 flex items-center justify-between text-right transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className={`px-2.5 py-1 text-[11px] font-bold rounded-lg ${statusInfo.style}`}>
+                                {statusInfo.label}
+                              </span>
+                              <div>
+                                <h4 className="text-sm font-bold text-gray-800">{t.subject}</h4>
+                                <p className="text-[10px] text-gray-400 mt-0.5">{toJalali(new Date(t.createdAt))}</p>
+                              </div>
+                            </div>
+                            <span className="text-xs text-primary font-medium">
+                              {isExpanded ? "بستن جزئیات" : "مشاهده پیام‌ها"}
+                            </span>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="p-4 bg-white space-y-3 border-t border-gray-100">
+                              {(t.messages || []).map((m: any) => (
+                                <div
+                                  key={m.id}
+                                  className={`flex ${m.isAdmin ? "justify-start" : "justify-end"}`}
+                                >
+                                  <div
+                                    className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed ${m.isAdmin
+                                      ? "bg-primary/10 text-gray-800 rounded-tl-none border border-primary/20"
+                                      : "bg-gray-100 text-gray-800 rounded-tr-none"
+                                      }`}
+                                  >
+                                    <div className="font-bold text-[10px] text-gray-500 mb-1">
+                                      {m.isAdmin ? "پشتیبانی سایت" : "شما"}
+                                    </div>
+                                    <p className="whitespace-pre-wrap">{m.content}</p>
+                                    <div className="text-[9px] text-gray-400 mt-1.5 text-left">
+                                      {toJalali(new Date(m.createdAt))}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -385,7 +524,7 @@ export default function ProfilePage() {
                 <Settings size={20} className="text-primary" />
                 تنظیمات پروفایل
               </h3>
-              
+
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">شماره موبایل (غیرقابل تغییر)</label>
@@ -409,7 +548,7 @@ export default function ProfilePage() {
                   <p className="text-xs text-red-500 font-medium">{saveError}</p>
                 )}
 
-                <button 
+                <button
                   onClick={handleUpdateProfile} disabled={isSaving}
                   className="flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md disabled:opacity-50 mt-4">
                   {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}

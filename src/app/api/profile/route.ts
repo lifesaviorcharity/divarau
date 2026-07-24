@@ -29,7 +29,12 @@ export async function GET() {
       }),
       prisma.ticket.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' }
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' }
+          }
+        },
+        orderBy: { updatedAt: 'desc' }
       })
     ]);
 

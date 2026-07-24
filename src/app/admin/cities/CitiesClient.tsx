@@ -29,14 +29,14 @@ export default function CitiesClient({ initialCities, countries }: { initialCiti
     try {
       const url = modal.mode === "add" ? "/api/admin/cities" : `/api/admin/cities/${modal.data.id}`;
       const method = modal.mode === "add" ? "POST" : "PUT";
-      
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
       const resData = await res.json();
-      
+
       if (res.ok) {
         setModal({ isOpen: false, mode: "add", data: null });
         refreshData();
@@ -67,9 +67,9 @@ export default function CitiesClient({ initialCities, countries }: { initialCiti
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-gray-800">مدیریت شهرها</h2>
-        <button 
+        <button
           onClick={() => setModal({ isOpen: true, mode: "add", data: null })}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-bold rounded-xl hover:bg-secondary-dark transition-colors"
         >
           <Plus size={18} />
           افزودن شهر جدید
@@ -100,13 +100,13 @@ export default function CitiesClient({ initialCities, countries }: { initialCiti
 
               {/* Desktop Hover Actions */}
               <div className="hidden sm:flex items-center gap-2 opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity shrink-0">
-                <button 
+                <button
                   onClick={() => setModal({ isOpen: true, mode: "edit", data: city })}
                   className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                 >
                   <Edit size={16} />
                 </button>
-                <button 
+                <button
                   onClick={() => handleDelete(city.id)}
                   className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 >
@@ -116,12 +116,12 @@ export default function CitiesClient({ initialCities, countries }: { initialCiti
 
               {/* Mobile Always-Visible Actions */}
               <div className="flex sm:hidden items-center gap-1 shrink-0 pl-1">
-                <button onClick={() => setModal({ isOpen: true, mode: "edit", data: city })} className="p-1.5 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"><Edit size={14}/></button>
-                <button onClick={() => handleDelete(city.id)} className="p-1.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"><Trash2 size={14}/></button>
+                <button onClick={() => setModal({ isOpen: true, mode: "edit", data: city })} className="p-1.5 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"><Edit size={14} /></button>
+                <button onClick={() => handleDelete(city.id)} className="p-1.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"><Trash2 size={14} /></button>
               </div>
             </div>
           ))}
-          
+
           {cities.length === 0 && (
             <div className="text-center py-12 text-gray-400 text-sm">
               هیچ شهری یافت نشد.

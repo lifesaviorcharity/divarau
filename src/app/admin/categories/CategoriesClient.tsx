@@ -125,10 +125,10 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
         <h2 className="text-xl font-black text-gray-800">مدیریت دسته‌بندی‌ها</h2>
         <button
           onClick={() => setCatModal({ isOpen: true, mode: "add", data: null })}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-bold rounded-xl hover:bg-secondary-dark transition-colors"
         >
           <Plus size={18} />
-          افزودن دسته‌بندی جدید
+          افزودن دسته‌بندی
         </button>
       </div>
 

@@ -133,7 +133,7 @@ export default function AdminSettingsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">تنظیمات</h1>
         <button onClick={handleSave} disabled={isSaving || isLoading}
-          className="flex items-center gap-1.5 px-5 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-md disabled:opacity-50">
+          className="flex items-center gap-1.5 px-5 py-2 bg-secondary text-white text-sm font-bold rounded-xl hover:bg-secondary-dark transition-colors shadow-md disabled:opacity-50">
           <Save size={16} />
           {isSaving ? "در حال ذخیره..." : "ذخیره تغییرات"}
         </button>
@@ -150,8 +150,8 @@ export default function AdminSettingsPage() {
               {sections.map((s) => (
                 <button key={s.key} onClick={() => setActiveSection(s.key)}
                   className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeSection === s.key
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-primary"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-primary"
                     }`}>
                   {s.icon}
                   {s.label}

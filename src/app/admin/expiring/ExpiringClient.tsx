@@ -58,10 +58,10 @@ export default function ExpiringClient({ initialItems }: { initialItems: Item[] 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">گزارش انقضای مشاغل و آگهی‌ها</h1>
-        <button 
+        <button
           onClick={handleSendReminder}
           disabled={selected.size === 0 || isSending}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-bold rounded-xl hover:bg-secondary-dark transition-colors disabled:opacity-50"
         >
           <Send size={18} />
           {isSending ? "در حال ارسال..." : `ارسال یادآوری (${selected.size})`}

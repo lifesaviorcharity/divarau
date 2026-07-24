@@ -6,6 +6,7 @@
   --color-primary-dark: #a93226;
   --color-primary-light: #e74c3c;
   --color-secondary: #2c3e50;
+  --color-secondary-dark: #233140;
   --color-primary2: #C0C0C0;
   --color-primary-dark2: #A9A9A9;
   --color-primary-light2: #E7E7E7;
@@ -232,6 +233,7 @@
     print-color-adjust: exact !important;
     background: white !important;
   }
+
   .print\:hidden {
     display: none !important;
   }
