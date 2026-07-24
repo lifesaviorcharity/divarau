@@ -65,16 +65,15 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return url;
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
       try {
-        const parsed = new URL(url);
-        if (typeof window !== "undefined") {
-          if (parsed.origin === window.location.origin) return url;
-        }
-        return parsed.pathname + parsed.search + parsed.hash;
+        if (new URL(url).origin === baseUrl) return url;
       } catch {
-        return "/";
+        return baseUrl;
       }
+      return baseUrl;
     },
     async jwt({ token, user, trigger, session }) {
       if (trigger === "update" && session?.name) {
