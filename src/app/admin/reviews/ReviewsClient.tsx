@@ -112,7 +112,7 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black text-gray-800">مدیریت دیدگاه‌ها</h1>
+        <h1 className="text-xl font-black text-gray-800">مدیریت نظرات</h1>
       </div>
 
       {/* Tabs */}

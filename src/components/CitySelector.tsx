@@ -101,20 +101,19 @@ export default function CitySelector() {
                   <button
                     key={city.slug}
                     onClick={() => setSelectedCity(city)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      isSelected
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isSelected
                         ? "bg-primary text-white shadow-md shadow-primary/25"
                         : "text-gray-700 hover:bg-gray-50 hover:text-primary"
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center gap-2">
                       <MapPin size={14} />
                       <span>{city.name}</span>
-                      {city.slug && (
+                      {/* {city.slug && (
                         <span className={`text-[11px] font-mono dir-ltr ${isSelected ? "text-white/80" : "text-gray-400"}`}>
                           ({city.slug})
                         </span>
-                      )}
+                      )} */}
                     </span>
                     {isSelected && <Check size={16} />}
                   </button>

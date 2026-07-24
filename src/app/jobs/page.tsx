@@ -179,7 +179,7 @@ function JobsContent() {
     const reviewCount = reviews.length;
     const avgRating = reviewCount > 0
       ? Math.round(reviews.reduce((acc: number, cur: any) => acc + cur.rating, 0) / reviewCount)
-      : 5;
+      : 0;
 
     return {
       id: job.id,

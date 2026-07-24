@@ -21,6 +21,7 @@ import {
 import { FaWhatsapp, FaTelegram, FaInstagram } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import LoginModal from "@/components/LoginModal";
+import { formatPersianNumber } from "@/lib/utils";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -264,31 +265,20 @@ export default function JobDetailPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-primary">دیدگاه‌ها</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-black text-gray-800">{job.rating}</span>
+                  <span className="text-2xl font-black text-gray-800">{formatPersianNumber(job.rating)}</span>
                   <span className="text-xs text-gray-400">از ۵</span>
                 </div>
               </div>
 
               {/* Overall Rating */}
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-6">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} size={18}
                     className={i < Math.round(job.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}
                   />
                 ))}
-                <span className="text-xs text-gray-400">از مجموع {job.reviewCount} امتیاز</span>
+                <span className="text-xs text-gray-400">از مجموع {formatPersianNumber(job.reviewCount)} امتیاز</span>
               </div>
-
-              {/* Register Review Button */}
-              <button
-                onClick={() => {
-                  setShowReviewForm(true);
-                  document.getElementById('review-form-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="w-full py-2.5 mb-6 border-2 border-primary/20 text-primary text-sm font-semibold rounded-xl hover:bg-primary/5 transition-colors"
-              >
-                ثبت دیدگاه
-              </button>
 
               {/* Reviews List (Only show if enabled) */}
               {job.reviewsEnabled && (

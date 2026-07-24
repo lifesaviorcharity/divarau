@@ -11,7 +11,7 @@ export async function GET() {
     ]);
 
     const totalSearches = (viewsAgg._sum.viewCount || 0) + 3000; // Base 3000 + real views
-    const rawAvg = reviewsAgg._avg.rating || 5;
+    const rawAvg = reviewsAgg._avg.rating || 0;
     const satisfaction = Math.round((rawAvg / 5) * 100);
 
     return NextResponse.json({

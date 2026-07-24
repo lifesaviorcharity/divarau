@@ -59,7 +59,7 @@ export async function GET(
     const reviewCount = job.reviews.length;
     const rating = reviewCount > 0 
       ? Math.round(job.reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviewCount) 
-      : 5;
+      : 0;
 
     return NextResponse.json({ ...job, reviewsEnabled, rating, reviewCount });
   } catch (error) {
