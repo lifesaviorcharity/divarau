@@ -61,7 +61,7 @@ export default function AdminReportsPage() {
               { key: "year" as const, label: "سال" },
             ].map((p) => (
               <button key={p.key} onClick={() => setPeriod(p.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${period === p.key ? "bg-white text-primary shadow-sm" : "text-gray-500"
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${period === p.key ? "bg-white text-gray-700 shadow-sm" : "text-gray-500"
                   }`}>
                 {p.label}
               </button>

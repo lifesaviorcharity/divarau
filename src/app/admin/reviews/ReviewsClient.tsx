@@ -119,17 +119,15 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
       <div className="flex items-center gap-2 border-b border-gray-200">
         <button
           onClick={() => setActiveTab("pending")}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === "pending" ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeTab === "pending" ? "border-primary text-gray-800" : "border-transparent text-gray-500 hover:text-primary"
+            }`}
         >
           نظرات تایید نشده ({pendingReviews.length})
         </button>
         <button
           onClick={() => setActiveTab("approved")}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === "approved" ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeTab === "approved" ? "border-primary text-gray-800" : "border-transparent text-gray-500 hover:text-primary"
+            }`}
         >
           نظرات تایید شده ({approvedReviews.length})
         </button>
@@ -140,8 +138,8 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
         <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
           <label className="block text-xs font-semibold text-red-800 mb-1.5">حذف گروهی نظرات تایید شده بر اساس:</label>
           <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-            <select 
-              value={bulkFilterType} 
+            <select
+              value={bulkFilterType}
               onChange={(e) => { setBulkFilterType(e.target.value as any); setBulkFilterValue(""); }}
               className="px-3 py-2 text-sm bg-white border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200"
             >
@@ -229,7 +227,7 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
                 <XCircle size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">شغل:</span>
