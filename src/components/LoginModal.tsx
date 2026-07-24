@@ -76,12 +76,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   }, [mobile]);
 
   const handleVerifyOTP = async (overrideCode?: string) => {
-    console.log("handleVerifyOTP called with overrideCode:", overrideCode, "type:", typeof overrideCode);
-    console.log("Current otp state:", otp, "otp.join:", otp.join(""));
     const code = typeof overrideCode === "string" ? overrideCode : otp.join("");
-    console.log("Final code used:", code, "length:", code.length);
     if (code.length !== OTP_LENGTH) {
-      console.log("Error triggered: length mismatch");
       setError(`لطفاً کد ${OTP_LENGTH} رقمی را وارد کنید`);
       return;
     }
@@ -96,14 +92,24 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       });
 
       if (res?.error) {
-        setError(res.error);
-      } else {
+        setError(res.error === "CredentialsSignin" ? "کد وارد شده ناصحیح یا منقضی شده است" : res.error);
+        setIsLoading(false);
+      } else if (res?.ok) {
+        setError("");
         onClose();
-        router.refresh();
+        window.location.reload();
+      } else {
+        setError("خطا در ورود به حساب کاربری");
+        setIsLoading(false);
       }
-    } catch {
-      setError("خطا در ارتباط با سرور");
-    } finally {
+    } catch (err: any) {
+      console.error("verify error:", err);
+      if (err?.name === "RedirectError" || err?.message?.includes("NEXT_REDIRECT")) {
+        onClose();
+        window.location.reload();
+        return;
+      }
+      setError(err?.message || "خطا در ارتباط با سرور");
       setIsLoading(false);
     }
   };

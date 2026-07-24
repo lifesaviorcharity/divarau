@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Phone, ArrowLeft, Shield, Loader2, RefreshCw } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatPersianNumber } from "@/lib/utils";
 
 const OTP_LENGTH = 6;
@@ -11,6 +11,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status: sessionStatus } = useSession();
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [mobile, setMobile] = useState("");
@@ -121,14 +122,23 @@ export default function LoginPage() {
       });
 
       if (res?.error) {
-        setError(res.error);
+        setError(res.error === "CredentialsSignin" ? "کد وارد شده ناصحیح یا منقضی شده است" : res.error);
+        setIsLoading(false);
+      } else if (res?.ok) {
+        setError("");
+        const targetUrl = searchParams.get("callbackUrl") || "/";
+        window.location.href = targetUrl;
       } else {
-        router.push("/");
-        router.refresh();
+        setError("خطا در ورود به حساب کاربری");
+        setIsLoading(false);
       }
-    } catch {
-      setError("خطا در ارتباط با سرور");
-    } finally {
+    } catch (err: any) {
+      console.error("signIn error:", err);
+      if (err?.name === "RedirectError" || err?.message?.includes("NEXT_REDIRECT")) {
+        window.location.href = "/";
+        return;
+      }
+      setError(err?.message || "خطا در ارتباط با سرور");
       setIsLoading(false);
     }
   };
