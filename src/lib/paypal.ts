@@ -107,7 +107,17 @@ async function handleResponse(response: Response) {
     return response.json();
   }
 
-  const errorMessage = await response.text();
-  throw new Error(errorMessage);
+  const errorText = await response.text();
+  try {
+    const errorJson = JSON.parse(errorText);
+    const issueDetail = errorJson.details?.[0]?.description || errorJson.details?.[0]?.issue;
+    const message = issueDetail ? `${errorJson.name || 'PayPal Error'}: ${issueDetail}` : (errorJson.message || errorText);
+    throw new Error(message);
+  } catch (e: any) {
+    if (e.message && e.message !== errorText && !e.message.startsWith("Unexpected token")) {
+      throw e;
+    }
+    throw new Error(errorText);
+  }
 }
 
