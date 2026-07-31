@@ -1,20 +1,27 @@
-const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
-const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
-const PAYPAL_ENVIRONMENT = process.env.PAYPAL_ENVIRONMENT || "sandbox";
+function getPayPalConfig() {
+  const clientId = (process.env.PAYPAL_CLIENT_ID || "").trim();
+  const clientSecret = (process.env.PAYPAL_CLIENT_SECRET || "").trim();
+  const rawMode = process.env.PAYPAL_ENVIRONMENT || process.env.PAYPAL_MODE || "sandbox";
+  const mode = rawMode.trim().toLowerCase();
 
-const base = PAYPAL_ENVIRONMENT === "sandbox"
-  ? "https://api-m.sandbox.paypal.com"
-  : "https://api-m.paypal.com";
+  const base = (mode === "live" || mode === "production")
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+
+  return { clientId, clientSecret, mode, base };
+}
 
 /**
  * Generate an OAuth 2.0 access token for authenticating with PayPal REST APIs.
  */
 export async function generateAccessToken(): Promise<string> {
-  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-    throw new Error("MISSING_API_CREDENTIALS");
+  const { clientId, clientSecret, base } = getPayPalConfig();
+
+  if (!clientId || !clientSecret) {
+    throw new Error("MISSING_API_CREDENTIALS: PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET is missing.");
   }
 
-  const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64");
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: "POST",
@@ -23,6 +30,7 @@ export async function generateAccessToken(): Promise<string> {
       Authorization: `Basic ${auth}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
+    cache: "no-store",
   });
 
   const data = await response.json();
@@ -38,6 +46,7 @@ export async function generateAccessToken(): Promise<string> {
  * Create an order to start the transaction.
  */
 export async function createOrder(amount: number, description: string, returnUrl: string, cancelUrl: string) {
+  const { base } = getPayPalConfig();
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders`;
 
@@ -67,6 +76,7 @@ export async function createOrder(amount: number, description: string, returnUrl
     },
     method: "POST",
     body: JSON.stringify(payload),
+    cache: "no-store",
   });
 
   return handleResponse(response);
@@ -76,6 +86,7 @@ export async function createOrder(amount: number, description: string, returnUrl
  * Capture payment for the created order to complete the transaction.
  */
 export async function capturePayment(orderId: string) {
+  const { base } = getPayPalConfig();
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders/${orderId}/capture`;
 
@@ -85,6 +96,7 @@ export async function capturePayment(orderId: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
+    cache: "no-store",
   });
 
   return handleResponse(response);
@@ -98,3 +110,4 @@ async function handleResponse(response: Response) {
   const errorMessage = await response.text();
   throw new Error(errorMessage);
 }
+
