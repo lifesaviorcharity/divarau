@@ -11,14 +11,22 @@ export async function GET(request: Request) {
     const cityId = searchParams.get("cityId");
     const categoryId = searchParams.get("categoryId");
     const subCategoryId = searchParams.get("subCategoryId");
-    const status = searchParams.get("status") || "FINAL"; // Default to FINAL
+    const statusParam = searchParams.get("status");
+    let statusWhere: any;
+    if (statusParam) {
+      statusWhere = statusParam;
+    } else {
+      // By default for public website listing, include both FINAL and APPROVED jobs
+      statusWhere = { in: ["FINAL", "APPROVED"] };
+    }
+
     const isVip = searchParams.get("isVip");
     const q = searchParams.get("q");
 
     const skip = parseInt(searchParams.get("skip") || "0");
     const take = parseInt(searchParams.get("take") || "0"); // 0 means no limit (backward compat)
 
-    const where: any = { status };
+    const where: any = { status: statusWhere };
 
     if (cityId) where.cityId = parseInt(cityId);
     if (categoryId) where.categoryId = parseInt(categoryId);

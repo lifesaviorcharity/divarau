@@ -17,7 +17,7 @@ export async function GET() {
       select: { username: true, email: true }
     });
 
-    const [jobs, ads, tickets] = await Promise.all([
+    const [jobs, ads, tickets, messages] = await Promise.all([
       prisma.job.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
@@ -35,12 +35,12 @@ export async function GET() {
           }
         },
         orderBy: { updatedAt: 'desc' }
+      }),
+      prisma.message.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' }
       })
-    ]);
-
-    // For demo purposes, returning empty messages array.
-    // In a real app, you might have a dedicated Message model.
-    const messages: any[] = []; 
+    ]); 
 
     return NextResponse.json({
       user: session.user,

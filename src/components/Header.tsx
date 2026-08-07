@@ -35,6 +35,24 @@ export default function Header() {
   const { selectedCity, openCityModal, isCityModalOpen } = useCityStore();
   const adSubmenuRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch("/api/profile/unread-count")
+        .then((res) => res.json())
+        .then((data) => {
+          if (typeof data.count === "number") {
+            setUnreadCount(data.count);
+          }
+        })
+        .catch(() => { });
+    } else {
+      setUnreadCount(0);
+    }
+  }, [session, pathname]);
+
+  const badgeText = unreadCount > 99 ? "99+" : unreadCount;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,9 +245,16 @@ export default function Header() {
                   )}
                   <Link
                     href="/profile"
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200"
+                    className="relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200"
                   >
-                    <User size={18} className="text-primary" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-2 left-1 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none shadow-md animate-pulse z-10 dir-ltr">
+                        {badgeText}
+                      </span>
+                    )}
+                    <div className="relative flex items-center justify-center">
+                      <User size={18} className="text-primary" />
+                    </div>
                     <span className="hidden sm:inline">دیوار من</span>
                   </Link>
                   {pathname.startsWith("/profile") && (

@@ -12,6 +12,13 @@ import {
   AlertTriangle,
   ImagePlus,
   Check,
+  HelpCircle,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  Trash2,
+  BadgeCheck,
+  BookOpen,
 } from "lucide-react";
 
 export default function RegisterJobPage() {
@@ -35,6 +42,7 @@ export default function RegisterJobPage() {
   const [boostPeriod, setBoostPeriod] = useState<"1" | "3" | "7">("1");
   const [pricingSettings, setPricingSettings] = useState<any>({});
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -44,6 +52,9 @@ export default function RegisterJobPage() {
   }, []);
 
   const selectedCategory = selectedCategoryIndex !== null ? jobCategories[selectedCategoryIndex] : null;
+
+  const maxImages = parseInt(pricingSettings.maxImages || "3", 10);
+  const maxImageSizeKB = parseInt(pricingSettings.maxImageSize || "300", 10);
 
   const price6 = parseFloat(pricingSettings.price6Month) || 25;
   const price12 = parseFloat(pricingSettings.price12Month) || 45;
@@ -62,14 +73,14 @@ export default function RegisterJobPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    if (images.length + files.length > 3) {
-      alert("حداکثر ۳ تصویر مجاز است");
+    if (images.length + files.length > maxImages) {
+      alert(`حداکثر ${maxImages} تصویر مجاز است`);
       return;
     }
     Array.from(files).forEach((file) => {
-      if (file.size > 300 * 1024) {
-        if (confirm(`حجم تصویر ${file.name} بیشتر از ۳۰۰ کیلوبایت است. آیا می‌خواهید فشرده‌سازی شود؟`)) {
-          // Compression would happen here
+      if (file.size > maxImageSizeKB * 1024) {
+        if (confirm(`حجم تصویر ${file.name} بیشتر از ${maxImageSizeKB} کیلوبایت است. آیا می‌خواهید ادامه دهید؟`)) {
+          // Continue with file upload
         } else return;
       }
       const url = URL.createObjectURL(file);
@@ -215,9 +226,9 @@ export default function RegisterJobPage() {
               </div>
 
               {/* Thumbnails */}
-              <div className="flex items-center gap-2 mb-8">
+              <div className="flex items-center gap-2 mb-2">
                 {/* Upload Button */}
-                {images.length < 3 && (
+                {images.length < maxImages && (
                   <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary flex items-center justify-center cursor-pointer transition-colors">
                     <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
                     <Upload size={18} className="text-gray-400" />
@@ -243,6 +254,9 @@ export default function RegisterJobPage() {
                   </div>
                 ))}
               </div>
+              <p className="text-[10px] text-gray-400 mb-6">
+                حداکثر {maxImages} تصویر (حداکثر {maxImageSizeKB}KB). کلیک بر روی هر تصویر، آن را به عنوان تصویر اصلی تنظیم می‌کند.
+              </p>
 
               {/* Subscription Section */}
               <div className="mt-6 border-t border-gray-100 pt-5">
@@ -446,6 +460,21 @@ export default function RegisterJobPage() {
                   </div>
                 </div>
 
+                {/* Registration Guide Link (Prominent) */}
+                <div className="mt-6 mb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-2.5 text-blue-950 font-bold text-xs">
+                    <BookOpen size={20} className="text-blue-600 shrink-0" />
+                    <span>پیش از ثبت، قوانین و مراحل را مطالعه نمایید:</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsGuideModalOpen(true)}
+                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-all shadow hover:shadow-md cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+                  >
+                    <span>راهنمای ثبت شغل</span>
+                  </button>
+                </div>
+
                 {/* Confirmation Checkbox */}
                 <div className="mt-4 mb-2 flex items-start gap-2">
                   <input
@@ -473,6 +502,110 @@ export default function RegisterJobPage() {
           </div>
         </div>
       </div>
+
+      {/* Registration Guide Modal */}
+      {isGuideModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-100 flex flex-col dir-rtl">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+              <div className="flex items-center gap-2.5 text-gray-800">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <BookOpen size={18} />
+                </div>
+                <h3 className="font-bold text-lg text-gray-900">راهنمای ثبت شغل</h3>
+              </div>
+              <button
+                onClick={() => setIsGuideModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 flex items-center justify-center transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-5 text-sm leading-relaxed text-gray-700">
+              <div className="bg-blue-50/80 border border-blue-100 rounded-xl p-4 text-blue-900">
+                <p className="font-bold text-blue-950 mb-2">
+                  لطفا پیش از ثبت شغل، موارد زیر را با دقت مطالعه نمایید:
+                </p>
+                <p className="text-xs leading-6 text-blue-900/90">
+                  پس از ثبت شغل، اطلاعات ثبت‌شده شما جهت بررسی در اختیار ادمین سایت قرار می‌گیرد، بنابراین بعد از ثبت، وضعیت شغل به &quot;در حال بررسی&quot; تغییر می‌یابد.و تا زمان تایید نهایی، امکان ویرایش اطلاعات ثبت‌شده توسط شما وجود نخواهد داشت.پس از بررسی، درخواست ثبت‌شده ممکن است در یکی از وضعیت‌های زیر قرار گیرد:
+                </p>
+              </div>
+
+              {/* Status List */}
+              <div className="space-y-3.5">
+                {/* 1. تایید اولیه */}
+                <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 size={18} className="text-blue-600 shrink-0" />
+                    <span className="font-bold text-blue-900">تایید اولیه</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-6">
+                    در صورتی که اطلاعات ثبت‌شده مطابق قوانین سایت باشد، توسط ادمین تأیید اولیه می‌شود. پس از تأیید اولیه، اطلاعات شغل شما در دسته‌بندی مربوطه در سایت قابل نمایش خواهد بود، اما اطلاعات تماس و تصاویر ثبت‌شده تا زمان انجام پرداخت قابل مشاهده نخواهند بود.
+                  </p>
+                </div>
+
+                {/* 2. نیاز به اصلاح */}
+                <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle size={18} className="text-amber-600 shrink-0" />
+                    <span className="font-bold text-amber-900">نیاز به اصلاح</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-6">
+                    چنانچه ادمین تشخیص دهد که اطلاعات ثبت‌شده برای قابل نمایش شدن نیاز به اصلاح دارد، وضعیت شغل به &quot;نیاز به اصلاح&quot; تغییر می‌یابد. در این حالت، ادمین توضیحات لازم درباره مواردی که باید اصلاح شوند را برای شما ثبت می‌کند. شما می‌توانید با مراجعه به دیوار من بخش پیام‌ها، توضیحات ادمین را مشاهده کرده و پس از اعمال اصلاحات، اطلاعات را مجددا ارسال نمایید. پس از ثبت اصلاحات، وضعیت شغل دوباره به &quot;در حال بررسی&quot; تغییر کرده و منتظر بررسی و تأیید مجدد ادمین خواهد بود.
+                  </p>
+                </div>
+
+                {/* 3. رد شدن اطلاعات */}
+                <div className="p-4 rounded-xl border border-red-200 bg-red-50/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <XCircle size={18} className="text-red-600 shrink-0" />
+                    <span className="font-bold text-red-900">رد شدن اطلاعات</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-6">
+                    در صورتی که اطلاعات ثبت‌شده مورد تأیید ادمین نباشد، وضعیت شغل به &quot;رد شده&quot; تغییر می‌کند. در این حالت، دلیل رد شدن اطلاعات توسط ادمین در قالب پیام برای شما ثبت می‌شود. شما می‌توانید با مراجعه به دیوار من بخش پیام‌ها و یا زیر شغل مربوطه در لیست مشاغل، دلیل رد شدن اطلاعات را مشاهده نمایید.
+                  </p>
+                </div>
+
+                {/* 4. حذف اطلاعات */}
+                <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/60">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trash2 size={18} className="text-gray-600 shrink-0" />
+                    <span className="font-bold text-gray-900">حذف اطلاعات</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-6">
+                    در صورتی که اطلاعات ثبت‌شده مغایر قوانین و مقررات سایت باشد، ادمین می‌تواند نسبت به حذف آن اقدام نماید.
+                  </p>
+                </div>
+
+                {/* 5. تأیید نهایی */}
+                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BadgeCheck size={18} className="text-emerald-600 shrink-0" />
+                    <span className="font-bold text-emerald-900">تأیید نهایی</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-6">
+                    پس از تأیید اولیه، لازم است هزینه اشتراک انتخابی را از طریق درگاه پرداخت سایت انجام دهید. پس از انجام موفق پرداخت، شغل شما به‌صورت خودکار تأیید نهایی شده و تمامی اطلاعات شغل ثبت‌شده شما، به‌طور کامل در سایت قابل نمایش و جستجو خواهد بود.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 border-t border-gray-100 bg-gray-50/80 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsGuideModalOpen(false)}
+                className="px-5 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer"
+              >
+                متوجه شدم
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -120,17 +120,85 @@ function JobsContent() {
       .catch(() => setIsLoadingAds(false));
   }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
+  // Persistent category/subcategory memory (localStorage)
   useEffect(() => {
-    if (!selectedCity) {
-      const timer = setTimeout(() => {
-        const currentCity = useCityStore.getState().selectedCity;
-        if (!currentCity) {
-          openCityModal();
-        }
-      }, 500);
-      return () => clearTimeout(timer);
+    if (typeof window === "undefined") return;
+
+    const hasCatInUrl = searchParams.has("category");
+    const hasSubInUrl = searchParams.has("sub");
+
+    if (!hasCatInUrl && !hasSubInUrl) {
+      // User arrived at /jobs without category/sub query params: restore last saved selection if present
+      const savedCategory = localStorage.getItem("last_selected_category");
+      const savedSub = localStorage.getItem("last_selected_sub");
+
+      if (savedCategory !== null || savedSub !== null) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (savedCategory !== null) params.set("category", savedCategory);
+        if (savedSub !== null) params.set("sub", savedSub);
+        router.replace(`/jobs?${params.toString()}`, { scroll: false });
+      }
+    } else {
+      // URL has category/sub query params: update localStorage
+      if (categoryParam !== null) {
+        localStorage.setItem("last_selected_category", categoryParam.toString());
+      } else {
+        localStorage.removeItem("last_selected_category");
+      }
+
+      if (subCategoryParam !== null) {
+        localStorage.setItem("last_selected_sub", subCategoryParam);
+      } else {
+        localStorage.removeItem("last_selected_sub");
+      }
     }
-  }, [selectedCity, openCityModal]);
+  }, [searchParams, categoryParam, subCategoryParam, router]);
+
+  const handleCategorySelect = useCallback((i: number | null) => {
+    if (typeof window !== "undefined") {
+      if (i !== null) {
+        localStorage.setItem("last_selected_category", i.toString());
+      } else {
+        localStorage.removeItem("last_selected_category");
+      }
+      localStorage.removeItem("last_selected_sub");
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (i !== null) {
+      params.set("category", i.toString());
+    } else {
+      params.delete("category");
+    }
+    params.delete("sub");
+    router.push(`/jobs?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  const handleSubCategorySelect = useCallback((catIdx: number | null, subSlug: string | null) => {
+    if (typeof window !== "undefined") {
+      if (catIdx !== null) {
+        localStorage.setItem("last_selected_category", catIdx.toString());
+      } else {
+        localStorage.removeItem("last_selected_category");
+      }
+      if (subSlug !== null) {
+        localStorage.setItem("last_selected_sub", subSlug);
+      } else {
+        localStorage.removeItem("last_selected_sub");
+      }
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (catIdx !== null) {
+      params.set("category", catIdx.toString());
+    } else {
+      params.delete("category");
+    }
+    if (subSlug !== null) {
+      params.set("sub", subSlug);
+    } else {
+      params.delete("sub");
+    }
+    router.push(`/jobs?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
 
 
 
@@ -257,30 +325,8 @@ function JobsContent() {
               <CategorySidebar
                 selectedCategoryIndex={selectedCategoryIndex}
                 selectedSubCategorySlug={selectedSubCategorySlug}
-                onSelectCategory={(i) => {
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (i !== null) {
-                    params.set("category", i.toString());
-                  } else {
-                    params.delete("category");
-                  }
-                  params.delete("sub");
-                  router.push(`/jobs?${params.toString()}`, { scroll: false });
-                }}
-                onSelectSubCategory={(catIdx, subSlug) => {
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (catIdx !== null) {
-                    params.set("category", catIdx.toString());
-                  } else {
-                    params.delete("category");
-                  }
-                  if (subSlug !== null) {
-                    params.set("sub", subSlug);
-                  } else {
-                    params.delete("sub");
-                  }
-                  router.push(`/jobs?${params.toString()}`, { scroll: false });
-                }}
+                onSelectCategory={handleCategorySelect}
+                onSelectSubCategory={handleSubCategorySelect}
               />
             </div>
           </aside>
@@ -306,28 +352,11 @@ function JobsContent() {
                   selectedCategoryIndex={selectedCategoryIndex}
                   selectedSubCategorySlug={selectedSubCategorySlug}
                   onSelectCategory={(i) => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    if (i !== null) {
-                      params.set("category", i.toString());
-                    } else {
-                      params.delete("category");
-                    }
-                    params.delete("sub");
-                    router.push(`/jobs?${params.toString()}`, { scroll: false });
+                    handleCategorySelect(i);
+                    setShowMobileSidebar(false);
                   }}
                   onSelectSubCategory={(catIdx, subSlug) => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    if (catIdx !== null) {
-                      params.set("category", catIdx.toString());
-                    } else {
-                      params.delete("category");
-                    }
-                    if (subSlug !== null) {
-                      params.set("sub", subSlug);
-                    } else {
-                      params.delete("sub");
-                    }
-                    router.push(`/jobs?${params.toString()}`, { scroll: false });
+                    handleSubCategorySelect(catIdx, subSlug);
                     setShowMobileSidebar(false);
                   }}
                 />

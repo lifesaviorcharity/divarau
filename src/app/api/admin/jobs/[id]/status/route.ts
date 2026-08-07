@@ -67,7 +67,8 @@ export async function POST(
       if (job.isVip) amount += 50;
       if (job.isBoosted) amount += 20;
 
-      const messageBody = `کاربر گرامی، شغل شما با عنوان "${job.title}" تایید اولیه شد. جهت تایید نهایی لطفا مبلغ ${amount}$ را پرداخت نموده و رسید آن را به همراه شماره ${job.id} به پشتیبانی ارسال نمایید. مهلت پرداخت: 48 ساعت.`;
+      const paymentDeadlineHours = settingsMap.paymentDeadlineHours || "48";
+      const messageBody = `کاربر گرامی، شغل شما با عنوان "${job.title}" تایید اولیه شد. جهت تایید نهایی لطفا مبلغ ${amount}$ را پرداخت نموده و رسید آن را به همراه شماره ${job.id} به پشتیبانی ارسال نمایید. مهلت پرداخت: ${paymentDeadlineHours} ساعت.`;
       
       if (isSmsEnabled && job.user?.mobile) {
         await sendMessage(job.user.mobile, messageBody);
@@ -82,7 +83,8 @@ export async function POST(
         }
       });
     } else if (status === "NEEDS_EDIT") {
-      const messageBody = `کاربر گرامی، اطلاعات شغل شما با عنوان "${job.title}" نیاز به اصلاح دارد. دلیل ادمین: ${adminNote || "عدم رعایت قوانین"}\nلطفا جهت اصلاح به پنل کاربری مراجعه کنید.`;
+      const cleanNote = adminNote ? adminNote.replace("[NEEDS_EDIT] ", "") : "عدم رعایت قوانین";
+      const messageBody = `کاربر گرامی، اطلاعات شغل شما با عنوان "${job.title}" نیاز به اصلاح دارد. دلیل ادمین: ${cleanNote}\nلطفا جهت اصلاح به پنل کاربری مراجعه کنید.`;
       
       if (isSmsEnabled && job.user?.mobile) {
         await sendMessage(job.user.mobile, messageBody);
@@ -96,7 +98,11 @@ export async function POST(
         }
       });
     } else if (status === "REJECTED") {
-      const messageBody = `کاربر گرامی، متاسفانه شغل شما با عنوان "${job.title}" رد شد. دلیل: ${adminNote || "عدم تایید توسط ناظر"}`;
+      const isNeedsEdit = adminNote?.startsWith("[NEEDS_EDIT]");
+      const cleanNote = adminNote ? adminNote.replace("[NEEDS_EDIT] ", "") : "عدم تایید توسط ناظر";
+      const messageBody = isNeedsEdit
+        ? `کاربر گرامی، اطلاعات شغل شما با عنوان "${job.title}" نیاز به اصلاح دارد. دلیل ادمین: ${cleanNote}\nلطفا جهت اصلاح به پنل کاربری مراجعه کنید.`
+        : `کاربر گرامی، متاسفانه شغل شما با عنوان "${job.title}" رد شد. دلیل: ${cleanNote}`;
       
       if (isSmsEnabled && job.user?.mobile) {
         await sendMessage(job.user.mobile, messageBody);
@@ -105,7 +111,7 @@ export async function POST(
       await prisma.message.create({
         data: {
           userId: job.userId,
-          title: "رد شغل",
+          title: isNeedsEdit ? "نیاز به اصلاح شغل" : "رد شغل",
           content: messageBody,
         }
       });

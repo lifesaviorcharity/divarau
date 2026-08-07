@@ -60,6 +60,11 @@ export default function JobDetailPage() {
 
   const isFinal = job.status === "FINAL" || job.status === "PAID";
   const isApproved = job.status === "APPROVED";
+  const isOwner = !!(session?.user && (
+    ((session.user as any).id && String((session.user as any).id) === String(job.userId)) ||
+    (session.user.mobile && job.user?.mobile && session.user.mobile === job.user.mobile)
+  ));
+  const canViewFullDetails = isFinal || isOwner;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -86,6 +91,13 @@ export default function JobDetailPage() {
             بازگشت
           </button>
         </div>
+
+        {job.adminNote && (
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 mb-6">
+            <h4 className="font-bold text-amber-900 text-sm mb-1">⚠️ پیام مدیریت در خصوص این آگهی:</h4>
+            <p className="text-xs text-amber-800 leading-relaxed">{job.adminNote.replace('[NEEDS_EDIT] ', '')}</p>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -115,20 +127,20 @@ export default function JobDetailPage() {
 
             {/* Contact Button */}
             <button
-              onClick={() => isFinal && setShowContact(!showContact)}
-              disabled={!isFinal}
-              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${!isFinal
+              onClick={() => canViewFullDetails && setShowContact(!showContact)}
+              disabled={!canViewFullDetails}
+              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${!canViewFullDetails
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : showContact
                   ? "bg-primary-darker text-white shadow-inner"
                   : "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl"
                 }`}
             >
-              {isFinal ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}
+              {canViewFullDetails ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}
             </button>
 
-            {/* Contact Details (i7) */}
-            {showContact && isFinal && (
+            {/* Contact Details */}
+            {showContact && canViewFullDetails && (
               <div className="border border-gray-100 rounded-xl p-5 mb-6 space-y-4 animate-scale-in bg-gray-50/50">
                 {job.phone && (
                   <div className="flex items-center justify-between">
@@ -205,11 +217,11 @@ export default function JobDetailPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {/* Main Image */}
             <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center">
-              {isApproved || (!job.images || job.images.length === 0) ? (
-                <div className="text-center text-gray-400">
+              {!canViewFullDetails || (!job.images || job.images.length === 0) ? (
+                <div className="text-center text-gray-400 p-6">
                   <div className="text-5xl mb-2">🏢</div>
                   <p className="text-sm">
-                    {isFinal ? "تصویری ثبت نشده است" : "تصاویر پس از تأیید نهایی نمایش داده می‌شوند"}
+                    {canViewFullDetails ? "تصویری ثبت نشده است" : "تصاویر پس از تأیید نهایی و پرداخت قابل مشاهده خواهند بود"}
                   </p>
                 </div>
               ) : (
@@ -221,7 +233,7 @@ export default function JobDetailPage() {
               )}
 
               {/* Nav Arrows */}
-              {isFinal && job.images && job.images.length > 1 && (
+              {canViewFullDetails && job.images && job.images.length > 1 && (
                 <>
                   <button
                     onClick={() => setCurrentImage(Math.max(0, currentImage - 1))}
@@ -240,7 +252,7 @@ export default function JobDetailPage() {
             </div>
 
             {/* Thumbnails */}
-            {isFinal && job.images && job.images.length > 1 && (
+            {canViewFullDetails && job.images && job.images.length > 1 && (
               <div className="flex items-center gap-2 p-3 justify-center">
                 {job.images.map((img: any, i: number) => (
                   <button

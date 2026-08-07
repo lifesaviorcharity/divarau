@@ -14,8 +14,14 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
     setUsers(initialUsers);
   }, [initialUsers]);
 
-  const filteredUsers = users.filter((u) =>
-    u.mobile.includes(searchTerm) || (u.username && u.username.includes(searchTerm))
+  const cleanQuery = searchTerm.trim().toLowerCase();
+
+  const filteredUsers = users.filter(
+    (u) =>
+      !cleanQuery ||
+      (u.mobile && u.mobile.toLowerCase().includes(cleanQuery)) ||
+      (u.username && u.username.toLowerCase().includes(cleanQuery)) ||
+      (u.email && u.email.toLowerCase().includes(cleanQuery))
   );
 
   const handleToggleActive = async (user: any) => {
@@ -135,10 +141,21 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-4 py-3 text-gray-400">{user.id}</td>
-                  <td className="px-4 py-3 text-gray-800 font-mono text-xs" dir="ltr">{user.mobile}</td>
+              {filteredUsers.map((user, index) => {
+                const isFirstMatch = cleanQuery.length > 0 && index === 0;
+                return (
+                  <tr
+                    key={user.id}
+                    className={`border-b transition-all duration-200 ${
+                      isFirstMatch
+                        ? "bg-amber-100/90 hover:bg-amber-100 border-amber-300 ring-2 ring-amber-400/60 shadow-sm"
+                        : "border-gray-50 hover:bg-gray-50/50"
+                    }`}
+                  >
+                    <td className="px-4 py-3 text-gray-400">{user.id}</td>
+                    <td className="px-4 py-3 text-gray-800 font-mono text-xs" dir="ltr">
+                      <span>{user.mobile}</span>
+                    </td>
                   <td className="px-4 py-3 text-gray-600">{user.username || "—"}</td>
                   <td className="px-4 py-3">
                     <button
@@ -193,7 +210,8 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
             </tbody>
           </table>
         </div>

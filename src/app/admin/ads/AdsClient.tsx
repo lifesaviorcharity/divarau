@@ -15,8 +15,18 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
   const [adminNote, setAdminNote] = useState("");
   const [ads, setAds] = useState(initialAds);
 
+  const cleanQuery = searchTerm.trim().toLowerCase();
+
   const filteredAds = ads.filter((ad) => {
-    const matchSearch = ad.title.includes(searchTerm) || ad.user.includes(searchTerm);
+    const matchSearch =
+      !cleanQuery ||
+      (ad.title && ad.title.toLowerCase().includes(cleanQuery)) ||
+      (ad.user && ad.user.toLowerCase().includes(cleanQuery)) ||
+      (ad.phone && ad.phone.toLowerCase().includes(cleanQuery)) ||
+      (ad.city && ad.city.toLowerCase().includes(cleanQuery)) ||
+      (ad.category && ad.category.toLowerCase().includes(cleanQuery)) ||
+      (ad.subCategory && ad.subCategory.toLowerCase().includes(cleanQuery)) ||
+      (ad.description && ad.description.toLowerCase().includes(cleanQuery));
     const matchStatus = statusFilter === "ALL" || ad.status === statusFilter;
     const matchType = typeFilter === "ALL" || ad.type === typeFilter;
     return matchSearch && matchStatus && matchType;
@@ -212,10 +222,21 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
               </tr>
             </thead>
             <tbody>
-              {filteredAds.map((ad) => (
-                <tr key={ad.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-4 py-3 text-gray-400">{ad.id}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-800">{ad.title}</td>
+              {filteredAds.map((ad, index) => {
+                const isFirstMatch = cleanQuery.length > 0 && index === 0;
+                return (
+                  <tr
+                    key={ad.id}
+                    className={`border-b transition-all duration-200 ${
+                      isFirstMatch
+                        ? "bg-amber-100/90 hover:bg-amber-100 border-amber-300 ring-2 ring-amber-400/60 shadow-sm"
+                        : "border-gray-50 hover:bg-gray-50/50"
+                    }`}
+                  >
+                    <td className="px-4 py-3 text-gray-400">{ad.id}</td>
+                    <td className="px-4 py-3 font-semibold text-gray-800">
+                      <span>{ad.title}</span>
+                    </td>
                   <td className="px-4 py-3 text-gray-600">{ad.user}</td>
                   <td className="px-4 py-3 text-gray-600">{ad.city}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -270,7 +291,8 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
             </tbody>
           </table>
         </div>

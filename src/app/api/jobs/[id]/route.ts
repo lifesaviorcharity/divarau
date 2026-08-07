@@ -21,6 +21,7 @@ export async function GET(
         city: true,
         category: true,
         subCategory: true,
+        images: { orderBy: { order: 'asc' } },
         user: {
           select: { username: true, mobile: true }
         },
@@ -39,9 +40,10 @@ export async function GET(
     }
 
     const isFinal = job.status === "FINAL" || job.status === "PAID";
+    const isApproved = job.status === "APPROVED";
     
-    // If not final, only the owner or an admin can view it
-    if (!isFinal) {
+    // If not final and not approved, only the owner or an admin can view it
+    if (!isFinal && !isApproved) {
       const session = await getServerSession(authOptions);
       if (!session || !session.user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -110,7 +112,22 @@ export async function PUT(
     const jobId = parseInt(id);
 
     const body = await request.json();
-    const { categoryId, subCategoryId } = body;
+    const {
+      title,
+      description,
+      phone,
+      address,
+      email,
+      website,
+      whatsapp,
+      telegram,
+      instagram,
+      workingHours,
+      workHours,
+      categoryId,
+      subCategoryId,
+      images,
+    } = body;
 
     const existingJob = await prisma.job.findUnique({
       where: { id: jobId }
@@ -124,13 +141,51 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Update job but KEEP existing status if it is FINAL or APPROVED
+    const isNeedsEditOrRejected = existingJob.status === "NEEDS_EDIT" || existingJob.status === "REJECTED";
+    const updateData: any = {};
+
+    if (isNeedsEditOrRejected) {
+      // Full editing allowed for jobs needing correction
+      if (title !== undefined) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
+      if (phone !== undefined) updateData.phone = phone;
+      if (address !== undefined) updateData.address = address;
+      if (email !== undefined) updateData.email = email;
+      if (website !== undefined) updateData.website = website;
+      if (whatsapp !== undefined) updateData.whatsapp = whatsapp;
+      if (telegram !== undefined) updateData.telegram = telegram;
+      if (instagram !== undefined) updateData.instagram = instagram;
+      const finalWorkHours = workingHours !== undefined ? workingHours : workHours;
+      if (finalWorkHours !== undefined) updateData.workHours = finalWorkHours;
+      if (categoryId) updateData.categoryId = parseInt(categoryId);
+      if (subCategoryId) updateData.subCategoryId = parseInt(subCategoryId);
+
+      // Change status to PENDING for admin re-approval
+      updateData.status = "PENDING";
+
+      if (images && Array.isArray(images)) {
+        await prisma.jobImage.deleteMany({ where: { jobId } });
+        if (images.length > 0) {
+          await prisma.jobImage.createMany({
+            data: images.map((img: any, idx: number) => ({
+              jobId,
+              url: typeof img === "string" ? img : img.url,
+              isMain: typeof img === "object" && img.isMain !== undefined ? !!img.isMain : idx === 0,
+              order: idx,
+            })),
+          });
+        }
+      }
+    } else {
+      // Restricted editing for other statuses (FINAL, APPROVED): only Category and SubCategory
+      if (categoryId) updateData.categoryId = parseInt(categoryId);
+      if (subCategoryId) updateData.subCategoryId = parseInt(subCategoryId);
+      // Status remains unchanged and no admin approval needed
+    }
+
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
-      data: {
-        categoryId: parseInt(categoryId),
-        subCategoryId: parseInt(subCategoryId)
-      }
+      data: updateData,
     });
 
     return NextResponse.json({ success: true, job: updatedJob });

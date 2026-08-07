@@ -42,6 +42,7 @@ export default function AdminSettingsPage() {
   const [sessionDuration, setSessionDuration] = useState("30");
   const [jobExpirationDuration, setJobExpirationDuration] = useState("30");
   const [expirationWarningDays, setExpirationWarningDays] = useState("7");
+  const [paymentDeadlineHours, setPaymentDeadlineHours] = useState("48");
   const [reviewsEnabled, setReviewsEnabled] = useState(true);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +81,7 @@ export default function AdminSettingsPage() {
         if (data.sessionDuration) setSessionDuration(data.sessionDuration);
         if (data.jobExpirationDuration) setJobExpirationDuration(data.jobExpirationDuration);
         if (data.expirationWarningDays) setExpirationWarningDays(data.expirationWarningDays);
+        if (data.paymentDeadlineHours) setPaymentDeadlineHours(data.paymentDeadlineHours);
         if (data.reviews_enabled) setReviewsEnabled(data.reviews_enabled === "true");
         setIsLoading(false);
       })
@@ -107,7 +109,7 @@ export default function AdminSettingsPage() {
         userNotifyApproval: String(userNotifyApproval),
         maxImages, maxImageSize, maxTitleLength, maxDescLength, freeAdLimit, commercialAdDuration,
         commercialFreeAdDuration, employmentAdDuration, jobSeekerAdDuration,
-        sessionDuration, jobExpirationDuration, expirationWarningDays,
+        sessionDuration, jobExpirationDuration, expirationWarningDays, paymentDeadlineHours,
         reviews_enabled: String(reviewsEnabled)
       };
       const res = await fetch("/api/settings", {
@@ -408,14 +410,15 @@ export default function AdminSettingsPage() {
                           className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl text-left dir-ltr" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">مدت زمان اعتبار مشاغل (روز)</label>
-                        <input type="number" value={jobExpirationDuration} onChange={(e) => setJobExpirationDuration(e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl text-left dir-ltr" />
-                      </div>
-                      <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1">زمان هشدار انقضا (روز)</label>
                         <input type="number" value={expirationWarningDays} onChange={(e) => setExpirationWarningDays(e.target.value)}
                           className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl text-left dir-ltr" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">مهلت پرداخت پس از تایید اولیه (ساعت)</label>
+                        <input type="number" value={paymentDeadlineHours} onChange={(e) => setPaymentDeadlineHours(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl text-left dir-ltr" />
+                        <p className="text-[11px] text-gray-500 mt-1">پیش‌فرض ۴۸ ساعت. مهلت زمان پرداخت کاربر پس از تایید اولیه شغل/آگهی.</p>
                       </div>
                     </div>
                   </div>

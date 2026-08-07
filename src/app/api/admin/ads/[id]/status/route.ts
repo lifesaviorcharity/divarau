@@ -89,7 +89,8 @@ export async function PATCH(
 
     if (nextStatus === "APPROVED" && ad.type === "COMMERCIAL") {
       const price = settingsMap.priceCommercialAd || "15";
-      const messageBody = `کاربر گرامی، آگهی تجاری شما با عنوان "${ad.title}" تایید اولیه شد. جهت انتشار نهایی لطفاً مبلغ $${price} را پرداخت کنید.`;
+      const deadlineHours = settingsMap.paymentDeadlineHours || "48";
+      const messageBody = `کاربر گرامی، آگهی تجاری شما با عنوان "${ad.title}" تایید اولیه شد. جهت انتشار نهایی لطفاً مبلغ $${price} را پرداخت کنید. مهلت پرداخت: ${deadlineHours} ساعت.`;
 
       if (isSmsEnabled && ad.user?.mobile) {
         await sendMessage(ad.user.mobile, messageBody);
@@ -117,7 +118,8 @@ export async function PATCH(
         }
       });
     } else if (nextStatus === "NEEDS_EDIT") {
-      const messageBody = `کاربر گرامی، آگهی شما با عنوان "${ad.title}" نیاز به اصلاح دارد. دلیل ادمین: ${adminNote || "عدم رعایت قوانین"}`;
+      const cleanNote = adminNote ? adminNote.replace("[NEEDS_EDIT] ", "") : "عدم رعایت قوانین";
+      const messageBody = `کاربر گرامی، آگهی شما با عنوان "${ad.title}" نیاز به اصلاح دارد. دلیل ادمین: ${cleanNote}`;
 
       if (isSmsEnabled && ad.user?.mobile) {
         await sendMessage(ad.user.mobile, messageBody);
@@ -131,7 +133,11 @@ export async function PATCH(
         }
       });
     } else if (nextStatus === "REJECTED") {
-      const messageBody = `کاربر گرامی، متأسفانه آگهی شما با عنوان "${ad.title}" رد شد. دلیل: ${adminNote || "عدم تایید توسط ناظر"}`;
+      const isNeedsEdit = adminNote?.startsWith("[NEEDS_EDIT]");
+      const cleanNote = adminNote ? adminNote.replace("[NEEDS_EDIT] ", "") : "عدم تایید توسط ناظر";
+      const messageBody = isNeedsEdit
+        ? `کاربر گرامی، آگهی شما با عنوان "${ad.title}" نیاز به اصلاح دارد. دلیل ادمین: ${cleanNote}`
+        : `کاربر گرامی، متأسفانه آگهی شما با عنوان "${ad.title}" رد شد. دلیل: ${cleanNote}`;
 
       if (isSmsEnabled && ad.user?.mobile) {
         await sendMessage(ad.user.mobile, messageBody);
@@ -140,7 +146,7 @@ export async function PATCH(
       await prisma.message.create({
         data: {
           userId: ad.userId,
-          title: "رد آگهی",
+          title: isNeedsEdit ? "نیاز به اصلاح آگهی" : "رد آگهی",
           content: messageBody,
         }
       });

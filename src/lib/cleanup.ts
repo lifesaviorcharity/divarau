@@ -2,7 +2,16 @@ import prisma from "@/lib/prisma";
 
 export async function runJobsCleanup() {
   const now = new Date();
-  const threshold48h = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+  // Fetch duration settings from database
+  const settings = await prisma.systemSetting.findMany();
+  const settingsMap = settings.reduce((acc, curr) => {
+    acc[curr.key] = curr.value;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const deadlineHours = parseInt(settingsMap.paymentDeadlineHours || "48", 10);
+  const thresholdPayment = new Date(Date.now() - deadlineHours * 60 * 60 * 1000);
 
   // 1. Mark active jobs that reached expiresAt as EXPIRED
   const expiredByDate = await prisma.job.updateMany({
@@ -15,13 +24,13 @@ export async function runJobsCleanup() {
     }
   });
 
-  // 2. Delete initial APPROVED jobs that were never paid within 48 hours
+  // 2. Delete initial APPROVED jobs that were never paid within payment deadline
   const unpaidJobs = await prisma.job.findMany({
     where: {
       status: "APPROVED",
       OR: [
-        { approvedAt: { lt: threshold48h } },
-        { approvedAt: null, createdAt: { lt: threshold48h } }
+        { approvedAt: { lt: thresholdPayment } },
+        { approvedAt: null, createdAt: { lt: thresholdPayment } }
       ]
     }
   });
