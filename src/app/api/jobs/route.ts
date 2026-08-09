@@ -1,143 +1,51 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const cityId = searchParams.get("cityId");
-    const categoryId = searchParams.get("categoryId");
-    const subCategoryId = searchParams.get("subCategoryId");
-    const statusParam = searchParams.get("status");
-    let statusWhere: any;
-    if (statusParam) {
-      statusWhere = statusParam;
-    } else {
-      // By default for public website listing, include both FINAL and APPROVED jobs
-      statusWhere = { in: ["FINAL", "APPROVED"] };
-    }
-
-    const isVip = searchParams.get("isVip");
-    const q = searchParams.get("q");
-
-    const skip = parseInt(searchParams.get("skip") || "0");
-    const take = parseInt(searchParams.get("take") || "0"); // 0 means no limit (backward compat)
-
-    const where: any = { status: statusWhere };
-
-    if (cityId) where.cityId = parseInt(cityId);
-    if (categoryId) where.categoryId = parseInt(categoryId);
-    if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
-    if (isVip !== null) where.isVip = isVip === "true";
-    if (q) {
-      where.OR = [
-        { title: { contains: q, mode: 'insensitive' } },
-        { description: { contains: q, mode: 'insensitive' } },
-        { address: { contains: q, mode: 'insensitive' } },
-        { category: { name: { contains: q, mode: 'insensitive' } } },
-        { subCategory: { name: { contains: q, mode: 'insensitive' } } },
-        { city: { name: { contains: q, mode: 'insensitive' } } },
-      ];
-    }
-
-    const queryOptions: any = {
-      where,
-      orderBy: [
-        { isBoosted: 'desc' }, // Boosted first
-        { finalApprovedAt: 'desc' }, // Then by latest approval
-        { id: 'desc' }, // Tie-breaker for deterministic sorting
-      ],
-      include: {
-        city: true,
-        category: true,
-        subCategory: true,
-        reviews: {
-          where: { isApproved: true },
-          select: { rating: true }
-        }
-      }
-    };
-
-    if (take > 0) {
-      queryOptions.skip = skip;
-      queryOptions.take = take;
-      const [jobs, total] = await Promise.all([
-        prisma.job.findMany(queryOptions),
-        prisma.job.count({ where }),
-      ]);
-      return NextResponse.json({
-        jobs,
-        total,
-        hasMore: skip + take < total,
-      });
-    }
-
-    // Backward compatible: no pagination, return flat array
-    const jobs = await prisma.job.findMany(queryOptions);
-    return NextResponse.json(jobs);
-  } catch (error) {
-    console.error("Jobs API Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در دریافت مشاغل رخ داد." },
-      { status: 500 }
-    );
+const mockJobs = [
+  {
+    id: 1,
+    title: "رستوران پرشین پلاس",
+    description: "بهترین غذاهای سنتی ایرانی با کادری مجرب در مرکز سیدنی",
+    status: "FINAL",
+    isVip: true,
+    isBoosted: false,
+    categoryId: 1,
+    category: { name: "رستوران و کافه" },
+    cityId: 1,
+    city: { name: "سیدنی" },
+    phone: "+61 412 345 678",
+    phones: ["+61 412 345 678", "+61 498 765 432"],
+    address: "George St, Sydney NSW 2000",
+    website: "https://example.com",
+    images: [{ url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600" }],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 2,
+    title: "خدمات ساختمانی و بازسازی آریا",
+    description: "کلیه خدمات نقاشی، بازسازی منازل و تاسیسات با گارانتی",
+    status: "FINAL",
+    isVip: false,
+    isBoosted: true,
+    boostPeriod: "THREE_DAYS",
+    categoryId: 2,
+    category: { name: "خدمات ساختمانی" },
+    cityId: 2,
+    city: { name: "ملبورن" },
+    phone: "+61 422 222 333",
+    images: [{ url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600" }],
+    createdAt: new Date().toISOString()
   }
+];
+
+export async function GET() {
+  return NextResponse.json(mockJobs);
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "لطفاً ابتدا وارد شوید." }, { status: 401 });
-    }
-
-    const data = await request.json();
-
-    // Convert to numbers where appropriate
-    const cityId = parseInt(data.cityId);
-    const categoryId = parseInt(data.categoryId);
-    const subCategoryId = parseInt(data.subCategoryId);
-
-    if (!cityId || !categoryId || !subCategoryId || !data.title || !data.phone) {
-      return NextResponse.json({ error: "لطفا فیلدهای الزامی را پر کنید." }, { status: 400 });
-    }
-
-    // Ensure userId is a number
-    const userId = parseInt(session.user.id as string, 10);
-
-
-    const job = await prisma.job.create({
-      data: {
-        userId: userId,
-        cityId,
-        categoryId,
-        subCategoryId,
-        title: data.title,
-        description: data.description,
-        phone: data.phone,
-        address: data.address,
-        website: data.website,
-        instagram: data.instagram,
-        telegram: data.telegram,
-        whatsapp: data.whatsapp,
-        workHours: data.workingHours,
-        subscriptionType: data.subscriptionType || 'SIX_MONTHS',
-        isVip: data.isVip || false,
-        isBoosted: data.isBoosted || false,
-        boostPeriod: data.boostPeriod,
-        status: 'PENDING',
-      }
-    });
-
-    return NextResponse.json({ success: true, job });
-  } catch (error) {
-    console.error("Job Creation Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در ثبت شغل رخ داد." },
-      { status: 500 }
-    );
-  }
+export async function POST(req: Request) {
+  const body = await req.json();
+  return NextResponse.json({
+    success: true,
+    message: "شغل با موفقیت به صورت آزمایشی ثبت شد.",
+    job: { id: Date.now(), ...body, status: "PENDING" }
+  });
 }
