@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+
+const mockCities = [
+  { id: 1, name: "سیدنی", state: "NSW", slug: "sydney" },
+  { id: 2, name: "ملبورن", state: "VIC", slug: "melbourne" },
+  { id: 3, name: "بریزبن", state: "QLD", slug: "brisbane" },
+  { id: 4, name: "پرت", state: "WA", slug: "perth" },
+  { id: 5, name: "آدلاید", state: "SA", slug: "adelaide" }
+];
 
 export async function GET() {
-  try {
-    const cities = await prisma.city.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        country: true
-      }
-    });
-
-    return NextResponse.json(cities);
-  } catch (error) {
-    console.error("Cities API Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در دریافت لیست شهرها رخ داد." },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(mockCities);
 }
