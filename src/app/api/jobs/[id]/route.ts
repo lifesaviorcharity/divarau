@@ -1,199 +1,25 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const jobId = parseInt(id);
-    
-    if (!jobId) {
-      return NextResponse.json({ error: "شناسه نامعتبر است." }, { status: 400 });
-    }
-
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: {
-        city: true,
-        category: true,
-        subCategory: true,
-        images: { orderBy: { order: 'asc' } },
-        user: {
-          select: { username: true, mobile: true }
-        },
-        reviews: {
-          where: { isApproved: true },
-          orderBy: { createdAt: 'desc' },
-          include: {
-            user: { select: { username: true } }
-          }
-        }
-      }
-    });
-
-    if (!job) {
-      return NextResponse.json({ error: "شغل یافت نشد." }, { status: 404 });
-    }
-
-    const isFinal = job.status === "FINAL" || job.status === "PAID";
-    const isApproved = job.status === "APPROVED";
-    
-    // If not final and not approved, only the owner or an admin can view it
-    if (!isFinal && !isApproved) {
-      const session = await getServerSession(authOptions);
-      if (!session || !session.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-      if (job.userId !== parseInt(session.user.id) && session.user.role !== "ADMIN") {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-      }
-    }
-
-    const reviewsEnabledSetting = await prisma.systemSetting.findUnique({
-      where: { key: "reviews_enabled" }
-    });
-    const reviewsEnabled = reviewsEnabledSetting?.value !== "false";
-
-    const reviewCount = job.reviews.length;
-    const rating = reviewCount > 0 
-      ? Math.round(job.reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviewCount) 
-      : 0;
-
-    return NextResponse.json({ ...job, reviewsEnabled, rating, reviewCount });
-  } catch (error) {
-    console.error("Job API Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در دریافت اطلاعات شغل رخ داد." },
-    );
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const jobId = parseInt(id);
-    
-    if (!jobId) {
-      return NextResponse.json({ error: "شناسه نامعتبر است." }, { status: 400 });
-    }
-
-    const job = await prisma.job.delete({
-      where: { id: jobId }
-    });
-
-    return NextResponse.json({ success: true, job });
-  } catch (error) {
-    console.error("Job Delete API Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در حذف شغل رخ داد." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const jobId = parseInt(id);
-
-    const body = await request.json();
-    const {
-      title,
-      description,
-      phone,
-      address,
-      email,
-      website,
-      whatsapp,
-      telegram,
-      instagram,
-      workingHours,
-      workHours,
-      categoryId,
-      subCategoryId,
-      images,
-    } = body;
-
-    const existingJob = await prisma.job.findUnique({
-      where: { id: jobId }
-    });
-
-    if (!existingJob) {
-      return NextResponse.json({ error: "شغل یافت نشد." }, { status: 404 });
-    }
-
-    if (existingJob.userId !== parseInt(session.user.id) && session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const isNeedsEditOrRejected = existingJob.status === "NEEDS_EDIT" || existingJob.status === "REJECTED";
-    const updateData: any = {};
-
-    if (isNeedsEditOrRejected) {
-      // Full editing allowed for jobs needing correction
-      if (title !== undefined) updateData.title = title;
-      if (description !== undefined) updateData.description = description;
-      if (phone !== undefined) updateData.phone = phone;
-      if (address !== undefined) updateData.address = address;
-      if (email !== undefined) updateData.email = email;
-      if (website !== undefined) updateData.website = website;
-      if (whatsapp !== undefined) updateData.whatsapp = whatsapp;
-      if (telegram !== undefined) updateData.telegram = telegram;
-      if (instagram !== undefined) updateData.instagram = instagram;
-      const finalWorkHours = workingHours !== undefined ? workingHours : workHours;
-      if (finalWorkHours !== undefined) updateData.workHours = finalWorkHours;
-      if (categoryId) updateData.categoryId = parseInt(categoryId);
-      if (subCategoryId) updateData.subCategoryId = parseInt(subCategoryId);
-
-      // Change status to PENDING for admin re-approval
-      updateData.status = "PENDING";
-
-      if (images && Array.isArray(images)) {
-        await prisma.jobImage.deleteMany({ where: { jobId } });
-        if (images.length > 0) {
-          await prisma.jobImage.createMany({
-            data: images.map((img: any, idx: number) => ({
-              jobId,
-              url: typeof img === "string" ? img : img.url,
-              isMain: typeof img === "object" && img.isMain !== undefined ? !!img.isMain : idx === 0,
-              order: idx,
-            })),
-          });
-        }
-      }
-    } else {
-      // Restricted editing for other statuses (FINAL, APPROVED): only Category and SubCategory
-      if (categoryId) updateData.categoryId = parseInt(categoryId);
-      if (subCategoryId) updateData.subCategoryId = parseInt(subCategoryId);
-      // Status remains unchanged and no admin approval needed
-    }
-
-    const updatedJob = await prisma.job.update({
-      where: { id: jobId },
-      data: updateData,
-    });
-
-    return NextResponse.json({ success: true, job: updatedJob });
-  } catch (error) {
-    console.error("Job Update API Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در ویرایش شغل رخ داد." },
-      { status: 500 }
-    );
-  }
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return NextResponse.json({
+    id: Number(id),
+    title: "رستوران پرشین پلاس",
+    description: "بهترین غذاهای سنتی ایرانی در مرکز سیدنی با سابقه درخشان",
+    status: "FINAL",
+    isVip: true,
+    isBoosted: true,
+    phone: "+61 412 345 678",
+    phones: ["+61 412 345 678"],
+    address: "Sydney NSW 2000",
+    workHours: "همه روزه از ۱۱:۰۰ تا ۲۳:۰۰",
+    email: "info@persianplus.com.au",
+    website: "https://example.com",
+    telegram: "persianplus",
+    instagram: "persianplus_au",
+    whatsapp: "+61412345678",
+    category: { name: "رستوران و کافه" },
+    city: { name: "سیدنی" },
+    images: [{ url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800" }]
+  });
 }
