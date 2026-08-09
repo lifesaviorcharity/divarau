@@ -1,61 +1,59 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = parseInt(session.user.id as string, 10);
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { username: true, email: true }
-    });
-
-    const [jobs, ads, tickets, messages] = await Promise.all([
-      prisma.job.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: { city: true }
-      }),
-      prisma.ad.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' }
-      }),
-      prisma.ticket.findMany({
-        where: { userId },
-        include: {
-          messages: {
-            orderBy: { createdAt: 'asc' }
-          }
-        },
-        orderBy: { updatedAt: 'desc' }
-      }),
-      prisma.message.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' }
-      })
-    ]); 
-
-    return NextResponse.json({
-      user: session.user,
-      username: user?.username || "",
-      email: user?.email || "",
-      jobs,
-      ads,
-      tickets,
-      messages
-    });
-  } catch (error) {
-    console.error("Profile API Error:", error);
-    return NextResponse.json(
-      { error: "خطایی در دریافت اطلاعات پروفایل رخ داد." },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    username: "محسن احمدی",
+    mobile: "+61412345678",
+    email: "user@example.com",
+    jobs: [
+      {
+        id: 1,
+        title: "رستوران سنتی زعفران",
+        status: "FINAL",
+        isVip: false,
+        isBoosted: false,
+        city: { name: "سیدنی" },
+        images: [{ url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600" }]
+      },
+      {
+        id: 2,
+        title: "دفتر ترجمه و مهاجرت آریا",
+        status: "APPROVED",
+        isVip: false,
+        isBoosted: false,
+        city: { name: "ملبورن" },
+        images: []
+      }
+    ],
+    ads: [
+      {
+        id: 10,
+        title: "نیازمند باریستا با سابقه کاری",
+        type: "EMPLOYMENT",
+        status: "FINAL",
+        phone: "+61400111222"
+      }
+    ],
+    messages: [
+      {
+        id: 1,
+        title: "خوش‌آمدگویی به دیوار استرالیا",
+        content: "حساب کاربری شما با موفقیت فعال گردید.",
+        isRead: true,
+        createdAt: new Date().toISOString()
+      }
+    ],
+    tickets: [
+      {
+        id: 101,
+        subject: "سوال درباره ارتقا به ویژه",
+        status: "REPLIED",
+        createdAt: new Date().toISOString(),
+        messages: [
+          { id: 1, content: "سلام، هزینه اشتراک ویژه چقدر است؟", isAdmin: false, createdAt: new Date().toISOString() },
+          { id: 2, content: "با سلام، هزینه ارتقا ۳۰ دلار است.", isAdmin: true, createdAt: new Date().toISOString() }
+        ]
+      }
+    ]
+  });
 }
