@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const data = await request.json();
-    const { type, id } = data; // type: "ad" | "job", id: number
+    const { type, id, period } = data; // type: "ad" | "job" | "job_boost" | "job_vip", id: number, period?: string
 
     if (!type || !id) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
@@ -23,12 +23,19 @@ export async function POST(request: Request) {
 
     // Fetch settings to get dynamic prices
     const settings = await prisma.systemSetting.findMany();
-    const getSetting = (key: string) => settings.find(s => s.key === key)?.value;
-    const adPrice = parseInt(getSetting("adPrice") || "50", 10);
-    const jobPrice = parseInt(getSetting("jobPrice") || "50", 10);
+    const getSetting = (key: string) => settings.find((s) => s.key === key)?.value;
+
+    const price6Month = parseInt(getSetting("price6Month") || getSetting("jobPrice") || "50", 10);
+    const price12Month = parseInt(getSetting("price12Month") || "90", 10);
+    const priceVip = parseInt(getSetting("priceVip") || "30", 10);
+    const priceBoost1 = parseInt(getSetting("priceBoost1") || "10", 10);
+    const priceBoost3 = parseInt(getSetting("priceBoost3") || "25", 10);
+    const priceBoost7 = parseInt(getSetting("priceBoost7") || "50", 10);
+    const priceCommercialAd = parseInt(getSetting("priceCommercialAd") || getSetting("adPrice") || "50", 10);
 
     let amount = 0;
     let description = "";
+    let returnUrlParams = `type=${type}&id=${itemId}`;
 
     if (type === "ad") {
       const ad = await prisma.ad.findUnique({ where: { id: itemId } });
@@ -36,39 +43,67 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Ad not found or unauthorized" }, { status: 404 });
       }
       if (ad.status !== "APPROVED") {
-        return NextResponse.json({ error: "Ad must be APPROVED before payment" }, { status: 400 });
+        return NextResponse.json({ error: "آگهی باید در وضعیت تأیید اولیه باشد." }, { status: 400 });
       }
-      amount = adPrice;
+      amount = priceCommercialAd;
       description = `Payment for Commercial Ad: ${ad.title}`;
     } else if (type === "job") {
       const job = await prisma.job.findUnique({ where: { id: itemId } });
       if (!job || job.userId !== userId) {
         return NextResponse.json({ error: "Job not found or unauthorized" }, { status: 404 });
       }
-      if (job.status !== "APPROVED") {
-        return NextResponse.json({ error: "Job must be APPROVED before payment" }, { status: 400 });
+      if (job.status !== "APPROVED" && job.status !== "EXPIRED") {
+        return NextResponse.json({ error: "شغل باید در وضعیت تأیید اولیه یا منقضی باشد." }, { status: 400 });
       }
-      amount = jobPrice;
-      description = `Payment for Job Listing: ${job.title}`;
+      amount = job.subscriptionType === "TWELVE_MONTHS" ? price12Month : price6Month;
+      description = `Payment for Job Listing (${job.subscriptionType === "TWELVE_MONTHS" ? "12 Months" : "6 Months"}): ${job.title}`;
+    } else if (type === "job_boost") {
+      const job = await prisma.job.findUnique({ where: { id: itemId } });
+      if (!job || job.userId !== userId) {
+        return NextResponse.json({ error: "Job not found or unauthorized" }, { status: 404 });
+      }
+      if (job.status !== "FINAL") {
+        return NextResponse.json({ error: "فقط مشاغل با تأیید نهایی قابلیت پله شدن دارند." }, { status: 400 });
+      }
+
+      const boostDays = String(period || "1");
+      if (boostDays === "7" || boostDays === "SEVEN_DAYS") {
+        amount = priceBoost7;
+      } else if (boostDays === "3" || boostDays === "THREE_DAYS") {
+        amount = priceBoost3;
+      } else {
+        amount = priceBoost1;
+      }
+
+      returnUrlParams += `&period=${boostDays}`;
+      description = `Boost (${boostDays} Days) for Job: ${job.title}`;
+    } else if (type === "job_vip") {
+      const job = await prisma.job.findUnique({ where: { id: itemId } });
+      if (!job || job.userId !== userId) {
+        return NextResponse.json({ error: "Job not found or unauthorized" }, { status: 404 });
+      }
+      if (job.status !== "FINAL") {
+        return NextResponse.json({ error: "فقط مشاغل با تأیید نهایی قابلیت ارتقا به ویژه دارند." }, { status: 400 });
+      }
+      amount = priceVip;
+      description = `VIP Upgrade for Job: ${job.title}`;
     } else {
       return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     }
 
     if (amount <= 0) {
-      // If price is 0, just mark it as paid directly
-      return NextResponse.json({ error: "Price is 0, no payment required" }, { status: 400 });
+      return NextResponse.json({ error: "مبلغ نامعتبر است." }, { status: 400 });
     }
 
     const host = request.headers.get("host");
     const protocol = host?.includes("localhost") ? "http" : "https";
     const baseUrl = `${protocol}://${host}`;
 
-    const returnUrl = `${baseUrl}/payment/success?type=${type}&id=${itemId}`;
-    const cancelUrl = `${baseUrl}/payment/cancel?type=${type}&id=${itemId}`;
+    const returnUrl = `${baseUrl}/payment/success?${returnUrlParams}`;
+    const cancelUrl = `${baseUrl}/payment/cancel?${returnUrlParams}`;
 
     const order = await createOrder(amount, description, returnUrl, cancelUrl);
 
-    // Order contains links array. We need to find the one with rel === "approve"
     const approveLink = order.links.find((link: any) => link.rel === "approve")?.href;
 
     if (!approveLink) {
@@ -78,9 +113,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       orderId: order.id,
-      approveUrl: approveLink
+      approveUrl: approveLink,
     });
-
   } catch (error: any) {
     console.error("Payment Create Error:", error);
     return NextResponse.json(

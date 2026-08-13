@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useCallback } from "react";
 import { Phone, ArrowLeft, Shield, Loader2, RefreshCw } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatPersianNumber } from "@/lib/utils";
+import { formatPersianNumber, normalizeAustralianMobile } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -51,10 +51,20 @@ function LoginPageContent() {
   }, [countdown]);
 
   const handleSendOTP = useCallback(async () => {
-    if (!mobile || mobile.replace(/\D/g, "").length < 8) {
-      setError("لطفاً شماره موبایل معتبر وارد کنید");
+    if (!mobile || !mobile.trim()) {
+      setError("لطفاً شماره موبایل را وارد کنید");
       return;
     }
+
+    let normalized = "";
+    try {
+      normalized = normalizeAustralianMobile(mobile);
+      setMobile(normalized);
+    } catch (err: any) {
+      setError(err?.message || "لطفاً شماره موبایل معتبر وارد کنید");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -62,7 +72,7 @@ function LoginPageContent() {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile }),
+        body: JSON.stringify({ mobile: normalized }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -85,11 +95,17 @@ function LoginPageContent() {
     setError("");
     setIsLoading(true);
 
+    let normalized = mobile;
+    try {
+      normalized = normalizeAustralianMobile(mobile);
+      setMobile(normalized);
+    } catch {}
+
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile }),
+        body: JSON.stringify({ mobile: normalized }),
       });
 
       const data = await res.json();
@@ -116,9 +132,15 @@ function LoginPageContent() {
     setIsLoading(true);
     setError("");
 
+    let normalized = mobile;
+    try {
+      normalized = normalizeAustralianMobile(mobile);
+      setMobile(normalized);
+    } catch {}
+
     try {
       const res = await signIn("credentials", {
-        mobile,
+        mobile: normalized,
         otp: code,
         redirect: false,
       });
@@ -256,20 +278,30 @@ function LoginPageContent() {
                     type="tel"
                     value={mobile}
                     onChange={(e) => {
-                      setMobile(e.target.value.replace(/[^0-9+]/g, ""));
+                      setMobile(e.target.value);
                       setError("");
+                    }}
+                    onBlur={() => {
+                      if (mobile.trim()) {
+                        try {
+                          const normalized = normalizeAustralianMobile(mobile);
+                          setMobile(normalized);
+                        } catch {
+                          // Ignore blur error; user can still edit
+                        }
+                      }
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSendOTP();
                     }}
-                    placeholder="04XX XXX XXX"
-                    className="w-full pr-10 pl-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr"
-                    maxLength={15}
+                    placeholder="+61 4XX XXX XXX یا 04XX XXX XXX"
+                    className="w-full pr-10 pl-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-medium"
+                    maxLength={20}
                     autoFocus
                   />
                 </div>
                 <p className="text-[10px] text-gray-400 mt-1">
-                  فرمت شماره موبایل استرالیا: 04XX XXX XXX
+                  شماره‌های وارد شده بدون پیش‌شماره به‌صورت خودکار به فرمت 61+ تبدیل می‌شوند.
                 </p>
               </div>
 

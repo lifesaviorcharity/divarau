@@ -31,15 +31,15 @@ interface AdminLayoutProps {
 const sidebarItems = [
   { label: "داشبورد", href: "/admin", icon: <LayoutDashboard size={18} /> },
   { label: "مدیریت مشاغل", href: "/admin/jobs", icon: <Briefcase size={18} /> },
-  { label: "مدیریت آگهی‌ها", href: "/admin/ads", icon: <FileText size={18} /> },
-  { label: "مدیریت دسته‌بندی‌ها", href: "/admin/categories", icon: <Tags size={18} /> },
+  { label: "مدیریت آگهی ها", href: "/admin/ads", icon: <FileText size={18} /> },
+  { label: "مدیریت دسته‌بندی ها", href: "/admin/categories", icon: <Tags size={18} /> },
   { label: "مدیریت شهرها", href: "/admin/cities", icon: <MapPin size={18} /> },
   { label: "مدیریت کاربران", href: "/admin/users", icon: <Users size={18} /> },
   { label: "مدیریت بنرها", href: "/admin/banners", icon: <ImageIcon size={18} /> },
-  { label: "مدیریت پرداخت‌ها", href: "/admin/payments", icon: <CreditCard size={18} /> },
+  { label: "مدیریت پرداخت ها", href: "/admin/payments", icon: <CreditCard size={18} /> },
   { label: "مدیریت نظرات", href: "/admin/reviews", icon: <Star size={18} /> },
-  { label: "پیام‌ها و تیکت‌ها", href: "/admin/messages", icon: <MessageSquare size={18} /> },
-  { label: "گزارش‌ها", href: "/admin/reports", icon: <BarChart3 size={18} /> },
+  { label: "پیام‌ها و تیکت ها", href: "/admin/messages", icon: <MessageSquare size={18} /> },
+  { label: "گزارش ها", href: "/admin/reports", icon: <BarChart3 size={18} /> },
   { label: "گزارش انقضا", href: "/admin/expiring", icon: <Clock size={18} /> },
   { label: "تنظیمات", href: "/admin/settings", icon: <Settings size={18} /> },
 ];
@@ -84,8 +84,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  ? "bg-primary text-white shadow-md shadow-primary/20"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
                   }`}
               >
                 {item.icon}
@@ -144,8 +144,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                        ? "bg-primary text-white shadow-md shadow-primary/20"
-                        : "text-gray-400 hover:text-white hover:bg-gray-800"
+                      ? "bg-primary text-white shadow-md shadow-primary/20"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800"
                       }`}
                   >
                     {item.icon}

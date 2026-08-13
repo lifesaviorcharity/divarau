@@ -39,7 +39,7 @@ export default function HomePage() {
                   جستجو کن، معرفی کن، ارتباط بگیر!
                 </p>
                 <p className="text-sm md:text-base text-gray-700 mt-1">
-                  مشاغل ایرانیان و فارسی‌زبانان استرالیا
+                  مشاغل ایرانیان و فارسی زبانان استرالیا
                 </p>
               </div>
               <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" className="w-8 md:w-10 h-auto rounded-sm shadow-sm object-cover" />

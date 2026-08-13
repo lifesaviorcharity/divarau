@@ -13,6 +13,7 @@ function SuccessContent() {
   const token = searchParams.get("token");
   const type = searchParams.get("type");
   const id = searchParams.get("id");
+  const period = searchParams.get("period");
 
   useEffect(() => {
     if (!token || !type || !id) {
@@ -26,7 +27,7 @@ function SuccessContent() {
         const res = await fetch("/api/payment/capture", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, type, id })
+          body: JSON.stringify({ token, type, id, period })
         });
         
         const data = await res.json();

@@ -104,8 +104,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
       action === "disable"
         ? `[DISABLED]:${targetJob?.status || "FINAL"}`
         : action === "enable"
-        ? null
-        : adminNote;
+          ? null
+          : adminNote;
 
     try {
       const res = await fetch(`/api/admin/jobs/${jobId}/status`, {
@@ -256,145 +256,143 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                 return (
                   <tr
                     key={job.id}
-                    className={`border-b transition-all duration-200 ${
-                      isFirstMatch
+                    className={`border-b transition-all duration-200 ${isFirstMatch
                         ? "bg-amber-100/90 hover:bg-amber-100 border-amber-300 ring-2 ring-amber-400/60 shadow-sm"
                         : "border-gray-50 hover:bg-gray-50/50"
-                    }`}
+                      }`}
                   >
                     <td className="px-4 py-3 text-gray-400">{job.id}</td>
                     <td className="px-4 py-3 font-semibold text-gray-800">
                       <span>{job.title}</span>
                     </td>
-                  <td className="px-4 py-3 text-gray-600">{job.user}</td>
-                  <td className="px-4 py-3 text-gray-600">{job.city}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
-                        {getSubscriptionLabel(job.subscriptionType)}
+                    <td className="px-4 py-3 text-gray-600">{job.user}</td>
+                    <td className="px-4 py-3 text-gray-600">{job.city}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                          {getSubscriptionLabel(job.subscriptionType)}
+                        </span>
+                        {job.isVip && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-md flex items-center gap-0.5">
+                            <Star size={10} className="fill-amber-600" /> ویژه
+                          </span>
+                        )}
+                        {job.isBoosted && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-800 rounded-md flex items-center gap-0.5">
+                            <Zap size={10} className="fill-purple-600" /> پله ({getBoostPeriodLabel(job.boostPeriod)})
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-xs text-gray-600 flex items-center gap-1">
+                        <ImageIcon size={14} className="text-blue-500" />
+                        {job.images?.length || 0} تصویر
                       </span>
-                      {job.isVip && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-md flex items-center gap-0.5">
-                          <Star size={10} className="fill-amber-600" /> ویژه
-                        </span>
-                      )}
-                      {job.isBoosted && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-800 rounded-md flex items-center gap-0.5">
-                          <Zap size={10} className="fill-purple-600" /> پله ({getBoostPeriodLabel(job.boostPeriod)})
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-xs text-gray-600 flex items-center gap-1">
-                      <ImageIcon size={14} className="text-blue-500" />
-                      {job.images?.length || 0} تصویر
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-[10px] font-semibold rounded-lg whitespace-nowrap inline-block ${
-                        getStatusInfo(job.status).color
-                      }`}
-                    >
-                      {getStatusInfo(job.status).label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">
-                    {toJalali(new Date(job.createdAt))}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => {
-                          setViewJob(job);
-                          setViewModalImageIndex(0);
-                        }}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                        title="مشاهده جزئیات و تصاویر"
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-[10px] font-semibold rounded-lg whitespace-nowrap inline-block ${getStatusInfo(job.status).color
+                          }`}
                       >
-                        <Eye size={14} />
-                      </button>
-                      <Link
-                        href={`/admin/jobs/${job.id}/edit`}
-                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                        title="ویرایش"
-                      >
-                        <Edit size={14} />
-                      </Link>
-                      {(job.status === "PENDING" || job.status === "PAID") && (
-                        <>
+                        {getStatusInfo(job.status).label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">
+                      {toJalali(new Date(job.createdAt))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => {
+                            setViewJob(job);
+                            setViewModalImageIndex(0);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                          title="مشاهده جزئیات و تصاویر"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <Link
+                          href={`/admin/jobs/${job.id}/edit`}
+                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                          title="ویرایش"
+                        >
+                          <Edit size={14} />
+                        </Link>
+                        {(job.status === "PENDING" || job.status === "PAID") && (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleAction(job.id, job.status === "PAID" ? "final_approve" : "approve")
+                              }
+                              className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                              title="تأیید"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedJob(job.id);
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                              title="رد"
+                            >
+                              <XCircle size={14} />
+                            </button>
+                          </>
+                        )}
+                        {job.status !== "FINAL" && job.status !== "DISABLED" && (
                           <button
-                            onClick={() =>
-                              handleAction(job.id, job.status === "PAID" ? "final_approve" : "approve")
-                            }
+                            onClick={() => {
+                              if (confirm("آیا از تایید نهایی این شغل اطمینان دارید؟"))
+                                handleAction(job.id, "final_approve");
+                            }}
                             className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
-                            title="تأیید"
+                            title="تایید نهایی دستی"
                           >
-                            <CheckCircle size={14} />
+                            <CheckCheck size={14} />
                           </button>
+                        )}
+                        {job.status === "DISABLED" ? (
                           <button
                             onClick={() => {
-                              setSelectedJob(job.id);
+                              if (confirm("آیا از فعال‌سازی مجدد این شغل اطمینان دارید؟"))
+                                handleAction(job.id, "enable");
                             }}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                            title="رد"
+                            className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg"
+                            title="فعال‌سازی مجدد"
                           >
-                            <XCircle size={14} />
+                            <Power size={14} />
                           </button>
-                        </>
-                      )}
-                      {job.status !== "FINAL" && job.status !== "DISABLED" && (
+                        ) : (
+                          (job.status === "FINAL" ||
+                            job.status === "APPROVED" ||
+                            job.status === "PAID") && (
+                            <button
+                              onClick={() => {
+                                if (confirm("آیا از غیرفعال کردن این شغل اطمینان دارید؟"))
+                                  handleAction(job.id, "disable");
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                              title="غیرفعال کردن"
+                            >
+                              <PowerOff size={14} />
+                            </button>
+                          )
+                        )}
                         <button
-                          onClick={() => {
-                            if (confirm("آیا از تایید نهایی این شغل اطمینان دارید؟"))
-                              handleAction(job.id, "final_approve");
-                          }}
-                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
-                          title="تایید نهایی دستی"
+                          onClick={() => handleDelete(job.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                          title="حذف"
                         >
-                          <CheckCheck size={14} />
+                          <Trash2 size={14} />
                         </button>
-                      )}
-                      {job.status === "DISABLED" ? (
-                        <button
-                          onClick={() => {
-                            if (confirm("آیا از فعال‌سازی مجدد این شغل اطمینان دارید؟"))
-                              handleAction(job.id, "enable");
-                          }}
-                          className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg"
-                          title="فعال‌سازی مجدد"
-                        >
-                          <Power size={14} />
-                        </button>
-                      ) : (
-                        (job.status === "FINAL" ||
-                          job.status === "APPROVED" ||
-                          job.status === "PAID") && (
-                          <button
-                            onClick={() => {
-                              if (confirm("آیا از غیرفعال کردن این شغل اطمینان دارید؟"))
-                                handleAction(job.id, "disable");
-                            }}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                            title="غیرفعال کردن"
-                          >
-                            <PowerOff size={14} />
-                          </button>
-                        )
-                      )}
-                      <button
-                        onClick={() => handleDelete(job.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                        title="حذف"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -486,9 +484,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   <div className="bg-white p-2.5 rounded-lg border border-emerald-100 flex items-center justify-between">
                     <span className="text-gray-500">اشتراک ویژه (VIP):</span>
                     <span
-                      className={`font-bold ${
-                        viewJob.isVip ? "text-amber-600" : "text-gray-500"
-                      }`}
+                      className={`font-bold ${viewJob.isVip ? "text-amber-600" : "text-gray-500"
+                        }`}
                     >
                       {viewJob.isVip ? "🌟 فعال (نمایش در گروه اصلی)" : "غیرفعال"}
                     </span>
@@ -496,9 +493,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   <div className="bg-white p-2.5 rounded-lg border border-emerald-100 flex items-center justify-between">
                     <span className="text-gray-500">پله شدن آگهی (Boost):</span>
                     <span
-                      className={`font-bold ${
-                        viewJob.isBoosted ? "text-purple-600" : "text-gray-500"
-                      }`}
+                      className={`font-bold ${viewJob.isBoosted ? "text-purple-600" : "text-gray-500"
+                        }`}
                     >
                       {viewJob.isBoosted
                         ? `🚀 فعال (${getBoostPeriodLabel(viewJob.boostPeriod)})`
@@ -508,9 +504,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   <div className="bg-white p-2.5 rounded-lg border border-emerald-100 flex items-center justify-between">
                     <span className="text-gray-500">وضعیت آگهی:</span>
                     <span
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
-                        getStatusInfo(viewJob.status).color
-                      }`}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${getStatusInfo(viewJob.status).color
+                        }`}
                     >
                       {getStatusInfo(viewJob.status).label}
                     </span>
@@ -581,11 +576,10 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                           key={img.id || idx}
                           type="button"
                           onClick={() => setViewModalImageIndex(idx)}
-                          className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all relative ${
-                            idx === viewModalImageIndex
+                          className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all relative ${idx === viewModalImageIndex
                               ? "border-primary shadow-sm"
                               : "border-gray-200 opacity-70"
-                          }`}
+                            }`}
                         >
                           <img src={img.url} alt="" className="w-full h-full object-cover" />
                           {img.isMain && (
@@ -613,8 +607,20 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                     <span className="font-semibold text-gray-800">{viewJob.user}</span>
                   </div>
                   <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                    <span className="text-gray-500 block mb-1">شماره تماس:</span>
-                    <span className="font-semibold text-gray-800 dir-ltr">{viewJob.phone || "-"}</span>
+                    <span className="text-gray-500 block mb-1">
+                      {viewJob.phone && viewJob.phone.includes(",") ? "شماره‌های تماس:" : "شماره تماس:"}
+                    </span>
+                    {viewJob.phone ? (
+                      <div className="space-y-0.5" dir="ltr">
+                        {viewJob.phone.split(/[,،\n]+/).map((ph: string, i: number) => (
+                          <div key={i} className="font-semibold text-gray-800 font-mono text-xs">
+                            {ph.trim()}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="font-semibold text-gray-800">-</span>
+                    )}
                   </div>
                   {viewJob.address && (
                     <div className="sm:col-span-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
@@ -655,7 +661,14 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/80 flex justify-end">
+            <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/80 flex justify-between items-center">
+              <Link
+                href={`/admin/jobs/${viewJob.id}/edit`}
+                className="px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Edit size={14} />
+                ویرایش کامل شغل
+              </Link>
               <button
                 type="button"
                 onClick={() => setViewJob(null)}

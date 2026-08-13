@@ -19,6 +19,7 @@ import {
   Trash2,
   BadgeCheck,
   BookOpen,
+  Plus,
 } from "lucide-react";
 
 export default function RegisterJobPage() {
@@ -31,9 +32,12 @@ export default function RegisterJobPage() {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number | null>(null);
   const [selectedSubCategorySlug, setSelectedSubCategorySlug] = useState("");
   const [formData, setFormData] = useState({
-    title: "", description: "", phone: "", address: "", email: "",
+    title: "", description: "", address: "", email: "",
     website: "", whatsapp: "", telegram: "", instagram: "", workHours: "",
   });
+  const [phoneList, setPhoneList] = useState<{ countryCode: string; number: string }[]>([
+    { countryCode: "+61", number: "" },
+  ]);
   const [images, setImages] = useState<{ url: string; file: File }[]>([]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [subscriptionType, setSubscriptionType] = useState<"6" | "12">("6");
@@ -101,8 +105,20 @@ export default function RegisterJobPage() {
   const handleSubmit = async () => {
     if (!selectedCity) { openCityModal(); return; }
     if (!isLoggedIn) return;
-    if (selectedCategoryIndex === null || !selectedSubCategorySlug || !formData.title.trim() || !formData.description.trim() || !formData.phone.trim()) {
-      alert("لطفاً تمامی فیلدهای ستاره‌دار (اجباری) را پر کنید.");
+
+    const formattedPhones = phoneList
+      .map((p) => (p.number.trim() ? `${p.countryCode} ${p.number.trim()}` : ""))
+      .filter(Boolean)
+      .join(", ");
+
+    if (
+      selectedCategoryIndex === null ||
+      !selectedSubCategorySlug ||
+      !formData.title.trim() ||
+      !formData.description.trim() ||
+      !formattedPhones
+    ) {
+      alert("لطفاً تمامی فیلدهای ستاره‌دار (اجباری) از جمله حداقل یک شماره تماس را پر کنید.");
       return;
     }
 
@@ -136,7 +152,7 @@ export default function RegisterJobPage() {
         body: JSON.stringify({
           title: formData.title,
           description: formData.description,
-          phone: formData.phone,
+          phone: formattedPhones,
           address: formData.address,
           email: formData.email,
           website: formData.website,
@@ -375,14 +391,69 @@ export default function RegisterJobPage() {
                   <p className="text-[10px] text-gray-400 mt-1">{formData.description.length}/800 کاراکتر</p>
                 </div>
 
-                {/* Phone */}
+                {/* Phone Numbers */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">شماره تماس *</label>
-                  <input type="tel" value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value.replace(/[^0-9+]/g, ""))}
-                    placeholder="فرمت صحیح: 0412345678 یا 61412345678+"
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr" />
-                  <p className="text-[10px] text-gray-400 mt-1">شماره تماس الزامی است و فقط شامل اعداد و + باشد.</p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      شماره‌های تماس (حداکثر ۳ شماره) *
+                    </label>
+                    {phoneList.length < 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setPhoneList([...phoneList, { countryCode: "+61", number: "" }])}
+                        className="text-xs font-bold text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <Plus size={13} /> افزودن شماره دیگر
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {phoneList.map((ph, idx) => (
+                      <div key={idx} className="flex items-center gap-1">
+
+                        {/* Number Input Box */}
+                        <input
+                          type="tel"
+                          value={ph.number}
+                          onChange={(e) => {
+                            const updated = [...phoneList];
+                            updated[idx].number = e.target.value.replace(/[^0-9\s-]/g, "");
+                            setPhoneList(updated);
+                          }}
+                          placeholder={idx === 0 ? "مثلاً: 412345678 یا 0412345678" : "شماره تماس دیگر..."}
+                          className="flex-1 px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono"
+                        />
+                        {/* Country Code Dropdown */}
+                        <select
+                          value={ph.countryCode}
+                          onChange={(e) => {
+                            const updated = [...phoneList];
+                            updated[idx].countryCode = e.target.value;
+                            setPhoneList(updated);
+                          }}
+                          className="w-25 px-2.5 py-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shrink-0"
+                        >
+                          <option value="+61">AU (+61)</option>
+                        </select>
+
+                        {/* Remove Button */}
+                        {phoneList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setPhoneList(phoneList.filter((_, i) => i !== idx))}
+                            className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer shrink-0"
+                            title="حذف این شماره"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    شماره اول الزامی است. می‌توانید حداکثر تا ۳ شماره تماس با پیش‌شماره کشور ثبت نمایید.
+                  </p>
                 </div>
 
                 {/* Address */}

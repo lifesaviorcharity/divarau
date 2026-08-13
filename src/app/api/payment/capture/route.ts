@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const data = await request.json();
-    const { token, type, id } = data; // token is PayPal order ID
+    const { token, type, id, period } = data; // token is PayPal order ID
 
     if (!token || !type || !id) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
@@ -50,13 +50,24 @@ export async function POST(request: Request) {
           amount,
           status: "COMPLETED",
           method: "PAYPAL",
-          reference: transactionId
+          reference: transactionId,
+          description: "پرداخت آگهی تجاری"
         }
       });
     } else if (type === "job") {
+      const existingJob = await prisma.job.findUnique({ where: { id: itemId } });
+      const monthsToAdd = existingJob?.subscriptionType === "TWELVE_MONTHS" ? 12 : 6;
+      const now = new Date();
+      const expiresAt = new Date(now.setMonth(now.getMonth() + monthsToAdd));
+
       await prisma.job.update({
         where: { id: itemId },
-        data: { status: "FINAL" }
+        data: {
+          status: "FINAL",
+          paidAt: new Date(),
+          finalApprovedAt: new Date(),
+          expiresAt: expiresAt,
+        }
       });
       // Log payment
       await prisma.payment.create({
@@ -66,7 +77,57 @@ export async function POST(request: Request) {
           amount,
           status: "COMPLETED",
           method: "PAYPAL",
-          reference: transactionId
+          reference: transactionId,
+          description: `پرداخت اشتراک شغل (${monthsToAdd} ماهه)`
+        }
+      });
+    } else if (type === "job_boost") {
+      const boostDays = String(period || "1");
+      const boostEnum =
+        boostDays === "7" || boostDays === "SEVEN_DAYS"
+          ? "SEVEN_DAYS"
+          : boostDays === "3" || boostDays === "THREE_DAYS"
+          ? "THREE_DAYS"
+          : "ONE_DAY";
+
+      await prisma.job.update({
+        where: { id: itemId },
+        data: {
+          isBoosted: true,
+          boostPeriod: boostEnum,
+          updatedAt: new Date(),
+        }
+      });
+
+      await prisma.payment.create({
+        data: {
+          userId,
+          jobId: itemId,
+          amount,
+          status: "COMPLETED",
+          method: "PAYPAL",
+          reference: transactionId,
+          description: `ارتقا به پله (Boost) شغل - ${boostDays} روزه`
+        }
+      });
+    } else if (type === "job_vip") {
+      await prisma.job.update({
+        where: { id: itemId },
+        data: {
+          isVip: true,
+          updatedAt: new Date(),
+        }
+      });
+
+      await prisma.payment.create({
+        data: {
+          userId,
+          jobId: itemId,
+          amount,
+          status: "COMPLETED",
+          method: "PAYPAL",
+          reference: transactionId,
+          description: "ارتقا به اشتراک ویژه (VIP) شغل"
         }
       });
     }

@@ -13,7 +13,14 @@ export default async function AdminJobEditPage({ params }: { params: Promise<{ i
   }
 
   const job = await prisma.job.findUnique({
-    where: { id: jobId }
+    where: { id: jobId },
+    include: {
+      images: { orderBy: { order: "asc" } },
+      user: { select: { id: true, username: true, mobile: true, email: true } },
+      city: true,
+      category: true,
+      subCategory: true,
+    }
   });
 
   if (!job) {

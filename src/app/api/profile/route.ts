@@ -21,11 +21,23 @@ export async function GET() {
       prisma.job.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
-        include: { city: true }
+        include: {
+          city: true,
+          category: true,
+          subCategory: true,
+          images: {
+            orderBy: { order: 'asc' }
+          }
+        }
       }),
       prisma.ad.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        include: {
+          city: true,
+          category: true,
+          subCategory: true
+        }
       }),
       prisma.ticket.findMany({
         where: { userId },

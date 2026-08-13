@@ -143,9 +143,27 @@ export default function JobDetailPage() {
             {showContact && canViewFullDetails && (
               <div className="border border-gray-100 rounded-xl p-5 mb-6 space-y-4 animate-scale-in bg-gray-50/50">
                 {job.phone && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-700">شماره تماس:</span>
-                    <a href={`tel:${job.phone}`} className="text-sm text-primary font-medium">{job.phone}</a>
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-semibold text-gray-700 block">
+                      {job.phone.includes(",") ? "شماره‌های تماس:" : "شماره تماس:"}
+                    </span>
+                    <div className="space-y-1.5">
+                      {job.phone.split(/[,،\n]+/).map((ph: string, idx: number) => {
+                        const cleanPh = ph.trim();
+                        if (!cleanPh) return null;
+                        return (
+                          <div key={idx} className="flex items-center justify-between">
+                            <span className="text-xs text-gray-400">شماره {idx + 1}:</span>
+                            <a
+                              href={`tel:${cleanPh.replace(/\s+/g, "")}`}
+                              className="text-sm text-primary font-medium inline-block hover:underline font-mono" dir="ltr"
+                            >
+                              {cleanPh}
+                            </a>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 {job.address && (

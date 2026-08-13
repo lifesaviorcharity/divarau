@@ -11,8 +11,26 @@ import {
   X,
   ImagePlus,
   AlertTriangle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import React from "react";
+
+const parsePhones = (phoneStr: string | null | undefined) => {
+  if (!phoneStr || !phoneStr.trim()) {
+    return [{ countryCode: "+61", number: "" }];
+  }
+  const parts = phoneStr.split(/[,،\n]+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 0) {
+    return [{ countryCode: "+61", number: "" }];
+  }
+  return parts.slice(0, 3).map((part) => {
+    if (part.startsWith("+61")) {
+      return { countryCode: "+61", number: part.replace(/^\+61\s*/, "") };
+    }
+    return { countryCode: "+61", number: part };
+  });
+};
 
 export default function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params);
@@ -31,7 +49,6 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    phone: "",
     address: "",
     email: "",
     website: "",
@@ -40,6 +57,10 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     instagram: "",
     workHours: "",
   });
+
+  const [phoneList, setPhoneList] = useState<{ countryCode: string; number: string }[]>([
+    { countryCode: "+61", number: "" },
+  ]);
 
   const [images, setImages] = useState<{ url: string; file?: File; isMain?: boolean }[]>([]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
@@ -50,7 +71,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => setSystemSettings(data))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const maxImages = parseInt(systemSettings.maxImages || "3", 10);
@@ -64,7 +85,6 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
           setFormData({
             title: data.title || "",
             description: data.description || "",
-            phone: data.phone || "",
             address: data.address || "",
             email: data.email || "",
             website: data.website || "",
@@ -73,6 +93,8 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             instagram: data.instagram || "",
             workHours: data.workHours || "",
           });
+
+          setPhoneList(parsePhones(data.phone));
 
           if (data.images && data.images.length > 0) {
             const loadedImgs = data.images.map((img: any) => ({
@@ -150,8 +172,13 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     };
 
     if (isFullEditAllowed) {
-      if (!formData.title.trim() || !formData.description.trim() || !formData.phone.trim()) {
-        alert("لطفاً تمامی فیلدهای الزامی (عنوان، توضیحات و شماره تماس) را پر کنید.");
+      const formattedPhones = phoneList
+        .map((p) => (p.number.trim() ? `${p.countryCode} ${p.number.trim()}` : ""))
+        .filter(Boolean)
+        .join(", ");
+
+      if (!formData.title.trim() || !formData.description.trim() || !formattedPhones) {
+        alert("لطفاً تمامی فیلدهای الزامی (عنوان، توضیحات و حداقل یک شماره تماس) را پر کنید.");
         return;
       }
 
@@ -165,7 +192,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
 
       payload.title = formData.title;
       payload.description = formData.description;
-      payload.phone = formData.phone;
+      payload.phone = formattedPhones;
       payload.address = formData.address;
       payload.email = formData.email;
       payload.website = formData.website;
@@ -213,9 +240,9 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   }
 
   const isOwner = session?.user && (
-    ( (session.user as any).id && String((session.user as any).id) === String(job.userId) ) ||
-    ( session.user.mobile && job.user?.mobile && session.user.mobile === job.user.mobile ) ||
-    ( session.user.role === "ADMIN" )
+    ((session.user as any).id && String((session.user as any).id) === String(job.userId)) ||
+    (session.user.mobile && job.user?.mobile && session.user.mobile === job.user.mobile) ||
+    (session.user.role === "ADMIN")
   );
 
   if (!session || !isOwner) {
@@ -287,9 +314,8 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
                     <button
                       type="button"
                       onClick={() => setMainImageIndex(i)}
-                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                        i === mainImageIndex ? "border-red-500 shadow-md" : "border-gray-200"
-                      }`}
+                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${i === mainImageIndex ? "border-red-500 shadow-md" : "border-gray-200"
+                        }`}
                     >
                       <img src={img.url} alt="" className="w-full h-full object-cover" />
                     </button>
@@ -410,16 +436,70 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
                       />
                     </div>
 
-                    {/* Phone */}
+                    {/* Phone Numbers */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">شماره تماس *</label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange("phone", e.target.value.replace(/[^0-9+]/g, ""))}
-                        placeholder="فرمت صحیح: 0412345678 یا 61412345678+"
-                        className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr"
-                      />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          شماره‌های تماس (حداکثر ۳ شماره) *
+                        </label>
+                        {phoneList.length < 3 && (
+                          <button
+                            type="button"
+                            onClick={() => setPhoneList([...phoneList, { countryCode: "+61", number: "" }])}
+                            className="text-xs font-bold text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <Plus size={13} /> افزودن شماره دیگر
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        {phoneList.map((ph, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+
+                            {/* Number Input Box */}
+                            <input
+                              type="tel"
+                              value={ph.number}
+                              onChange={(e) => {
+                                const updated = [...phoneList];
+                                updated[idx].number = e.target.value.replace(/[^0-9\s-]/g, "");
+                                setPhoneList(updated);
+                              }}
+                              placeholder={idx === 0 ? "مثلاً: 412345678 یا 0412345678" : "شماره تماس دیگر..."}
+                              className="flex-1 px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono"
+                            />
+
+                            {/* Country Code Dropdown */}
+                            <select
+                              value={ph.countryCode}
+                              onChange={(e) => {
+                                const updated = [...phoneList];
+                                updated[idx].countryCode = e.target.value;
+                                setPhoneList(updated);
+                              }}
+                              className="w-25 px-2.5 py-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shrink-0"
+                            >
+                              <option value="+61">🇦🇺 استرالیا (+61)</option>
+                            </select>
+
+                            {/* Remove Button */}
+                            {phoneList.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setPhoneList(phoneList.filter((_, i) => i !== idx))}
+                                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer shrink-0"
+                                title="حذف این شماره"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        شماره اول الزامی است. می‌توانید حداکثر تا ۳ شماره تماس با پیش‌شماره کشور ثبت نمایید.
+                      </p>
                     </div>
 
                     {/* Address */}

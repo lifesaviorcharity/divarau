@@ -53,8 +53,9 @@ export function toEnglishDigits(str: string): string {
 
 /**
  * Normalize a mobile number to E.164 format.
- * Accepts: 04XX XXX XXX, 04XXXXXXXX, +614XXXXXXXX, 614XXXXXXXX, 09XXXXXXXXX, +98XXXXXXXXXX
- * Returns: +614XXXXXXXX or +989XXXXXXXXX or +E164
+ * Any phone number entered without a country code is automatically converted to the Australian (+61) format.
+ * Accepts: 04XX XXX XXX, 04XXXXXXXX, 4XXXXXXXX, 614XXXXXXXX, +614XXXXXXXX, +98..., etc.
+ * Returns: +614XXXXXXXX or E.164 formatted string (+...)
  */
 export function normalizeAustralianMobile(phone: string): string {
   const englishPhone = toEnglishDigits(phone || "");
@@ -64,30 +65,28 @@ export function normalizeAustralianMobile(phone: string): string {
     throw new Error("لطفاً شماره موبایل را وارد کنید.");
   }
 
-  // If starts with +, maintain E.164 format
+  // If already starts with '+', keep standard E.164
   if (cleaned.startsWith("+")) {
-    if (cleaned.length >= 8) return cleaned;
+    const digits = cleaned.slice(1);
+    if (digits.length >= 8 && digits.length <= 15) {
+      return cleaned;
+    }
+    throw new Error("شماره موبایل نامعتبر است. لطفاً شماره معتبر وارد کنید.");
   }
 
-  if (cleaned.startsWith("61") && cleaned.length >= 11) {
-    cleaned = cleaned.slice(2);
-  } else if (cleaned.startsWith("0")) {
+  // If starts with '61' (e.g. 61412345678 or 61XXXXXXXXX)
+  if (cleaned.startsWith("61") && cleaned.length >= 10) {
+    return `+${cleaned}`;
+  }
+
+  // If starts with '0' (e.g. 0412345678 or 04XX XXX XXX), strip the leading 0
+  if (cleaned.startsWith("0")) {
     cleaned = cleaned.slice(1);
   }
 
-  // Australian mobile: 9 digits starting with 4 (e.g., 412345678)
-  if (/^4\d{8}$/.test(cleaned)) {
+  // Any number entered without country code is converted to Australian +61 format (+61xxxxxxxx)
+  if (/^\d{8,12}$/.test(cleaned)) {
     return `+61${cleaned}`;
-  }
-
-  // Iranian mobile: 10 digits starting with 9 (e.g., 9123456789)
-  if (/^9\d{9}$/.test(cleaned)) {
-    return `+98${cleaned}`;
-  }
-
-  // General international digit sequence (8 to 15 digits)
-  if (/^\d{8,15}$/.test(cleaned)) {
-    return `+${cleaned}`;
   }
 
   throw new Error("شماره موبایل نامعتبر است. لطفاً شماره معتبر وارد کنید.");
@@ -98,8 +97,8 @@ export function normalizeAustralianMobile(phone: string): string {
  */
 export function isValidAustralianMobile(phone: string): boolean {
   try {
-    normalizeAustralianMobile(phone);
-    return true;
+    const normalized = normalizeAustralianMobile(phone);
+    return /^\+[1-9]\d{7,14}$/.test(normalized);
   } catch {
     return false;
   }
