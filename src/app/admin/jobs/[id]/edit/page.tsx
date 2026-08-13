@@ -34,7 +34,7 @@ export default async function AdminJobEditPage({ params }: { params: Promise<{ i
   const cities = await prisma.city.findMany();
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">ویرایش شغل: {job.title}</h1>
       </div>

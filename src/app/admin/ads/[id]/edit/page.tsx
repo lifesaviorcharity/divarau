@@ -27,7 +27,7 @@ export default async function AdminAdEditPage({ params }: { params: Promise<{ id
   const cities = await prisma.city.findMany();
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-gray-800">ویرایش آگهی: {ad.title}</h1>
       </div>
