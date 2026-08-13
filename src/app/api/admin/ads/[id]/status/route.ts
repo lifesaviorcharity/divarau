@@ -132,6 +132,20 @@ export async function PATCH(
           content: messageBody,
         }
       });
+    } else if (nextStatus === "PENDING") {
+      const messageBody = `کاربر گرامی، وضعیت آگهی شما با عنوان "${ad.title}" به «در حال بررسی» بازگردانده شد.`;
+
+      if (isSmsEnabled && ad.user?.mobile) {
+        await sendMessage(ad.user.mobile, messageBody);
+      }
+
+      await prisma.message.create({
+        data: {
+          userId: ad.userId,
+          title: "تغییر وضعیت آگهی به در حال بررسی",
+          content: messageBody,
+        }
+      });
     } else if (nextStatus === "REJECTED") {
       const isNeedsEdit = adminNote?.startsWith("[NEEDS_EDIT]");
       const cleanNote = adminNote ? adminNote.replace("[NEEDS_EDIT] ", "") : "عدم تایید توسط ناظر";

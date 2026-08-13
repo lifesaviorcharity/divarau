@@ -146,72 +146,71 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
                 return (
                   <tr
                     key={user.id}
-                    className={`border-b transition-all duration-200 ${
-                      isFirstMatch
+                    className={`border-b transition-all duration-200 ${isFirstMatch
                         ? "bg-amber-100/90 hover:bg-amber-100 border-amber-300 ring-2 ring-amber-400/60 shadow-sm"
                         : "border-gray-50 hover:bg-gray-50/50"
-                    }`}
+                      }`}
                   >
                     <td className="px-4 py-3 text-gray-400">{user.id}</td>
                     <td className="px-4 py-3 text-gray-800 font-mono text-xs" dir="ltr">
                       <span>{user.mobile}</span>
                     </td>
-                  <td className="px-4 py-3 text-gray-600">{user.username || "—"}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleRole(user)}
-                      title="جهت تغییر نقش کلیک کنید"
-                      className={`group inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer hover:shadow-xs active:scale-95 ${user.role === "ADMIN"
-                        ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                        }`}
-                    >
-                      <Shield size={12} className="shrink-0" />
-                      <span>{user.role === "ADMIN" ? "مدیر" : "کاربر"}</span>
-                      <RefreshCw size={10} className="opacity-50 group-hover:rotate-180 transition-transform duration-300 mr-0.5" />
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 font-medium">{user.jobCount ?? user.jobs?.length ?? 0}</td>
-                  <td className="px-4 py-3 text-gray-600 font-medium">{user.adCount ?? user.ads?.length ?? 0}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${user.isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                      }`}>
-                      {user.isActive ? "فعال" : "غیرفعال"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{toJalali(new Date(user.createdAt))}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-1">
+                    <td className="px-4 py-3 text-gray-600">{user.username || "—"}</td>
+                    <td className="px-4 py-3">
                       <button
-                        onClick={() => handleViewUser(user)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="مشاهده جزئیات"
-                      >
-                        <Eye size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleToggleActive(user)}
-                        className={`p-1.5 rounded-lg transition-colors ${user.isActive
-                          ? "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
-                          : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                        type="button"
+                        onClick={() => handleToggleRole(user)}
+                        title="جهت تغییر نقش کلیک کنید"
+                        className={`group inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer hover:shadow-xs active:scale-95 ${user.role === "ADMIN"
+                          ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                           }`}
-                        title={user.isActive ? "غیرفعال کردن" : "فعال کردن"}
                       >
-                        {user.isActive ? <XCircle size={14} /> : <CheckCircle size={14} />}
+                        <Shield size={12} className="shrink-0" />
+                        <span>{user.role === "ADMIN" ? "مدیر" : "کاربر"}</span>
+                        <RefreshCw size={10} className="opacity-50 group-hover:rotate-180 transition-transform duration-300 mr-0.5" />
                       </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="حذف کاربر"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 font-medium">{user.jobCount ?? user.jobs?.length ?? 0}</td>
+                    <td className="px-4 py-3 text-gray-600 font-medium">{user.adCount ?? user.ads?.length ?? 0}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg ${user.isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                        }`}>
+                        {user.isActive ? "فعال" : "غیرفعال"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">{toJalali(new Date(user.createdAt))}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-0">
+                        <button
+                          onClick={() => handleViewUser(user)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="مشاهده جزئیات"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(user)}
+                          className={`p-1.5 rounded-lg transition-colors ${user.isActive
+                            ? "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                            : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            }`}
+                          title={user.isActive ? "غیرفعال کردن" : "فعال کردن"}
+                        >
+                          {user.isActive ? <XCircle size={14} /> : <CheckCircle size={14} />}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="حذف کاربر"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

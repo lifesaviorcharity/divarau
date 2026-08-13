@@ -13,6 +13,7 @@ import {
   PowerOff,
   Power,
   CheckCheck,
+  RotateCcw,
   Image as ImageIcon,
   Star,
   Zap,
@@ -63,6 +64,10 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
       case "approve":
         newStatus = "APPROVED";
         alertMsg = `شغل ${jobId} تأیید اولیه شد و پیامک پرداخت ارسال شد.`;
+        break;
+      case "revert_to_pending":
+        newStatus = "PENDING";
+        alertMsg = `شغل ${jobId} به وضعیت در حال بررسی بازگردانده شد.`;
         break;
       case "reject":
         if (!adminNote) {
@@ -302,7 +307,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                       {toJalali(new Date(job.createdAt))}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-0">
                         <button
                           onClick={() => {
                             setViewJob(job);
@@ -336,7 +341,30 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                                 setSelectedJob(job.id);
                               }}
                               className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                              title="رد"
+                              title="رد / نیاز به اصلاح"
+                            >
+                              <XCircle size={14} />
+                            </button>
+                          </>
+                        )}
+                        {job.status === "APPROVED" && (
+                          <>
+                            <button
+                              onClick={() => {
+                                if (confirm("آیا از بازگردانی وضعیت این شغل به «در حال بررسی» اطمینان دارید؟"))
+                                  handleAction(job.id, "revert_to_pending");
+                              }}
+                              className="p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg"
+                              title="بازگردانی به در حال بررسی"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedJob(job.id);
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                              title="رد / نیاز به اصلاح"
                             >
                               <XCircle size={14} />
                             </button>

@@ -33,6 +33,9 @@ export async function POST(
     
     if (status === "APPROVED") {
       updateData.approvedAt = new Date();
+    } else if (status === "PENDING") {
+      updateData.approvedAt = null;
+      updateData.finalApprovedAt = null;
     } else if (status === "FINAL") {
       updateData.finalApprovedAt = new Date();
       if (job.status !== "FINAL") {
@@ -79,6 +82,20 @@ export async function POST(
         data: {
           userId: job.userId,
           title: "تایید اولیه و درخواست پرداخت",
+          content: messageBody,
+        }
+      });
+    } else if (status === "PENDING") {
+      const messageBody = `کاربر گرامی، وضعیت شغل شما با عنوان "${job.title}" به «در حال بررسی» بازگردانده شد.`;
+
+      if (isSmsEnabled && job.user?.mobile) {
+        await sendMessage(job.user.mobile, messageBody);
+      }
+
+      await prisma.message.create({
+        data: {
+          userId: job.userId,
+          title: "تغییر وضعیت شغل به در حال بررسی",
           content: messageBody,
         }
       });

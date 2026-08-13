@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Eye, CheckCircle, XCircle, Trash2, Edit, PowerOff, Power, CheckCheck } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, Trash2, Edit, PowerOff, Power, CheckCheck, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 import { toJalali } from "@/lib/utils";
@@ -74,6 +74,25 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
         // Removed success alert
       } else {
         alert("خطا در تأیید آگهی");
+      }
+    } catch (e) {
+      alert("خطا در ارتباط با سرور");
+    }
+  };
+
+  const handleRevertToPending = async (id: number) => {
+    if (!confirm("آیا از بازگردانی وضعیت این آگهی به «در حال بررسی» اطمینان دارید؟")) return;
+    try {
+      const res = await fetch(`/api/admin/ads/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "PENDING" })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAds(ads.map(a => a.id === id ? { ...a, status: data.ad.status } : a));
+      } else {
+        alert("خطا در بازگردانی وضعیت آگهی");
       }
     } catch (e) {
       alert("خطا در ارتباط با سرور");
@@ -261,7 +280,19 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
                             <CheckCircle size={14} />
                           </button>
                           <button onClick={() => setSelectedAd(ad.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="رد">
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="رد / نیاز به اصلاح">
+                            <XCircle size={14} />
+                          </button>
+                        </>
+                      )}
+                      {ad.status === "APPROVED" && (
+                        <>
+                          <button onClick={() => handleRevertToPending(ad.id)}
+                            className="p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg" title="بازگردانی به در حال بررسی">
+                            <RotateCcw size={14} />
+                          </button>
+                          <button onClick={() => setSelectedAd(ad.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="رد / نیاز به اصلاح">
                             <XCircle size={14} />
                           </button>
                         </>
