@@ -257,8 +257,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   <tr
                     key={job.id}
                     className={`border-b transition-all duration-200 ${isFirstMatch
-                        ? "bg-amber-100/90 hover:bg-amber-100 border-amber-300 ring-2 ring-amber-400/60 shadow-sm"
-                        : "border-gray-50 hover:bg-gray-50/50"
+                      ? "bg-amber-100/90 hover:bg-amber-100 border-amber-300 ring-2 ring-amber-400/60 shadow-sm"
+                      : "border-gray-50 hover:bg-gray-50/50"
                       }`}
                   >
                     <td className="px-4 py-3 text-gray-400">{job.id}</td>
@@ -530,7 +530,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   </h4>
 
                   {/* Main Display */}
-                  <div className="aspect-video bg-gray-900/5 rounded-xl overflow-hidden relative max-h-72 border border-gray-200 flex items-center justify-center">
+                  <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative max-h-72 w-full max-w-lg mx-auto border border-gray-100 flex items-center justify-center">
                     <img
                       src={viewJob.images[viewModalImageIndex]?.url}
                       alt={viewJob.title}
@@ -577,8 +577,8 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                           type="button"
                           onClick={() => setViewModalImageIndex(idx)}
                           className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all relative ${idx === viewModalImageIndex
-                              ? "border-primary shadow-sm"
-                              : "border-gray-200 opacity-70"
+                            ? "border-primary shadow-sm"
+                            : "border-gray-200 opacity-70"
                             }`}
                         >
                           <img src={img.url} alt="" className="w-full h-full object-cover" />

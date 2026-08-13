@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toJalali } from "@/lib/utils";
+import { useUnreadStore } from "@/store/unreadStore";
 
 type Tab = "jobs" | "ads" | "messages" | "tickets" | "settings";
 
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("jobs");
+  const { clearUnreadCount } = useUnreadStore();
 
   // Tickets
   const [ticketSubject, setTicketSubject] = useState("");
@@ -88,17 +90,20 @@ export default function ProfilePage() {
   const unreadMessagesCount = profileData?.messages?.filter((m: any) => !m.isRead).length || 0;
 
   useEffect(() => {
-    if (activeTab === "messages" && profileData?.messages) {
-      const unreadExist = profileData.messages.some((m: any) => !m.isRead);
-      if (unreadExist) {
-        setProfileData((prev: any) => ({
-          ...prev,
-          messages: prev?.messages?.map((m: any) => ({ ...m, isRead: true })) || []
-        }));
-        fetch("/api/profile/messages/read", { method: "POST" }).catch(console.error);
+    if (activeTab === "messages") {
+      clearUnreadCount();
+      if (profileData?.messages) {
+        const unreadExist = profileData.messages.some((m: any) => !m.isRead);
+        if (unreadExist) {
+          setProfileData((prev: any) => ({
+            ...prev,
+            messages: prev?.messages?.map((m: any) => ({ ...m, isRead: true })) || []
+          }));
+          fetch("/api/profile/messages/read", { method: "POST" }).catch(console.error);
+        }
       }
     }
-  }, [activeTab, profileData?.messages]);
+  }, [activeTab, profileData?.messages, clearUnreadCount]);
 
   const handleCreateTicket = async () => {
     if (!ticketSubject.trim() || !ticketMessage.trim()) {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useCityStore } from "@/store/cityStore";
+import { useUnreadStore } from "@/store/unreadStore";
 import CitySelector from "./CitySelector";
 import {
   Menu,
@@ -33,24 +34,17 @@ export default function Header() {
   const [isAdSubmenuOpen, setIsAdSubmenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { selectedCity, openCityModal, isCityModalOpen } = useCityStore();
+  const { unreadCount, fetchUnreadCount, clearUnreadCount } = useUnreadStore();
   const adSubmenuRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
-  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (session?.user) {
-      fetch("/api/profile/unread-count")
-        .then((res) => res.json())
-        .then((data) => {
-          if (typeof data.count === "number") {
-            setUnreadCount(data.count);
-          }
-        })
-        .catch(() => { });
+      fetchUnreadCount();
     } else {
-      setUnreadCount(0);
+      clearUnreadCount();
     }
-  }, [session, pathname]);
+  }, [session, pathname, fetchUnreadCount, clearUnreadCount]);
 
   const badgeText = unreadCount > 99 ? "99+" : unreadCount;
 

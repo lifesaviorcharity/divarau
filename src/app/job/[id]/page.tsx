@@ -217,7 +217,7 @@ export default function JobDetailPage() {
             )}
 
             {/* Description */}
-            <div className="border-t border-gray-100 pt-4 mb-4">
+            <div className="border-t border-gray-200 pt-4 mb-4">
               <h3 className="text-sm font-bold text-gray-800 mb-2">توضیحات:</h3>
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{job.description}</p>
             </div>
