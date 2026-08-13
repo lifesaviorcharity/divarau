@@ -480,7 +480,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
                               }}
                               className="w-25 px-2.5 py-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shrink-0"
                             >
-                              <option value="+61">🇦🇺 استرالیا (+61)</option>
+                              <option value="+61">AU (+61)</option>
                             </select>
 
                             {/* Remove Button */}
