@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { saveJobImageToDisk, deleteJobImageFile } from "@/lib/jobImageStorage";
 
 export async function GET(
   request: Request,
@@ -72,6 +73,7 @@ export async function GET(
   }
 }
 
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -83,6 +85,20 @@ export async function DELETE(
     if (!jobId) {
       return NextResponse.json({ error: "شناسه نامعتبر است." }, { status: 400 });
     }
+
+    // Fetch images before deleting so we can clean up files
+    const images = await prisma.jobImage.findMany({
+      where: { jobId },
+      select: { url: true },
+    });
+
+    // Delete image files from disk
+    for (const img of images) {
+      await deleteJobImageFile(img.url);
+    }
+
+    // Delete image records first (foreign key), then the job
+    await prisma.jobImage.deleteMany({ where: { jobId } });
 
     const job = await prisma.job.delete({
       where: { id: jobId }
@@ -164,16 +180,30 @@ export async function PUT(
       updateData.status = "PENDING";
 
       if (images && Array.isArray(images)) {
+        // Delete old image files from disk
+        const oldImages = await prisma.jobImage.findMany({
+          where: { jobId },
+          select: { url: true },
+        });
+        for (const oldImg of oldImages) {
+          await deleteJobImageFile(oldImg.url);
+        }
+
         await prisma.jobImage.deleteMany({ where: { jobId } });
         if (images.length > 0) {
-          await prisma.jobImage.createMany({
-            data: images.map((img: any, idx: number) => ({
+          const imageData = [];
+          for (let idx = 0; idx < images.length; idx++) {
+            const img = images[idx];
+            const rawUrl = typeof img === "string" ? img : img.url;
+            const savedUrl = await saveJobImageToDisk(rawUrl);
+            imageData.push({
               jobId,
-              url: typeof img === "string" ? img : img.url,
+              url: savedUrl,
               isMain: typeof img === "object" && img.isMain !== undefined ? !!img.isMain : idx === 0,
               order: idx,
-            })),
-          });
+            });
+          }
+          await prisma.jobImage.createMany({ data: imageData });
         }
       }
     } else {

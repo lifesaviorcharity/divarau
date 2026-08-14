@@ -22,6 +22,8 @@ import {
   Plus,
 } from "lucide-react";
 
+import { compressImage } from "@/lib/compressImage";
+
 export default function RegisterJobPage() {
   const { selectedCity, openCityModal } = useCityStore();
   const { categories: jobCategories, isLoading: isCategoriesLoading } = useCategories();
@@ -47,6 +49,7 @@ export default function RegisterJobPage() {
   const [pricingSettings, setPricingSettings] = useState<any>({});
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -74,22 +77,38 @@ export default function RegisterJobPage() {
   const total12 = price12 + extraCost;
   const finalPrice = subscriptionType === "6" ? total6 : total12;
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     if (images.length + files.length > maxImages) {
       alert(`حداکثر ${maxImages} تصویر مجاز است`);
       return;
     }
-    Array.from(files).forEach((file) => {
+
+    for (const file of Array.from(files)) {
+      let finalFile = file;
+
       if (file.size > maxImageSizeKB * 1024) {
-        if (confirm(`حجم تصویر ${file.name} بیشتر از ${maxImageSizeKB} کیلوبایت است. آیا می‌خواهید ادامه دهید؟`)) {
-          // Continue with file upload
-        } else return;
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const accepted = confirm(
+          `حجم تصویر "${file.name}" (${sizeMB}MB) بیشتر از حد مجاز (${maxImageSizeKB}KB) است.\n\nآیا می‌خواهید سیستم حجم تصویر را به‌صورت خودکار کاهش دهد؟`
+        );
+        if (!accepted) continue;
+
+        setIsCompressing(true);
+        try {
+          finalFile = await compressImage(file, maxImageSizeKB);
+        } catch {
+          alert(`خطا در فشرده‌سازی تصویر "${file.name}". لطفاً تصویر دیگری انتخاب کنید.`);
+          continue;
+        } finally {
+          setIsCompressing(false);
+        }
       }
-      const url = URL.createObjectURL(file);
-      setImages((prev) => [...prev, { url, file }]);
-    });
+
+      const url = URL.createObjectURL(finalFile);
+      setImages((prev) => [...prev, { url, file: finalFile }]);
+    }
   };
 
   const removeImage = (index: number) => {
@@ -146,6 +165,21 @@ export default function RegisterJobPage() {
         return;
       }
 
+      // Convert image files to base64 for server-side file storage
+      const imagePayloads = [];
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(img.file);
+        });
+        imagePayloads.push({
+          url: base64,
+          isMain: i === mainImageIndex,
+        });
+      }
+
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,6 +201,7 @@ export default function RegisterJobPage() {
           isVip,
           isBoosted,
           boostPeriod: isBoosted ? `${boostPeriod}_DAYS` : null,
+          images: imagePayloads,
         })
       });
 

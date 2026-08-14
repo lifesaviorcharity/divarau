@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { saveJobImageToDisk } from "@/lib/jobImageStorage";
 
 export const dynamic = 'force-dynamic';
 
@@ -131,6 +132,23 @@ export async function POST(request: Request) {
         status: 'PENDING',
       }
     });
+
+    // Save images if provided
+    if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+      const imageData = [];
+      for (let idx = 0; idx < data.images.length; idx++) {
+        const img = data.images[idx];
+        const rawUrl = typeof img === "string" ? img : img.url;
+        const savedUrl = await saveJobImageToDisk(rawUrl);
+        imageData.push({
+          jobId: job.id,
+          url: savedUrl,
+          isMain: typeof img === "object" && img.isMain !== undefined ? !!img.isMain : idx === 0,
+          order: idx,
+        });
+      }
+      await prisma.jobImage.createMany({ data: imageData });
+    }
 
     return NextResponse.json({ success: true, job });
   } catch (error) {

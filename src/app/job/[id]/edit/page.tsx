@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import React from "react";
+import { compressImage } from "@/lib/compressImage";
 
 const parsePhones = (phoneStr: string | null | undefined) => {
   if (!phoneStr || !phoneStr.trim()) {
@@ -75,6 +76,8 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   }, []);
 
   const maxImages = parseInt(systemSettings.maxImages || "3", 10);
+  const maxImageSizeKB = parseInt(systemSettings.maxImageSize || "300", 10);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   useEffect(() => {
     fetch(`/api/jobs/${id}`)
@@ -130,21 +133,42 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     if (images.length + files.length > maxImages) {
       alert(`حداکثر ${maxImages} تصویر مجاز است`);
       return;
     }
-    Array.from(files).forEach((file) => {
+
+    for (const file of Array.from(files)) {
+      let finalFile = file;
+
+      if (file.size > maxImageSizeKB * 1024) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const accepted = confirm(
+          `حجم تصویر "${file.name}" (${sizeMB}MB) بیشتر از حد مجاز (${maxImageSizeKB}KB) است.\n\nآیا می‌خواهید سیستم حجم تصویر را به‌صورت خودکار کاهش دهد؟`
+        );
+        if (!accepted) continue;
+
+        setIsCompressing(true);
+        try {
+          finalFile = await compressImage(file, maxImageSizeKB);
+        } catch {
+          alert(`خطا در فشرده‌سازی تصویر "${file.name}". لطفاً تصویر دیگری انتخاب کنید.`);
+          continue;
+        } finally {
+          setIsCompressing(false);
+        }
+      }
+
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         const url = uploadEvent.target?.result as string;
-        setImages((prev) => [...prev, { url, file }]);
+        setImages((prev) => [...prev, { url, file: finalFile }]);
       };
-      reader.readAsDataURL(file);
-    });
+      reader.readAsDataURL(finalFile);
+    }
   };
 
   const removeImage = (index: number) => {

@@ -47,14 +47,8 @@ export default async function AdminJobsPage() {
           name: true,
         },
       },
-      images: {
-        select: {
-          id: true,
-          url: true,
-          isMain: true,
-          order: true,
-        },
-        orderBy: { order: "asc" },
+      _count: {
+        select: { images: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -85,12 +79,7 @@ export default async function AdminJobsPage() {
     boostPeriod: j.boostPeriod,
     expiresAt: j.expiresAt ? j.expiresAt.toISOString() : null,
     createdAt: j.createdAt.toISOString(),
-    images: j.images.map((img) => ({
-      id: img.id,
-      url: img.url,
-      isMain: img.isMain,
-      order: img.order,
-    })),
+    imageCount: j._count.images,
   }));
 
   return <JobsClient initialJobs={formattedJobs} />;

@@ -35,6 +35,28 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
   const [selectedJob, setSelectedJob] = useState<number | null>(null);
   const [viewJob, setViewJob] = useState<any | null>(null);
   const [viewModalImageIndex, setViewModalImageIndex] = useState(0);
+  const [viewJobImages, setViewJobImages] = useState<any[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+
+  const openViewModal = async (job: any) => {
+    setViewJob(job);
+    setViewModalImageIndex(0);
+    setViewJobImages([]);
+    if (job.imageCount > 0) {
+      setLoadingImages(true);
+      try {
+        const res = await fetch(`/api/admin/jobs/${job.id}/images`);
+        if (res.ok) {
+          const data = await res.json();
+          setViewJobImages(data.images || []);
+        }
+      } catch (e) {
+        console.error("Failed to load images", e);
+      } finally {
+        setLoadingImages(false);
+      }
+    }
+  };
   const [adminNote, setAdminNote] = useState("");
 
   const [jobs, setJobs] = useState(initialJobs);
@@ -292,7 +314,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="text-xs text-gray-600 flex items-center gap-1">
                         <ImageIcon size={14} className="text-blue-500" />
-                        {job.images?.length || 0} تصویر
+                        {job.imageCount || 0} تصویر
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -309,10 +331,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-0">
                         <button
-                          onClick={() => {
-                            setViewJob(job);
-                            setViewModalImageIndex(0);
-                          }}
+                          onClick={() => openViewModal(job)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                           title="مشاهده جزئیات و تصاویر"
                         >
@@ -550,27 +569,32 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
               </div>
 
               {/* Images Section */}
-              {viewJob.images && viewJob.images.length > 0 ? (
+              {loadingImages ? (
+                <div className="border-t border-gray-100 pt-4 text-center py-6">
+                  <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                  <p className="text-xs text-gray-400 mt-2">در حال بارگذاری تصاویر...</p>
+                </div>
+              ) : viewJobImages.length > 0 ? (
                 <div className="space-y-3 border-t border-gray-100 pt-4">
                   <h4 className="font-bold text-gray-800 text-xs flex items-center gap-1.5">
                     <ImageIcon size={16} className="text-blue-600" />
-                    تصاویر ثبت‌شده شغل ({viewJob.images.length} تصویر):
+                    تصاویر ثبت‌شده شغل ({viewJobImages.length} تصویر):
                   </h4>
 
                   {/* Main Display */}
                   <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative max-h-72 w-full max-w-lg mx-auto border border-gray-100 flex items-center justify-center">
                     <img
-                      src={viewJob.images[viewModalImageIndex]?.url}
+                      src={viewJobImages[viewModalImageIndex]?.url}
                       alt={viewJob.title}
                       className="w-full h-full object-contain"
                     />
-                    {viewJob.images[viewModalImageIndex]?.isMain && (
+                    {viewJobImages[viewModalImageIndex]?.isMain && (
                       <span className="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded-md shadow">
                         تصویر اصلی
                       </span>
                     )}
 
-                    {viewJob.images.length > 1 && (
+                    {viewJobImages.length > 1 && (
                       <>
                         <button
                           type="button"
@@ -585,7 +609,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                           type="button"
                           onClick={() =>
                             setViewModalImageIndex(
-                              Math.min(viewJob.images.length - 1, viewModalImageIndex + 1)
+                              Math.min(viewJobImages.length - 1, viewModalImageIndex + 1)
                             )
                           }
                           className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center rotate-180"
@@ -597,9 +621,9 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                   </div>
 
                   {/* Thumbnails Strip */}
-                  {viewJob.images.length > 1 && (
+                  {viewJobImages.length > 1 && (
                     <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                      {viewJob.images.map((img: any, idx: number) => (
+                      {viewJobImages.map((img: any, idx: number) => (
                         <button
                           key={img.id || idx}
                           type="button"

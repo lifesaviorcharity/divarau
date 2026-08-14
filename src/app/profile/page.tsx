@@ -25,6 +25,7 @@ import {
 import Link from "next/link";
 import { toJalali } from "@/lib/utils";
 import { useUnreadStore } from "@/store/unreadStore";
+import ImageLightbox from "@/components/ImageLightbox";
 
 type Tab = "jobs" | "ads" | "messages" | "tickets" | "settings";
 
@@ -56,6 +57,7 @@ export default function ProfilePage() {
   const [viewingJob, setViewingJob] = useState<any | null>(null);
   const [viewingAd, setViewingAd] = useState<any | null>(null);
   const [viewModalImageIndex, setViewModalImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   // Boost & VIP Modal States
   const [systemSettings, setSystemSettings] = useState<any>({});
@@ -761,23 +763,27 @@ export default function ProfilePage() {
               {viewingJob.images && viewingJob.images.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-bold text-gray-800 text-xs">تصاویر ثبت‌شده:</h4>
-                  <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative max-h-72 w-full max-w-lg mx-auto border border-gray-100 flex items-center justify-center">
+                  <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative max-h-72 w-full max-w-lg mx-auto border border-gray-100 flex items-center justify-center group">
                     <img
                       src={viewingJob.images[viewModalImageIndex]?.url}
                       alt={viewingJob.title}
-                      className="w-full h-full object-contain bg-gray-900/5"
+                      className="w-full h-full object-contain bg-gray-900/5 cursor-pointer"
+                      onClick={() => setIsLightboxOpen(true)}
+                      title="کلیک برای بزرگ‌نمایی تصویر"
                     />
                     {viewingJob.images.length > 1 && (
                       <>
                         <button
-                          onClick={() => setViewModalImageIndex(Math.max(0, viewModalImageIndex - 1))}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center cursor-pointer"
+                          onClick={() => setViewModalImageIndex((prev) => (prev - 1 + viewingJob.images.length) % viewingJob.images.length)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center cursor-pointer z-10"
+                          title="تصویر قبلی"
                         >
                           <ChevronLeft size={16} />
                         </button>
                         <button
-                          onClick={() => setViewModalImageIndex(Math.min(viewingJob.images.length - 1, viewModalImageIndex + 1))}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center rotate-180 cursor-pointer"
+                          onClick={() => setViewModalImageIndex((prev) => (prev + 1) % viewingJob.images.length)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center rotate-180 cursor-pointer z-10"
+                          title="تصویر بعدی"
                         >
                           <ChevronLeft size={16} />
                         </button>
@@ -792,13 +798,23 @@ export default function ProfilePage() {
                           key={idx}
                           onClick={() => setViewModalImageIndex(idx)}
                           className={`w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
-                            idx === viewModalImageIndex ? "border-primary shadow-sm" : "border-gray-200 opacity-70"
+                            idx === viewModalImageIndex ? "border-primary shadow-sm scale-105" : "border-gray-200 opacity-70"
                           }`}
                         >
                           <img src={img.url} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}
                     </div>
+                  )}
+
+                  {/* Lightbox in Profile */}
+                  {isLightboxOpen && (
+                    <ImageLightbox
+                      images={viewingJob.images}
+                      initialIndex={viewModalImageIndex}
+                      onIndexChange={setViewModalImageIndex}
+                      onClose={() => setIsLightboxOpen(false)}
+                    />
                   )}
                 </div>
               )}

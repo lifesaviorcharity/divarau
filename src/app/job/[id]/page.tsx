@@ -16,12 +16,14 @@ import {
   ExternalLink,
   X,
   ArrowRight,
-  UserCircle
+  UserCircle,
+  Maximize2
 } from "lucide-react";
 import { FaWhatsapp, FaTelegram, FaInstagram } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import LoginModal from "@/components/LoginModal";
 import { formatPersianNumber } from "@/lib/utils";
+import ImageLightbox from "@/components/ImageLightbox";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -33,6 +35,7 @@ export default function JobDetailPage() {
   const [showContact, setShowContact] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState("");
 
@@ -232,9 +235,9 @@ export default function JobDetailPage() {
           </div>
 
           {/* Image Gallery */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {/* Main Image */}
-            <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between">
+            {/* Main Image Stage */}
+            <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center group overflow-hidden">
               {!canViewFullDetails || (!job.images || job.images.length === 0) ? (
                 <div className="text-center text-gray-400 p-6">
                   <div className="text-5xl mb-2">🏢</div>
@@ -243,25 +246,50 @@ export default function JobDetailPage() {
                   </p>
                 </div>
               ) : (
-                <img
-                  src={job.images[currentImage]?.url}
-                  alt={job.title}
-                  className="w-full h-full object-cover"
-                />
+                <div
+                  className="relative w-full h-full cursor-pointer flex items-center justify-center"
+                  onClick={() => setLightboxOpen(true)}
+                  title="کلیک برای بزرگ‌نمایی تصویر"
+                >
+                  <img
+                    src={job.images[currentImage]?.url}
+                    alt={job.title}
+                    className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                  />
+
+                  {/* Expand / Lightbox Cue Badge on hover */}
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
+                    <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-medium shadow-lg transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                      <Maximize2 size={14} />
+                      بزرگ‌نمایی و مشاهده همه تصاویر
+                    </span>
+                  </div>
+
+                  {/* Image Counter Badge on bottom-left */}
+                  {job.images.length > 1 && (
+                    <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white text-[11px] font-medium pointer-events-none">
+                      {formatPersianNumber(currentImage + 1)} / {formatPersianNumber(job.images.length)}
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Nav Arrows */}
               {canViewFullDetails && job.images && job.images.length > 1 && (
                 <>
                   <button
-                    onClick={() => setCurrentImage(Math.max(0, currentImage - 1))}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-lg flex items-center justify-center"
+                    onClick={() => setCurrentImage((prev) => (prev - 1 + job.images.length) % job.images.length)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer z-10"
+                    title="تصویر قبلی"
+                    aria-label="تصویر قبلی"
                   >
                     <ChevronLeft size={20} />
                   </button>
                   <button
-                    onClick={() => setCurrentImage(Math.min(job.images.length - 1, currentImage + 1))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-lg flex items-center justify-center"
+                    onClick={() => setCurrentImage((prev) => (prev + 1) % job.images.length)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer z-10"
+                    title="تصویر بعدی"
+                    aria-label="تصویر بعدی"
                   >
                     <ChevronRight size={20} />
                   </button>
@@ -271,13 +299,17 @@ export default function JobDetailPage() {
 
             {/* Thumbnails */}
             {canViewFullDetails && job.images && job.images.length > 1 && (
-              <div className="flex items-center gap-2 p-3 justify-center">
+              <div className="flex items-center gap-2 p-3 justify-center overflow-x-auto bg-gray-50/50 border-t border-gray-100">
                 {job.images.map((img: any, i: number) => (
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${i === currentImage ? "border-primary shadow-md" : "border-gray-200 opacity-60"
-                      }`}
+                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
+                      i === currentImage
+                        ? "border-primary shadow-md scale-105 opacity-100"
+                        : "border-gray-200 opacity-60 hover:opacity-90 hover:scale-100"
+                    }`}
+                    title={`تصویر ${formatPersianNumber(i + 1)}`}
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -285,6 +317,16 @@ export default function JobDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Image Lightbox Modal */}
+          {lightboxOpen && canViewFullDetails && job.images && job.images.length > 0 && (
+            <ImageLightbox
+              images={job.images}
+              initialIndex={currentImage}
+              onIndexChange={setCurrentImage}
+              onClose={() => setLightboxOpen(false)}
+            />
+          )}
         </div>
 
         {/* Reviews Section (Bottom) */}

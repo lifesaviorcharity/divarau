@@ -31,7 +31,7 @@ function LoginPageContent() {
           setSessionDuration(data.sessionDuration);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Redirect if already logged in (smart session — no SMS needed)
@@ -99,7 +99,7 @@ function LoginPageContent() {
     try {
       normalized = normalizeAustralianMobile(mobile);
       setMobile(normalized);
-    } catch {}
+    } catch { }
 
     try {
       const res = await fetch("/api/auth/send-otp", {
@@ -136,7 +136,7 @@ function LoginPageContent() {
     try {
       normalized = normalizeAustralianMobile(mobile);
       setMobile(normalized);
-    } catch {}
+    } catch { }
 
     try {
       const res = await signIn("credentials", {
@@ -181,12 +181,12 @@ function LoginPageContent() {
       const newOtp = [...prev];
       newOtp[index] = value;
       const code = newOtp.join("");
-      
+
       // Auto-submit when all digits are filled
       if (code.length === OTP_LENGTH) {
         setTimeout(() => handleVerifyOTP(code), 10);
       }
-      
+
       return newOtp;
     });
   };
@@ -294,7 +294,7 @@ function LoginPageContent() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSendOTP();
                     }}
-                    placeholder="+61 4XX XXX XXX یا 04XX XXX XXX"
+                    placeholder="+61 4XX XXX XXX | 04 XX XXX XXX"
                     className="w-full pr-10 pl-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-medium"
                     maxLength={20}
                     autoFocus

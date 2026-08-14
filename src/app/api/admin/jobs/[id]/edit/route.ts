@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { saveJobImageToDisk, deleteJobImageFile } from "@/lib/jobImageStorage";
 
 export async function PUT(
   request: Request,
@@ -58,16 +59,30 @@ export async function PUT(
 
     // Handle images update
     if (data.images && Array.isArray(data.images)) {
+      // Delete old image files from disk
+      const oldImages = await prisma.jobImage.findMany({
+        where: { jobId },
+        select: { url: true },
+      });
+      for (const oldImg of oldImages) {
+        await deleteJobImageFile(oldImg.url);
+      }
+
       await prisma.jobImage.deleteMany({ where: { jobId } });
       if (data.images.length > 0) {
-        await prisma.jobImage.createMany({
-          data: data.images.map((img: any, idx: number) => ({
+        const imageData = [];
+        for (let idx = 0; idx < data.images.length; idx++) {
+          const img = data.images[idx];
+          const rawUrl = typeof img === "string" ? img : img.url;
+          const savedUrl = await saveJobImageToDisk(rawUrl);
+          imageData.push({
             jobId,
-            url: typeof img === "string" ? img : img.url,
+            url: savedUrl,
             isMain: typeof img === "object" && img.isMain !== undefined ? Boolean(img.isMain) : idx === 0,
             order: idx,
-          })),
-        });
+          });
+        }
+        await prisma.jobImage.createMany({ data: imageData });
       }
     }
 

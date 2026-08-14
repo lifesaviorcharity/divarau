@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { compressImage } from "@/lib/compressImage";
 
 const parsePhones = (phoneStr: string | null | undefined) => {
   if (!phoneStr || !phoneStr.trim()) {
@@ -107,7 +108,9 @@ export default function JobEditClient({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -116,19 +119,34 @@ export default function JobEditClient({
       return;
     }
 
-    Array.from(files).forEach((file) => {
+    for (const file of Array.from(files)) {
+      let finalFile = file;
+
       if (file.size > maxImageSizeKB * 1024) {
-        if (!confirm(`حجم تصویر "${file.name}" بیشتر از ${maxImageSizeKB}KB است. آیا مایل به ادامه هستید؟`)) {
-          return;
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const accepted = confirm(
+          `حجم تصویر "${file.name}" (${sizeMB}MB) بیشتر از حد مجاز (${maxImageSizeKB}KB) است.\n\nآیا می‌خواهید سیستم حجم تصویر را به‌صورت خودکار کاهش دهد؟`
+        );
+        if (!accepted) continue;
+
+        setIsCompressing(true);
+        try {
+          finalFile = await compressImage(file, maxImageSizeKB);
+        } catch {
+          alert(`خطا در فشرده‌سازی تصویر "${file.name}". لطفاً تصویر دیگری انتخاب کنید.`);
+          continue;
+        } finally {
+          setIsCompressing(false);
         }
       }
+
       const reader = new FileReader();
       reader.onload = (ev) => {
         const url = ev.target?.result as string;
-        setImages((prev) => [...prev, { url, file }]);
+        setImages((prev) => [...prev, { url, file: finalFile }]);
       };
-      reader.readAsDataURL(file);
-    });
+      reader.readAsDataURL(finalFile);
+    }
   };
 
   const removeImage = (index: number) => {
