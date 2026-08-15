@@ -7,7 +7,7 @@ interface City {
   name: string;
   slug: string;
 }
-import { X, Search, MapPin, Check, Loader2 } from "lucide-react";
+import { X, Search, MapPin, Check, Loader2, Globe } from "lucide-react";
 
 export default function CitySelector() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,6 +95,22 @@ export default function CitySelector() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-1.5">
+              {/* All Cities Option */}
+              <button
+                onClick={() => setSelectedCity(null)}
+                className={`col-span-2 flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1 cursor-pointer ${
+                  selectedCity === null
+                    ? "bg-primary text-white shadow-md shadow-primary/25"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-primary"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Globe size={16} />
+                  <span>همه شهرها (سراسر استرالیا)</span>
+                </span>
+                {selectedCity === null && <Check size={16} />}
+              </button>
+
               {filteredCities.map((city) => {
                 const isSelected = selectedCity?.slug === city.slug;
                 return (

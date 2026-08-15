@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import CategorySidebar from "@/components/CategorySidebar";
 import JobCard, { JobCardData } from "@/components/JobCard";
@@ -33,11 +33,25 @@ function JobsContent() {
   const categoryParam = searchParams.get("category");
   const searchQuery = searchParams.get("q") || "";
   const subCategoryParam = searchParams.get("sub");
-  const parsedCategory = categoryParam ? parseInt(categoryParam, 10) : null;
-  const selectedCategoryIndex =
-    parsedCategory !== null && !isNaN(parsedCategory) && parsedCategory >= 0 && parsedCategory < jobCategories.length
-      ? parsedCategory
-      : null;
+
+  const selectedCategoryIndex = useMemo(() => {
+    if (!categoryParam || jobCategories.length === 0) return null;
+    const num = parseInt(categoryParam, 10);
+    if (!isNaN(num)) {
+      // Check if it matches a category ID directly
+      const byId = jobCategories.findIndex((c) => c.id === num);
+      if (byId !== -1) return byId;
+      // Or if it was a valid index
+      if (num >= 0 && num < jobCategories.length) return num;
+    }
+    // Check by slug or name
+    const bySlug = jobCategories.findIndex(
+      (c) => (c as any).slug === categoryParam || c.name === categoryParam
+    );
+    if (bySlug !== -1) return bySlug;
+    return null;
+  }, [categoryParam, jobCategories]);
+
   const selectedSubCategorySlug = subCategoryParam;
   const [activeAdTab, setActiveAdTab] = useState<"commercial" | "employment" | "job_seeker">("commercial");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -58,7 +72,18 @@ function JobsContent() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const selectedCategory = selectedCategoryIndex !== null ? jobCategories[selectedCategoryIndex] : null;
-  const selectedSubCategory = selectedCategory?.subCategories.find(sub => sub.slug === selectedSubCategorySlug) || null;
+  const selectedSubCategory = useMemo(() => {
+    if (!selectedCategory || !selectedSubCategorySlug) return null;
+    const num = parseInt(selectedSubCategorySlug, 10);
+    return (
+      selectedCategory.subCategories.find(
+        (sub) =>
+          sub.slug === selectedSubCategorySlug ||
+          sub.name === selectedSubCategorySlug ||
+          (!isNaN(num) && sub.id === num)
+      ) || null
+    );
+  }, [selectedCategory, selectedSubCategorySlug]);
 
   // Fetch jobs with pagination
   const fetchJobs = useCallback(async (skip: number, take: number, reset = false) => {
@@ -81,17 +106,21 @@ function JobsContent() {
     }
   }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
-  // Initial load
+  // Initial load: wait for categories to be available if category/subcategory is specified to avoid fetching unfiltered jobs
   useEffect(() => {
+    if ((categoryParam || subCategoryParam) && isCategoriesLoading) return;
+
     setIsLoadingJobs(true);
     setJobsData([]);
     setAutoScrollEnabled(true);
     setLoadMoreClicked(false);
     fetchJobs(0, INITIAL_LOAD, true).finally(() => setIsLoadingJobs(false));
-  }, [searchQuery, fetchJobs]);
+  }, [searchQuery, categoryParam, subCategoryParam, isCategoriesLoading, fetchJobs]);
 
-  // Load ads (no pagination)
+  // Load ads: also wait for category resolution
   useEffect(() => {
+    if ((categoryParam || subCategoryParam) && isCategoriesLoading) return;
+
     setIsLoadingAds(true);
     let url = `/api/ads?`;
     if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
@@ -118,77 +147,23 @@ function JobsContent() {
         setIsLoadingAds(false);
       })
       .catch(() => setIsLoadingAds(false));
-  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
-
-  // Persistent category/subcategory memory (localStorage)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const hasCatInUrl = searchParams.has("category");
-    const hasSubInUrl = searchParams.has("sub");
-
-    if (!hasCatInUrl && !hasSubInUrl) {
-      // User arrived at /jobs without category/sub query params: restore last saved selection if present
-      const savedCategory = localStorage.getItem("last_selected_category");
-      const savedSub = localStorage.getItem("last_selected_sub");
-
-      if (savedCategory !== null || savedSub !== null) {
-        const params = new URLSearchParams(searchParams.toString());
-        if (savedCategory !== null) params.set("category", savedCategory);
-        if (savedSub !== null) params.set("sub", savedSub);
-        router.replace(`/jobs?${params.toString()}`, { scroll: false });
-      }
-    } else {
-      // URL has category/sub query params: update localStorage
-      if (categoryParam !== null) {
-        localStorage.setItem("last_selected_category", categoryParam.toString());
-      } else {
-        localStorage.removeItem("last_selected_category");
-      }
-
-      if (subCategoryParam !== null) {
-        localStorage.setItem("last_selected_sub", subCategoryParam);
-      } else {
-        localStorage.removeItem("last_selected_sub");
-      }
-    }
-  }, [searchParams, categoryParam, subCategoryParam, router]);
+  }, [searchQuery, categoryParam, isCategoriesLoading, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
   const handleCategorySelect = useCallback((i: number | null) => {
-    if (typeof window !== "undefined") {
-      if (i !== null) {
-        localStorage.setItem("last_selected_category", i.toString());
-      } else {
-        localStorage.removeItem("last_selected_category");
-      }
-      localStorage.removeItem("last_selected_sub");
-    }
     const params = new URLSearchParams(searchParams.toString());
-    if (i !== null) {
-      params.set("category", i.toString());
+    if (i !== null && jobCategories[i]) {
+      params.set("category", String(jobCategories[i].id));
     } else {
       params.delete("category");
     }
     params.delete("sub");
     router.push(`/jobs?${params.toString()}`, { scroll: false });
-  }, [searchParams, router]);
+  }, [searchParams, jobCategories, router]);
 
   const handleSubCategorySelect = useCallback((catIdx: number | null, subSlug: string | null) => {
-    if (typeof window !== "undefined") {
-      if (catIdx !== null) {
-        localStorage.setItem("last_selected_category", catIdx.toString());
-      } else {
-        localStorage.removeItem("last_selected_category");
-      }
-      if (subSlug !== null) {
-        localStorage.setItem("last_selected_sub", subSlug);
-      } else {
-        localStorage.removeItem("last_selected_sub");
-      }
-    }
     const params = new URLSearchParams(searchParams.toString());
-    if (catIdx !== null) {
-      params.set("category", catIdx.toString());
+    if (catIdx !== null && jobCategories[catIdx]) {
+      params.set("category", String(jobCategories[catIdx].id));
     } else {
       params.delete("category");
     }
@@ -198,7 +173,7 @@ function JobsContent() {
       params.delete("sub");
     }
     router.push(`/jobs?${params.toString()}`, { scroll: false });
-  }, [searchParams, router]);
+  }, [searchParams, jobCategories, router]);
 
 
 
@@ -254,12 +229,14 @@ function JobsContent() {
       title: job.title,
       category: job.category?.name || "",
       subCategory: job.subCategory?.name || "",
+      imageUrl: job.images?.find((img: any) => img.isMain)?.url || job.images?.[0]?.url || "",
       rating: avgRating,
       reviewCount: reviewCount,
       viewCount: job.viewCount || 0,
       city: job.city?.name || "",
       timeAgo: timeAgo(job.createdAt),
       isVip: job.isVip,
+      isBoosted: job.isBoosted,
     };
   });
 
@@ -378,7 +355,9 @@ function JobsContent() {
                   ))
                 ) : (
                   <div className="col-span-full text-center py-10 text-gray-400 text-sm">
-                    شغلی در این دسته یافت نشد
+                    {selectedCategory && !selectedSubCategory
+                      ? "شغل ویژه‌ای در گروه اصلی این دسته ثبت نشده است. برای مشاهده تمام مشاغل، لطفاً یکی از زیردسته‌ها را انتخاب نمایید."
+                      : "شغلی در این دسته یافت نشد"}
                   </div>
                 )}
               </div>

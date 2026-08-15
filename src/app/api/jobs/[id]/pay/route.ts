@@ -26,9 +26,26 @@ export async function POST(
       expiresAt.setMonth(expiresAt.getMonth() + 12);
     }
 
+    let boostExpiresAt: Date | null = null;
+    if (jobRecord.isBoosted) {
+      const bDays =
+        jobRecord.boostPeriod === "SEVEN_DAYS" || String(jobRecord.boostPeriod) === "7"
+          ? 7
+          : jobRecord.boostPeriod === "THREE_DAYS" || String(jobRecord.boostPeriod) === "3"
+          ? 3
+          : 1;
+      boostExpiresAt = new Date(Date.now() + bDays * 24 * 60 * 60 * 1000);
+    }
+
     const job = await prisma.job.update({
       where: { id: jobId, userId: parseInt(session.user.id) },
-      data: { status: "FINAL", expiresAt }
+      data: {
+        status: "FINAL",
+        finalApprovedAt: new Date(),
+        paidAt: new Date(),
+        expiresAt,
+        ...(boostExpiresAt ? { boostExpiresAt } : {})
+      }
     });
 
     return NextResponse.json({ success: true, job });

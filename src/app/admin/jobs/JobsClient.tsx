@@ -557,6 +557,14 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                       {getStatusInfo(viewJob.status).label}
                     </span>
                   </div>
+                  {viewJob.isBoosted && viewJob.boostExpiresAt && (
+                    <div className="sm:col-span-2 bg-white p-2.5 rounded-lg border border-purple-100 flex items-center justify-between">
+                      <span className="text-gray-500">تاریخ پایان پله (Boost):</span>
+                      <span className="font-bold text-purple-900">
+                        {toJalali(new Date(viewJob.boostExpiresAt))}
+                      </span>
+                    </div>
+                  )}
                   {viewJob.expiresAt && (
                     <div className="sm:col-span-2 bg-white p-2.5 rounded-lg border border-emerald-100 flex items-center justify-between">
                       <span className="text-gray-500">تاریخ انقضای اشتراک:</span>

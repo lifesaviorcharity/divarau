@@ -158,10 +158,15 @@ export async function PUT(
     }
 
     const isNeedsEditOrRejected = existingJob.status === "NEEDS_EDIT" || existingJob.status === "REJECTED";
+    
+    if (!isNeedsEditOrRejected && session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "این شغل پس از تأیید نهایی قابل ویرایش نمی‌باشد." }, { status: 400 });
+    }
+
     const updateData: any = {};
 
-    if (isNeedsEditOrRejected) {
-      // Full editing allowed for jobs needing correction
+    if (isNeedsEditOrRejected || session.user.role === "ADMIN") {
+      // Full editing allowed for jobs needing correction or admin
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
       if (phone !== undefined) updateData.phone = phone;
@@ -176,17 +181,30 @@ export async function PUT(
       if (categoryId) updateData.categoryId = parseInt(categoryId);
       if (subCategoryId) updateData.subCategoryId = parseInt(subCategoryId);
 
-      // Change status to PENDING for admin re-approval
-      updateData.status = "PENDING";
+      // Change status to PENDING for admin re-approval (if not admin)
+      if (session.user.role !== "ADMIN") {
+        updateData.status = "PENDING";
+      }
 
       if (images && Array.isArray(images)) {
-        // Delete old image files from disk
+        // Find all old images currently in the DB for this job
         const oldImages = await prisma.jobImage.findMany({
           where: { jobId },
           select: { url: true },
         });
+
+        // Collect existing file URLs that are being kept
+        const keptUrls = new Set(
+          images
+            .map((img: any) => (typeof img === "string" ? img : img.url))
+            .filter((url: string) => typeof url === "string" && !url.startsWith("data:"))
+        );
+
+        // ONLY delete image files from disk that were ACTUALLY removed
         for (const oldImg of oldImages) {
-          await deleteJobImageFile(oldImg.url);
+          if (!keptUrls.has(oldImg.url)) {
+            await deleteJobImageFile(oldImg.url);
+          }
         }
 
         await prisma.jobImage.deleteMany({ where: { jobId } });
@@ -206,11 +224,6 @@ export async function PUT(
           await prisma.jobImage.createMany({ data: imageData });
         }
       }
-    } else {
-      // Restricted editing for other statuses (FINAL, APPROVED): only Category and SubCategory
-      if (categoryId) updateData.categoryId = parseInt(categoryId);
-      if (subCategoryId) updateData.subCategoryId = parseInt(subCategoryId);
-      // Status remains unchanged and no admin approval needed
     }
 
     const updatedJob = await prisma.job.update({

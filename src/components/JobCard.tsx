@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, Eye, Clock } from "lucide-react";
+import { Star, Eye, Clock, TrendingUp } from "lucide-react";
 
 export interface JobCardData {
   id: number;
@@ -14,6 +14,7 @@ export interface JobCardData {
   city: string;
   timeAgo: string;
   isVip: boolean;
+  isBoosted?: boolean;
 }
 
 interface JobCardProps {
@@ -42,8 +43,15 @@ export default function JobCard({ job, onClick }: JobCardProps) {
             </div>
           )}
           {job.isVip && (
-            <span className="absolute top-1 right-1 px-1.5 py-0.5 bg-gold text-white text-[9px] font-bold rounded-md">
+            <span className="absolute top-1 right-1 px-1.5 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-md flex items-center gap-0.5 shadow-sm">
+              <Star size={9} className="fill-white" />
               ویژه
+            </span>
+          )}
+          {job.isBoosted && (
+            <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-md flex items-center gap-0.5 shadow-sm">
+              <TrendingUp size={9} />
+              نردبان
             </span>
           )}
         </div>

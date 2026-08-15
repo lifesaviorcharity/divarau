@@ -89,8 +89,7 @@ export async function PATCH(
 
     if (nextStatus === "APPROVED" && ad.type === "COMMERCIAL") {
       const price = settingsMap.priceCommercialAd || "15";
-      const deadlineHours = settingsMap.paymentDeadlineHours || "48";
-      const messageBody = `کاربر گرامی، آگهی تجاری شما با عنوان "${ad.title}" تایید اولیه شد. جهت انتشار نهایی لطفاً مبلغ $${price} را پرداخت کنید. مهلت پرداخت: ${deadlineHours} ساعت.`;
+      const messageBody = `کاربر گرامی، آگهی تجاری شما با عنوان "${ad.title}" تایید اولیه شد. جهت انتشار نهایی لطفاً با مراجعه به پنل کاربری نسبت به پرداخت مبلغ ($${price}) از طریق درگاه پرداخت آنلاین اقدام فرمایید.`;
 
       if (isSmsEnabled && ad.user?.mobile) {
         await sendMessage(ad.user.mobile, messageBody);

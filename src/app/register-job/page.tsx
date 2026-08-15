@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { compressImage } from "@/lib/compressImage";
+import { limitDigits } from "@/lib/utils";
 
 export default function RegisterJobPage() {
   const { selectedCity, openCityModal } = useCityStore();
@@ -453,9 +454,10 @@ export default function RegisterJobPage() {
                           value={ph.number}
                           onChange={(e) => {
                             const updated = [...phoneList];
-                            updated[idx].number = e.target.value.replace(/[^0-9\s-]/g, "");
+                            updated[idx].number = limitDigits(e.target.value, 13);
                             setPhoneList(updated);
                           }}
+                          maxLength={13}
                           placeholder={idx === 0 ? "مثلاً: 412345678 یا 0412345678" : "شماره تماس دیگر..."}
                           className="flex-1 px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono"
                         />
@@ -523,9 +525,10 @@ export default function RegisterJobPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">واتساپ</label>
                   <input type="text" value={formData.whatsapp}
-                    onChange={(e) => handleInputChange("whatsapp", e.target.value.replace(/[^0-9]/g, ""))}
+                    onChange={(e) => handleInputChange("whatsapp", limitDigits(e.target.value, 14))}
+                    maxLength={14}
                     placeholder='شماره موبایل واتساپ خود را به صورت "61414652687" وارد نمایید'
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr" />
+                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono" />
                 </div>
 
                 {/* Telegram */}

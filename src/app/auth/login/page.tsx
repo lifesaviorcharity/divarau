@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useCallback } from "react";
 import { Phone, ArrowLeft, Shield, Loader2, RefreshCw } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatPersianNumber, normalizeAustralianMobile } from "@/lib/utils";
+import { formatPersianNumber, normalizeAustralianMobile, sanitizePhoneInput } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -278,7 +278,7 @@ function LoginPageContent() {
                     type="tel"
                     value={mobile}
                     onChange={(e) => {
-                      setMobile(e.target.value);
+                      setMobile(sanitizePhoneInput(e.target.value, true));
                       setError("");
                     }}
                     onBlur={() => {
@@ -296,7 +296,7 @@ function LoginPageContent() {
                     }}
                     placeholder="+61 4XX XXX XXX | 04 XX XXX XXX"
                     className="w-full pr-10 pl-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-medium"
-                    maxLength={20}
+                    maxLength={18}
                     autoFocus
                   />
                 </div>

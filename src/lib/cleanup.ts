@@ -13,18 +13,30 @@ export async function runJobsCleanup() {
   const deadlineHours = parseInt(settingsMap.paymentDeadlineHours || "48", 10);
   const thresholdPayment = new Date(Date.now() - deadlineHours * 60 * 60 * 1000);
 
-  // 1. Mark active jobs that reached expiresAt as EXPIRED
+  // 1. Mark active jobs that reached expiresAt as EXPIRED and disable boost
   const expiredByDate = await prisma.job.updateMany({
     where: {
       status: { in: ["FINAL", "PAID", "APPROVED"] },
       expiresAt: { lt: now }
     },
     data: {
-      status: "EXPIRED"
+      status: "EXPIRED",
+      isBoosted: false
     }
   });
 
-  // 2. Delete initial APPROVED jobs that were never paid within payment deadline
+  // 2. Deactivate expired boosts whose boostExpiresAt is in the past
+  const expiredBoosts = await prisma.job.updateMany({
+    where: {
+      isBoosted: true,
+      boostExpiresAt: { lt: now }
+    },
+    data: {
+      isBoosted: false
+    }
+  });
+
+  // 3. Delete initial APPROVED jobs that were never paid within payment deadline
   const unpaidJobs = await prisma.job.findMany({
     where: {
       status: "APPROVED",

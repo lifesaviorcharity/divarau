@@ -50,7 +50,20 @@ export async function PUT(
     if (data.status) updateData.status = data.status;
     if (data.subscriptionType) updateData.subscriptionType = data.subscriptionType;
     if (data.isVip !== undefined) updateData.isVip = Boolean(data.isVip);
-    if (data.isBoosted !== undefined) updateData.isBoosted = Boolean(data.isBoosted);
+    if (data.isBoosted !== undefined) {
+      updateData.isBoosted = Boolean(data.isBoosted);
+      if (updateData.isBoosted) {
+        if (data.boostExpiresAt) {
+          updateData.boostExpiresAt = new Date(data.boostExpiresAt);
+        } else {
+          const bp = data.boostPeriod || "ONE_DAY";
+          const bDays = bp === "SEVEN_DAYS" || bp === "7" ? 7 : bp === "THREE_DAYS" || bp === "3" ? 3 : 1;
+          updateData.boostExpiresAt = new Date(Date.now() + bDays * 24 * 60 * 60 * 1000);
+        }
+      } else {
+        updateData.boostExpiresAt = null;
+      }
+    }
     if (data.boostPeriod !== undefined) updateData.boostPeriod = data.boostPeriod || null;
     if (data.adminNote !== undefined) updateData.adminNote = data.adminNote || null;
     if (data.expiresAt !== undefined) {
@@ -59,13 +72,24 @@ export async function PUT(
 
     // Handle images update
     if (data.images && Array.isArray(data.images)) {
-      // Delete old image files from disk
+      // Find all old images currently in the DB for this job
       const oldImages = await prisma.jobImage.findMany({
         where: { jobId },
         select: { url: true },
       });
+
+      // Collect existing file URLs that are being kept by the admin
+      const keptUrls = new Set(
+        data.images
+          .map((img: any) => (typeof img === "string" ? img : img.url))
+          .filter((url: string) => typeof url === "string" && !url.startsWith("data:"))
+      );
+
+      // ONLY delete image files from disk that were ACTUALLY removed by the admin
       for (const oldImg of oldImages) {
-        await deleteJobImageFile(oldImg.url);
+        if (!keptUrls.has(oldImg.url)) {
+          await deleteJobImageFile(oldImg.url);
+        }
       }
 
       await prisma.jobImage.deleteMany({ where: { jobId } });

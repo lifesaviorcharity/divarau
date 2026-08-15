@@ -65,9 +65,10 @@ export default function JobDetailPage() {
   const isApproved = job.status === "APPROVED";
   const isOwner = !!(session?.user && (
     ((session.user as any).id && String((session.user as any).id) === String(job.userId)) ||
-    (session.user.mobile && job.user?.mobile && session.user.mobile === job.user.mobile)
+    (session.user.mobile && job.user?.mobile && session.user.mobile === job.user.mobile) ||
+    session.user.role === "ADMIN"
   ));
-  const canViewFullDetails = isFinal || isOwner;
+  const canViewContact = isFinal || isOwner;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -79,9 +80,9 @@ export default function JobDetailPage() {
             <ChevronLeft size={12} />
             <a href="/jobs" className="hover:text-primary">مشاغل</a>
             <ChevronLeft size={12} />
-            <a href={`/jobs?category=${job.category?.slug || ""}`} className="hover:text-primary">{job.category?.name || "گروه"}</a>
+            <a href={`/jobs?category=${job.category?.id || job.categoryId || ""}`} className="hover:text-primary">{job.category?.name || "گروه"}</a>
             <ChevronLeft size={12} />
-            <a href={`/jobs?category=${job.category?.slug || ""}&sub=${job.subCategory?.slug || ""}`} className="hover:text-primary">{job.subCategory?.name || "دسته"}</a>
+            <a href={`/jobs?category=${job.category?.id || job.categoryId || ""}&sub=${job.subCategory?.slug || ""}`} className="hover:text-primary">{job.subCategory?.name || "دسته"}</a>
             <ChevronLeft size={12} />
             <span className="text-gray-700 truncate max-w-[150px] sm:max-w-xs">{job.title}</span>
           </div>
@@ -130,20 +131,27 @@ export default function JobDetailPage() {
 
             {/* Contact Button */}
             <button
-              onClick={() => canViewFullDetails && setShowContact(!showContact)}
-              disabled={!canViewFullDetails}
-              className={`w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all duration-200 ${!canViewFullDetails
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              onClick={() => canViewContact && setShowContact(!showContact)}
+              disabled={!canViewContact}
+              className={`w-full py-3 rounded-xl font-bold text-sm mb-4 transition-all duration-200 ${!canViewContact
+                ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
                 : showContact
-                  ? "bg-primary-darker text-white shadow-inner"
-                  : "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl"
+                  ? "bg-primary-darker text-white shadow-inner cursor-pointer"
+                  : "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl cursor-pointer"
                 }`}
             >
-              {canViewFullDetails ? "راه‌های ارتباطی" : "راه‌های ارتباطی (غیرفعال)"}
+              {canViewContact ? "راه‌های ارتباطی" : "راه‌های ارتباطی"}
             </button>
 
+            {/* Notice for unfinalized job contact info */}
+            {!canViewContact && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-6 text-center text-xs text-amber-800 leading-relaxed">
+                راه‌های ارتباطی این آگهی پس از تأیید نهایی و پرداخت فعال و قابل مشاهده خواهند بود.
+              </div>
+            )}
+
             {/* Contact Details */}
-            {showContact && canViewFullDetails && (
+            {showContact && canViewContact && (
               <div className="border border-gray-100 rounded-xl p-5 mb-6 space-y-4 animate-scale-in bg-gray-50/50">
                 {job.phone && (
                   <div className="space-y-1.5">
@@ -238,11 +246,11 @@ export default function JobDetailPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between">
             {/* Main Image Stage */}
             <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center group overflow-hidden">
-              {!canViewFullDetails || (!job.images || job.images.length === 0) ? (
+              {!job.images || job.images.length === 0 ? (
                 <div className="text-center text-gray-400 p-6">
                   <div className="text-5xl mb-2">🏢</div>
                   <p className="text-sm">
-                    {canViewFullDetails ? "تصویری ثبت نشده است" : "تصاویر پس از تأیید نهایی و پرداخت قابل مشاهده خواهند بود"}
+                    تصویری برای این شغل ثبت نشده است
                   </p>
                 </div>
               ) : (
@@ -275,7 +283,7 @@ export default function JobDetailPage() {
               )}
 
               {/* Nav Arrows */}
-              {canViewFullDetails && job.images && job.images.length > 1 && (
+              {job.images && job.images.length > 1 && (
                 <>
                   <button
                     onClick={() => setCurrentImage((prev) => (prev - 1 + job.images.length) % job.images.length)}
@@ -298,17 +306,16 @@ export default function JobDetailPage() {
             </div>
 
             {/* Thumbnails */}
-            {canViewFullDetails && job.images && job.images.length > 1 && (
+            {job.images && job.images.length > 1 && (
               <div className="flex items-center gap-2 p-3 justify-center overflow-x-auto bg-gray-50/50 border-t border-gray-100">
                 {job.images.map((img: any, i: number) => (
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
-                      i === currentImage
+                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer ${i === currentImage
                         ? "border-primary shadow-md scale-105 opacity-100"
                         : "border-gray-200 opacity-60 hover:opacity-90 hover:scale-100"
-                    }`}
+                      }`}
                     title={`تصویر ${formatPersianNumber(i + 1)}`}
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -319,7 +326,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Image Lightbox Modal */}
-          {lightboxOpen && canViewFullDetails && job.images && job.images.length > 0 && (
+          {lightboxOpen && job.images && job.images.length > 0 && (
             <ImageLightbox
               images={job.images}
               initialIndex={currentImage}
@@ -330,7 +337,7 @@ export default function JobDetailPage() {
         </div>
 
         {/* Reviews Section (Bottom) */}
-        {isFinal && (
+        {(isFinal || isApproved) && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Reviews List */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

@@ -52,9 +52,64 @@ export function toEnglishDigits(str: string): string {
 }
 
 /**
+ * Limit phone input to prevent entering too many digits.
+ * Normal Australian mobile: 10 digits (e.g. 0412345678) or +61 412 345 678 (11 digits).
+ * Maximum allowed digits = Normal digits + 3 more digits:
+ * - Local / without '+': max 13 digits (10 + 3)
+ * - With international prefix (+ / 61): max 14 digits (+61... -> 11 + 3 = 14, max 15 digits for E.164)
+ */
+export function sanitizePhoneInput(input: string, allowLeadingPlus = true): string {
+  if (!input) return "";
+  const converted = toEnglishDigits(input);
+  const trimmed = converted.trimStart();
+  const startsWithPlus = allowLeadingPlus && trimmed.startsWith("+");
+
+  // Determine max allowed numeric digits (normal + 3 digits)
+  // International with +: normal 11 + 3 = 14 digits (or max 15 for global E.164)
+  // International with 61: normal 11 + 3 = 14 digits
+  // Local (e.g. 04...): normal 10 + 3 = 13 digits
+  const maxDigits = startsWithPlus ? 14 : (trimmed.startsWith("61") ? 14 : 13);
+
+  let result = "";
+  let digitCount = 0;
+
+  let startIdx = 0;
+  if (startsWithPlus) {
+    result = "+";
+    startIdx = trimmed.indexOf("+") + 1;
+  }
+
+  for (let i = startIdx; i < trimmed.length; i++) {
+    const char = trimmed[i];
+    if (/\d/.test(char)) {
+      if (digitCount < maxDigits) {
+        result += char;
+        digitCount++;
+      }
+    } else if (/[\s-]/.test(char)) {
+      result += char;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Filter and limit pure digit string (e.g. for structured number inputs or WhatsApp).
+ * Normal phone is 10 digits, max +3 more digits = 13 digits.
+ */
+export function limitDigits(input: string, maxDigits = 13): string {
+  if (!input) return "";
+  const english = toEnglishDigits(input);
+  const digits = english.replace(/\D/g, "");
+  return digits.slice(0, maxDigits);
+}
+
+/**
  * Normalize a mobile number to E.164 format.
  * Any phone number entered without a country code is automatically converted to the Australian (+61) format.
  * Accepts: 04XX XXX XXX, 04XXXXXXXX, 4XXXXXXXX, 614XXXXXXXX, +614XXXXXXXX, +98..., etc.
+ * Enforces maximum +3 digits over normal digits (max 13 digits for local, max 14-15 for international).
  * Returns: +614XXXXXXXX or E.164 formatted string (+...)
  */
 export function normalizeAustralianMobile(phone: string): string {
@@ -67,25 +122,42 @@ export function normalizeAustralianMobile(phone: string): string {
 
   // If already starts with '+', keep standard E.164
   if (cleaned.startsWith("+")) {
-    const digits = cleaned.slice(1);
+    const digits = cleaned.slice(1).replace(/\D/g, "");
+    if (digits.length > 15) {
+      throw new Error("شماره موبایل بیش از حد مجاز طولانی است (حداکثر ۱۵ رقم).");
+    }
     if (digits.length >= 8 && digits.length <= 15) {
-      return cleaned;
+      return `+${digits}`;
     }
     throw new Error("شماره موبایل نامعتبر است. لطفاً شماره معتبر وارد کنید.");
   }
 
   // If starts with '61' (e.g. 61412345678 or 61XXXXXXXXX)
-  if (cleaned.startsWith("61") && cleaned.length >= 10) {
-    return `+${cleaned}`;
+  if (cleaned.startsWith("61")) {
+    if (cleaned.length > 14) {
+      throw new Error("شماره موبایل بیش از حد مجاز طولانی است (حداکثر ۱۴ رقم).");
+    }
+    if (cleaned.length >= 10 && cleaned.length <= 14) {
+      return `+${cleaned}`;
+    }
+    throw new Error("شماره موبایل نامعتبر است. لطفاً شماره معتبر وارد کنید.");
   }
 
   // If starts with '0' (e.g. 0412345678 or 04XX XXX XXX), strip the leading 0
   if (cleaned.startsWith("0")) {
+    if (cleaned.length > 13) {
+      throw new Error("شماره موبایل بیش از حد مجاز طولانی است (حداکثر ۱۳ رقم).");
+    }
     cleaned = cleaned.slice(1);
   }
 
+  // Total raw digits check for numbers entered without country code
+  if (cleaned.length > 13) {
+    throw new Error("شماره موبایل بیش از حد مجاز طولانی است (حداکثر ۱۳ رقم).");
+  }
+
   // Any number entered without country code is converted to Australian +61 format (+61xxxxxxxx)
-  if (/^\d{8,12}$/.test(cleaned)) {
+  if (/^\d{8,13}$/.test(cleaned)) {
     return `+61${cleaned}`;
   }
 
@@ -103,4 +175,5 @@ export function isValidAustralianMobile(phone: string): boolean {
     return false;
   }
 }
+
 

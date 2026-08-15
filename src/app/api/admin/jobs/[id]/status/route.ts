@@ -30,7 +30,7 @@ export async function POST(
 
     // Prepare update data
     const updateData: any = { status, adminNote };
-    
+
     if (status === "APPROVED") {
       updateData.approvedAt = new Date();
     } else if (status === "PENDING") {
@@ -46,7 +46,21 @@ export async function POST(
           expiresAt.setMonth(expiresAt.getMonth() + 12);
         }
         updateData.expiresAt = expiresAt;
+
+        // Set boost duration if boosted
+        if (job.isBoosted) {
+          const boostDays =
+            job.boostPeriod === "SEVEN_DAYS" || String(job.boostPeriod) === "7"
+              ? 7
+              : job.boostPeriod === "THREE_DAYS" || String(job.boostPeriod) === "3"
+              ? 3
+              : 1;
+          updateData.boostExpiresAt = new Date(Date.now() + boostDays * 24 * 60 * 60 * 1000);
+        }
       }
+    } else if (status === "EXPIRED" || status === "REJECTED" || status === "DISABLED") {
+      updateData.isBoosted = false;
+      updateData.boostExpiresAt = null;
     }
 
     const updatedJob = await prisma.job.update({
@@ -65,18 +79,34 @@ export async function POST(
 
     // Handle side effects (SMS, Messages)
     if (status === "APPROVED") {
-      // Calculate mock payment amount
-      let amount = job.subscriptionType === "SIX_MONTHS" ? 100 : 200;
-      if (job.isVip) amount += 50;
-      if (job.isBoosted) amount += 20;
+      // Calculate dynamic payment amount based on admin settings and job options
+      const price6Month = parseFloat(settingsMap.price6Month || "25");
+      const price12Month = parseFloat(settingsMap.price12Month || "45");
+      const priceVip = parseFloat(settingsMap.priceVip || "15");
+      const priceBoost1 = parseFloat(settingsMap.priceBoost1 || "5");
+      const priceBoost3 = parseFloat(settingsMap.priceBoost3 || "12");
+      const priceBoost7 = parseFloat(settingsMap.priceBoost7 || "20");
 
-      const paymentDeadlineHours = settingsMap.paymentDeadlineHours || "48";
-      const messageBody = `کاربر گرامی، شغل شما با عنوان "${job.title}" تایید اولیه شد. جهت تایید نهایی لطفا مبلغ ${amount}$ را پرداخت نموده و رسید آن را به همراه شماره ${job.id} به پشتیبانی ارسال نمایید. مهلت پرداخت: ${paymentDeadlineHours} ساعت.`;
-      
+      let amount = job.subscriptionType === "TWELVE_MONTHS" ? price12Month : price6Month;
+      if (job.isVip) amount += priceVip;
+      if (job.isBoosted) {
+        const periodStr = String(job.boostPeriod || "");
+        if (periodStr === "SEVEN_DAYS" || periodStr === "7") {
+          amount += priceBoost7;
+        } else if (periodStr === "THREE_DAYS" || periodStr === "3") {
+          amount += priceBoost3;
+        } else {
+          amount += priceBoost1;
+        }
+      }
+
+      const subscriptionLabel = job.subscriptionType === "TWELVE_MONTHS" ? "۱۲ ماهه" : "۶ ماهه";
+      const messageBody = `کاربر گرامی، شغل شما با عنوان "${job.title}" تایید اولیه شد. جهت تایید نهایی و فعال‌سازی در سایت، لطفاً با مراجعه به پنل کاربری نسبت به پرداخت مبلغ اشتراک (${subscriptionLabel}: $${amount}) اقدام فرمایید.`;
+
       if (isSmsEnabled && job.user?.mobile) {
         await sendMessage(job.user.mobile, messageBody);
       }
-      
+
       // Also send system message
       await prisma.message.create({
         data: {
@@ -102,11 +132,11 @@ export async function POST(
     } else if (status === "NEEDS_EDIT") {
       const cleanNote = adminNote ? adminNote.replace("[NEEDS_EDIT] ", "") : "عدم رعایت قوانین";
       const messageBody = `کاربر گرامی، اطلاعات شغل شما با عنوان "${job.title}" نیاز به اصلاح دارد. دلیل ادمین: ${cleanNote}\nلطفا جهت اصلاح به پنل کاربری مراجعه کنید.`;
-      
+
       if (isSmsEnabled && job.user?.mobile) {
         await sendMessage(job.user.mobile, messageBody);
       }
-      
+
       await prisma.message.create({
         data: {
           userId: job.userId,
@@ -120,7 +150,7 @@ export async function POST(
       const messageBody = isNeedsEdit
         ? `کاربر گرامی، اطلاعات شغل شما با عنوان "${job.title}" نیاز به اصلاح دارد. دلیل ادمین: ${cleanNote}\nلطفا جهت اصلاح به پنل کاربری مراجعه کنید.`
         : `کاربر گرامی، متاسفانه شغل شما با عنوان "${job.title}" رد شد. دلیل: ${cleanNote}`;
-      
+
       if (isSmsEnabled && job.user?.mobile) {
         await sendMessage(job.user.mobile, messageBody);
       }

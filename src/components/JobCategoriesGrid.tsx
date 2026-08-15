@@ -10,8 +10,8 @@ export default function JobCategoriesGrid() {
   const router = useRouter();
   const { categories: jobCategories, isLoading } = useCategories();
 
-  const handleCategoryClick = (categoryIndex: number) => {
-    router.push(`/jobs?category=${categoryIndex}`);
+  const handleCategoryClick = (categoryId: number) => {
+    router.push(`/jobs?category=${categoryId}`);
   };
 
   return (
@@ -26,10 +26,10 @@ export default function JobCategoriesGrid() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
-          {jobCategories.map((category, index) => (
+          {jobCategories.map((category) => (
             <button
               key={category.name}
-              onClick={() => handleCategoryClick(index)}
+              onClick={() => handleCategoryClick(category.id)}
               className="group flex flex-col items-center gap-3 p-5 bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer hover:border-gray-200 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 card-hover"
             >
               <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform duration-300">

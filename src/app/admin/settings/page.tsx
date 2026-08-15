@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save, Globe, CreditCard, Bell, Shield, Palette, Clock, Mail } from "lucide-react";
+import { sanitizePhoneInput } from "@/lib/utils";
 
 export default function AdminSettingsPage() {
   const [activeSection, setActiveSection] = useState("general");
@@ -197,7 +198,8 @@ export default function AdminSettingsPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">تلفن تماس</label>
-                      <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)}
+                      <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(sanitizePhoneInput(e.target.value, true))}
+                        maxLength={18}
                         className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr" />
                     </div>
                   </div>

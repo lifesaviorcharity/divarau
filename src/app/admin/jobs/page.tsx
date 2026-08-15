@@ -77,6 +77,7 @@ export default async function AdminJobsPage() {
     isVip: j.isVip,
     isBoosted: j.isBoosted,
     boostPeriod: j.boostPeriod,
+    boostExpiresAt: (j as any).boostExpiresAt ? new Date((j as any).boostExpiresAt).toISOString() : null,
     expiresAt: j.expiresAt ? j.expiresAt.toISOString() : null,
     createdAt: j.createdAt.toISOString(),
     imageCount: j._count.images,

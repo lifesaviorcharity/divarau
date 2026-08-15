@@ -46,12 +46,14 @@ export async function saveJobImageToDisk(dataUrl: string): Promise<string> {
  * Silently ignores non-local URLs (external or base64) and missing files.
  */
 export async function deleteJobImageFile(url: string): Promise<void> {
+  if (!url || typeof url !== "string") return;
+  const cleanUrl = url.split("?")[0].trim();
   // Only delete local file URLs
-  if (!url.startsWith("/uploads/jobs/")) {
+  if (!cleanUrl.startsWith("/uploads/jobs/")) {
     return;
   }
 
-  const filepath = path.join(process.cwd(), "public", url);
+  const filepath = path.join(process.cwd(), "public", cleanUrl);
 
   // Security check to prevent directory traversal
   const uploadsDir = path.join(process.cwd(), "public", "uploads", "jobs");

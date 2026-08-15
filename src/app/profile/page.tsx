@@ -21,6 +21,8 @@ import {
   X,
   Zap,
   Star,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { toJalali } from "@/lib/utils";
@@ -412,11 +414,11 @@ export default function ProfilePage() {
                           >
                             <Eye size={16} />
                           </button>
-                          {(job.status === "FINAL" || job.status === "NEEDS_EDIT") && (
+                          {(job.status === "NEEDS_EDIT" || job.status === "REJECTED") && (
                             <button
                               onClick={() => router.push(`/job/${job.id}/edit`)}
                               className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
-                              title="ویرایش"
+                              title="ویرایش و اصلاح"
                             >
                               <Edit size={16} />
                             </button>
@@ -833,6 +835,77 @@ export default function ProfilePage() {
                 )}
               </div>
 
+              {/* Subscription & Requested Options */}
+              <div className="bg-purple-50/60 border border-purple-100 rounded-xl p-4 space-y-3">
+                <h4 className="font-bold text-purple-950 text-xs flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-purple-600" />
+                  نوع اشتراک و خدمات انتخابی شغل:
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  {/* Base Subscription */}
+                  <div className="bg-white p-2.5 rounded-lg border border-purple-100 flex flex-col justify-between gap-1">
+                    <span className="text-gray-500 text-[11px]">اشتراک انتخابی:</span>
+                    <span className="font-bold text-purple-900">
+                      {viewingJob.subscriptionType === "TWELVE_MONTHS" ? "۱۲ ماهه (۳۶۵ روز)" : "۶ ماهه (۱۸۰ روز)"}
+                    </span>
+                  </div>
+
+                  {/* VIP Status */}
+                  <div className="bg-white p-2.5 rounded-lg border border-purple-100 flex flex-col justify-between gap-1">
+                    <span className="text-gray-500 text-[11px]">نشان ویژه (VIP):</span>
+                    <span className={`font-bold flex items-center gap-1 ${viewingJob.isVip ? "text-amber-600" : "text-gray-600"}`}>
+                      {viewingJob.isVip ? (
+                        <>
+                          <Star size={13} className="fill-amber-500 text-amber-500" />
+                          شغل ویژه (VIP)
+                        </>
+                      ) : (
+                        "عادی (بدون VIP)"
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Boost / Ladder */}
+                  <div className="bg-white p-2.5 rounded-lg border border-purple-100 flex flex-col justify-between gap-1">
+                    <span className="text-gray-500 text-[11px]">نردبان (پله شده):</span>
+                    <span className={`font-bold flex items-center gap-1 ${viewingJob.isBoosted ? "text-blue-600" : "text-gray-600"}`}>
+                      {viewingJob.isBoosted ? (
+                        <>
+                          <TrendingUp size={13} className="text-blue-600" />
+                          {viewingJob.boostPeriod === "SEVEN_DAYS" || String(viewingJob.boostPeriod) === "7"
+                            ? "نردبان ۷ روزه"
+                            : viewingJob.boostPeriod === "THREE_DAYS" || String(viewingJob.boostPeriod) === "3"
+                              ? "نردبان ۳ روزه"
+                              : "نردبان ۱ روزه"}
+                        </>
+                      ) : (
+                        "بدون نردبان"
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Boost Expiration date if active */}
+                {viewingJob.isBoosted && viewingJob.boostExpiresAt && (
+                  <div className="bg-white px-3 py-2 rounded-lg border border-blue-100 flex items-center justify-between text-xs text-gray-700">
+                    <span className="text-gray-500 text-[11px]">مهلت اعتبار نردبان (پله):</span>
+                    <span className="font-semibold text-blue-900 font-mono">
+                      {toJalali(new Date(viewingJob.boostExpiresAt))}
+                    </span>
+                  </div>
+                )}
+
+                {/* Expiration date if finalized */}
+                {viewingJob.expiresAt && (
+                  <div className="bg-white px-3 py-2 rounded-lg border border-purple-100 flex items-center justify-between text-xs text-gray-700">
+                    <span className="text-gray-500 text-[11px]">تاریخ انقضای اشتراک:</span>
+                    <span className="font-semibold text-purple-950 font-mono">
+                      {toJalali(new Date(viewingJob.expiresAt))}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               {/* Registered Contact Information */}
               <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 space-y-3">
                 <h4 className="font-bold text-blue-950 text-xs mb-2">اطلاعات تماس ثبت‌شده (مخصوص شما):</h4>
@@ -911,12 +984,12 @@ export default function ProfilePage() {
                     پرداخت و فعال‌سازی نهایی
                   </button>
                 )}
-                {(viewingJob.status === "FINAL" || viewingJob.status === "NEEDS_EDIT") && (
+                {(viewingJob.status === "NEEDS_EDIT" || viewingJob.status === "REJECTED") && (
                   <button
                     onClick={() => { setViewingJob(null); router.push(`/job/${viewingJob.id}/edit`); }}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer"
                   >
-                    ویرایش اطلاعات
+                    ویرایش و اصلاح اطلاعات
                   </button>
                 )}
               </div>

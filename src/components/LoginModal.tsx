@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Phone, Shield, Loader2, X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { formatPersianNumber } from "@/lib/utils";
+import { formatPersianNumber, normalizeAustralianMobile, sanitizePhoneInput } from "@/lib/utils";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -46,10 +46,20 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   }, [countdown]);
 
   const handleSendOTP = useCallback(async () => {
-    if (!mobile || mobile.replace(/\D/g, "").length < 8) {
-      setError("لطفاً شماره موبایل معتبر وارد کنید");
+    if (!mobile || !mobile.trim()) {
+      setError("لطفاً شماره موبایل را وارد کنید");
       return;
     }
+
+    let normalized = "";
+    try {
+      normalized = normalizeAustralianMobile(mobile);
+      setMobile(normalized);
+    } catch (err: any) {
+      setError(err?.message || "لطفاً شماره موبایل معتبر وارد کنید");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -57,7 +67,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile }),
+        body: JSON.stringify({ mobile: normalized }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -84,9 +94,15 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
     setIsLoading(true);
     setError("");
 
+    let normalized = mobile;
+    try {
+      normalized = normalizeAustralianMobile(mobile);
+      setMobile(normalized);
+    } catch { }
+
     try {
       const res = await signIn("credentials", {
-        mobile,
+        mobile: normalized,
         otp: code,
         redirect: false,
       });
@@ -165,13 +181,13 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                   type="tel"
                   value={mobile}
                   onChange={(e) => {
-                    setMobile(e.target.value.replace(/[^0-9+]/g, ""));
+                    setMobile(sanitizePhoneInput(e.target.value, true));
                     setError("");
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleSendOTP()}
-                  placeholder="04XX XXX XXX"
+                  placeholder="+61 4XX XXX XXX | 04 XX XXX XXX"
                   className="w-full pr-10 pl-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr"
-                  maxLength={15}
+                  maxLength={18}
                   autoFocus
                 />
               </div>

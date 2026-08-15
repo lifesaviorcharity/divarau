@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -14,8 +14,8 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import React from "react";
 import { compressImage } from "@/lib/compressImage";
+import { limitDigits } from "@/lib/utils";
 
 const parsePhones = (phoneStr: string | null | undefined) => {
   if (!phoneStr || !phoneStr.trim()) {
@@ -270,7 +270,29 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   );
 
   if (!session || !isOwner) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500">عدم دسترسی</div>;
+    return <div className="min-h-screen flex items-center justify-center text-red-500 font-bold">عدم دسترسی</div>;
+  }
+
+  if (!isFullEditAllowed && session.user.role !== "ADMIN") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white max-w-md w-full rounded-2xl border border-gray-200 shadow-sm p-6 text-center space-y-4">
+          <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-amber-500">
+            <AlertTriangle size={28} />
+          </div>
+          <h2 className="text-lg font-bold text-gray-800">غیرقابل ویرایش</h2>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            این شغل پس از تأیید نهایی قابل ویرایش توسط کاربر نمی‌باشد. در صورت نیاز به اعمال تغییرات، لطفاً با پشتیبانی در ارتباط باشید.
+          </p>
+          <button
+            onClick={() => router.push("/profile")}
+            className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-colors cursor-pointer"
+          >
+            بازگشت به پروفایل
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -487,9 +509,10 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
                               value={ph.number}
                               onChange={(e) => {
                                 const updated = [...phoneList];
-                                updated[idx].number = e.target.value.replace(/[^0-9\s-]/g, "");
+                                updated[idx].number = limitDigits(e.target.value, 13);
                                 setPhoneList(updated);
                               }}
+                              maxLength={13}
                               placeholder={idx === 0 ? "مثلاً: 412345678 یا 0412345678" : "شماره تماس دیگر..."}
                               className="flex-1 px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono"
                             />
@@ -567,9 +590,10 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
                       <input
                         type="text"
                         value={formData.whatsapp}
-                        onChange={(e) => handleInputChange("whatsapp", e.target.value.replace(/[^0-9]/g, ""))}
+                        onChange={(e) => handleInputChange("whatsapp", limitDigits(e.target.value, 14))}
+                        maxLength={14}
                         placeholder="61414652687"
-                        className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr"
+                        className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono"
                       />
                     </div>
 

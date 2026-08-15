@@ -60,6 +60,17 @@ export async function POST(request: Request) {
       const now = new Date();
       const expiresAt = new Date(now.setMonth(now.getMonth() + monthsToAdd));
 
+      let boostExpiresAt: Date | undefined;
+      if (existingJob?.isBoosted) {
+        const bDays =
+          existingJob.boostPeriod === "SEVEN_DAYS" || String(existingJob.boostPeriod) === "7"
+            ? 7
+            : existingJob.boostPeriod === "THREE_DAYS" || String(existingJob.boostPeriod) === "3"
+            ? 3
+            : 1;
+        boostExpiresAt = new Date(Date.now() + bDays * 24 * 60 * 60 * 1000);
+      }
+
       await prisma.job.update({
         where: { id: itemId },
         data: {
@@ -67,6 +78,7 @@ export async function POST(request: Request) {
           paidAt: new Date(),
           finalApprovedAt: new Date(),
           expiresAt: expiresAt,
+          ...(boostExpiresAt ? { boostExpiresAt } : {}),
         }
       });
       // Log payment
@@ -90,11 +102,15 @@ export async function POST(request: Request) {
           ? "THREE_DAYS"
           : "ONE_DAY";
 
+      const numDays = boostEnum === "SEVEN_DAYS" ? 7 : boostEnum === "THREE_DAYS" ? 3 : 1;
+      const boostExpiresAt = new Date(Date.now() + numDays * 24 * 60 * 60 * 1000);
+
       await prisma.job.update({
         where: { id: itemId },
         data: {
           isBoosted: true,
           boostPeriod: boostEnum,
+          boostExpiresAt,
           updatedAt: new Date(),
         }
       });

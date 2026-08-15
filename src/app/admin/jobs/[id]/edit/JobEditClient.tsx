@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { compressImage } from "@/lib/compressImage";
+import { limitDigits } from "@/lib/utils";
 
 const parsePhones = (phoneStr: string | null | undefined) => {
   if (!phoneStr || !phoneStr.trim()) {
@@ -468,9 +469,10 @@ export default function JobEditClient({
                         value={ph.number}
                         onChange={(e) => {
                           const updated = [...phoneList];
-                          updated[idx].number = e.target.value.replace(/[^0-9\s-]/g, "");
+                          updated[idx].number = limitDigits(e.target.value, 13);
                           setPhoneList(updated);
                         }}
+                        maxLength={13}
                         placeholder={idx === 0 ? "مثلاً: 412345678 یا 0412345678" : "شماره تماس دیگر..."}
                         className="flex-1 px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-left dir-ltr font-mono"
                       />
@@ -533,9 +535,10 @@ export default function JobEditClient({
                 <input
                   type="text"
                   value={formData.whatsapp}
-                  onChange={(e) => handleInputChange("whatsapp", e.target.value)}
-                  placeholder="+61412345678"
-                  className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-left"
+                  onChange={(e) => handleInputChange("whatsapp", limitDigits(e.target.value, 14))}
+                  maxLength={14}
+                  placeholder="04XXXXXXXX یا 614XXXXXXXX"
+                  className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-left dir-ltr font-mono"
                   dir="ltr"
                 />
               </div>

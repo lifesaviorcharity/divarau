@@ -141,6 +141,7 @@ model Job {
   isVip           Boolean          @default(false)
   isBoosted       Boolean          @default(false)
   boostPeriod     BoostPeriod?
+  boostExpiresAt  DateTime?
   status          JobStatus        @default(PENDING)
   adminNote       String?          // دلیل رد یا اصلاح
   viewCount       Int              @default(0)

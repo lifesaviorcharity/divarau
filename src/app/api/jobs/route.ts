@@ -8,6 +8,20 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const now = new Date();
+
+    // Auto-expire past boosts & subscriptions in real-time
+    await Promise.all([
+      prisma.job.updateMany({
+        where: { isBoosted: true, boostExpiresAt: { lt: now } },
+        data: { isBoosted: false }
+      }),
+      prisma.job.updateMany({
+        where: { status: { in: ["FINAL", "APPROVED", "PAID"] }, expiresAt: { lt: now } },
+        data: { status: "EXPIRED", isBoosted: false }
+      })
+    ]).catch((e) => console.error("Realtime cleanup error:", e));
+
     const { searchParams } = new URL(request.url);
     const cityId = searchParams.get("cityId");
     const categoryId = searchParams.get("categoryId");
@@ -17,8 +31,8 @@ export async function GET(request: Request) {
     if (statusParam) {
       statusWhere = statusParam;
     } else {
-      // By default for public website listing, include both FINAL and APPROVED jobs
-      statusWhere = { in: ["FINAL", "APPROVED"] };
+      // By default for public website listing, include active approved and finalized jobs
+      statusWhere = { in: ["FINAL", "APPROVED", "PAID"] };
     }
 
     const isVip = searchParams.get("isVip");
@@ -30,9 +44,21 @@ export async function GET(request: Request) {
     const where: any = { status: statusWhere };
 
     if (cityId) where.cityId = parseInt(cityId);
-    if (categoryId) where.categoryId = parseInt(categoryId);
-    if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
-    if (isVip !== null) where.isVip = isVip === "true";
+
+    if (categoryId && !subCategoryId) {
+      // In the main category view (without subcategory), only VIP jobs of this category are displayed
+      where.categoryId = parseInt(categoryId);
+      if (isVip === null) {
+        where.isVip = true;
+      } else {
+        where.isVip = isVip === "true";
+      }
+    } else {
+      if (categoryId) where.categoryId = parseInt(categoryId);
+      if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
+      if (isVip !== null) where.isVip = isVip === "true";
+    }
+
     if (q) {
       where.OR = [
         { title: { contains: q, mode: 'insensitive' } },
@@ -47,14 +73,20 @@ export async function GET(request: Request) {
     const queryOptions: any = {
       where,
       orderBy: [
-        { isBoosted: 'desc' }, // Boosted first
+        { isBoosted: 'desc' }, // Boosted first (صدر آگهی‌ها)
+        { isVip: 'desc' },     // VIP jobs next
         { finalApprovedAt: 'desc' }, // Then by latest approval
+        { createdAt: 'desc' }, // Then by latest creation
         { id: 'desc' }, // Tie-breaker for deterministic sorting
       ],
       include: {
         city: true,
         category: true,
         subCategory: true,
+        images: {
+          select: { url: true, isMain: true, order: true },
+          orderBy: { order: 'asc' }
+        },
         reviews: {
           where: { isApproved: true },
           select: { rating: true }
