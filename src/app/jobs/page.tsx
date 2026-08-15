@@ -149,7 +149,50 @@ function JobsContent() {
       .catch(() => setIsLoadingAds(false));
   }, [searchQuery, categoryParam, isCategoriesLoading, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
+  // Persistent category/subcategory memory (localStorage)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const hasCatInUrl = searchParams.has("category");
+    const hasSubInUrl = searchParams.has("sub");
+    const hasQInUrl = searchParams.has("q");
+
+    if (!hasCatInUrl && !hasSubInUrl && !hasQInUrl) {
+      // User arrived at /jobs from another page without query params: restore last saved selection if present
+      const savedCategory = localStorage.getItem("last_selected_category");
+      const savedSub = localStorage.getItem("last_selected_sub");
+
+      if (savedCategory) {
+        const params = new URLSearchParams();
+        params.set("category", savedCategory);
+        if (savedSub) params.set("sub", savedSub);
+        router.replace(`/jobs?${params.toString()}`, { scroll: false });
+      }
+    } else if (hasCatInUrl || hasSubInUrl) {
+      // URL has category/sub query params: keep localStorage in sync
+      if (categoryParam !== null) {
+        localStorage.setItem("last_selected_category", categoryParam.toString());
+      } else {
+        localStorage.removeItem("last_selected_category");
+      }
+
+      if (subCategoryParam !== null) {
+        localStorage.setItem("last_selected_sub", subCategoryParam);
+      } else {
+        localStorage.removeItem("last_selected_sub");
+      }
+    }
+  }, [searchParams, categoryParam, subCategoryParam, router]);
+
   const handleCategorySelect = useCallback((i: number | null) => {
+    if (typeof window !== "undefined") {
+      if (i !== null && jobCategories[i]) {
+        localStorage.setItem("last_selected_category", String(jobCategories[i].id));
+      } else {
+        localStorage.removeItem("last_selected_category");
+      }
+      localStorage.removeItem("last_selected_sub");
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (i !== null && jobCategories[i]) {
       params.set("category", String(jobCategories[i].id));
@@ -161,6 +204,18 @@ function JobsContent() {
   }, [searchParams, jobCategories, router]);
 
   const handleSubCategorySelect = useCallback((catIdx: number | null, subSlug: string | null) => {
+    if (typeof window !== "undefined") {
+      if (catIdx !== null && jobCategories[catIdx]) {
+        localStorage.setItem("last_selected_category", String(jobCategories[catIdx].id));
+      } else {
+        localStorage.removeItem("last_selected_category");
+      }
+      if (subSlug !== null) {
+        localStorage.setItem("last_selected_sub", subSlug);
+      } else {
+        localStorage.removeItem("last_selected_sub");
+      }
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (catIdx !== null && jobCategories[catIdx]) {
       params.set("category", String(jobCategories[catIdx].id));
