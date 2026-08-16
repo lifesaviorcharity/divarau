@@ -38,7 +38,7 @@ export default function FreeAdPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!selectedCity) { openCityModal(); return; }
+    if (!selectedCity || !selectedCity.id || selectedCity.id === 0) { openCityModal(); return; }
     if (!isLoggedIn) return;
     if (!title || !description || selectedCategoryIndex === null || !selectedSubCategorySlug) {
       alert("لطفاً تمامی فیلدهای اجباری را پر کنید.");

@@ -288,7 +288,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                       : "border-gray-50 hover:bg-gray-50/50"
                       }`}
                   >
-                    <td className="px-4 py-3 text-gray-400">{job.id}</td>
+                    <td className="px-4 py-3 text-gray-400">{index + 1}</td>
                     <td className="px-4 py-3 font-semibold text-gray-800">
                       <span>{job.title}</span>
                     </td>

@@ -151,7 +151,7 @@ export default function Header() {
                 >
                   <MapPin size={16} className="text-primary" />
                   <span className="hidden sm:inline text-gray-700">
-                    {selectedCity ? selectedCity.name : "انتخاب شهر"}
+                    {selectedCity?.name || "همه شهرها"}
                   </span>
                   <ChevronDown size={14} className="text-gray-400" />
                 </button>

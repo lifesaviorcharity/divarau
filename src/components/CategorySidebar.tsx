@@ -24,8 +24,26 @@ export default function CategorySidebar({
 
   const qQuery = searchParams.get("q") || "";
   const [globalSearch, setGlobalSearch] = useState(qQuery);
+  const [searchAllCategories, setSearchAllCategories] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedCategory, setExpandedCategory] = useState<number | null>(selectedCategoryIndex);
+
+  // Restore saved searchAllCategories preference from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("search_all_categories");
+      if (saved !== null) {
+        setSearchAllCategories(saved === "true");
+      }
+    }
+  }, []);
+
+  const handleToggleSearchAll = (checked: boolean) => {
+    setSearchAllCategories(checked);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("search_all_categories", String(checked));
+    }
+  };
 
   useEffect(() => {
     if (selectedCategoryIndex !== null) {
@@ -42,11 +60,22 @@ export default function CategorySidebar({
 
   const handleGlobalSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (globalSearch.trim()) {
-      router.push(`/jobs?q=${encodeURIComponent(globalSearch.trim())}`);
-    } else {
-      router.push("/jobs");
+    const trimmed = globalSearch.trim();
+    const params = new URLSearchParams();
+
+    if (trimmed) {
+      params.set("q", trimmed);
     }
+
+    if (!searchAllCategories) {
+      const currentCat = searchParams.get("category");
+      const currentSub = searchParams.get("sub");
+      if (currentCat) params.set("category", currentCat);
+      if (currentSub) params.set("sub", currentSub);
+    }
+
+    const qs = params.toString();
+    router.push(qs ? `/jobs?${qs}` : "/jobs", { scroll: false });
   };
 
   const handleCategoryClick = (originalIndex: number) => {
@@ -246,17 +275,31 @@ export default function CategorySidebar({
         </div>
       </div>
 
-      {/* Global Jobs/Ads Search - only visible on desktop (lg) */}
-      <div className="hidden lg:block p-2 bg-[var(--color-list-backgnd2)] rounded-md border border-gray-100 shadow-sm">
-        <form onSubmit={handleGlobalSearchSubmit} className="relative">
-          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="جستجوی مشاغل و آگهی‌ها..."
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-            className="w-full pr-9 pl-3 py-2 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-gray-400 transition-all text-right"
-          />
+      {/* Global Jobs/Ads Search */}
+      <div className="p-2.5 bg-[var(--color-list-backgnd2)] rounded-md border border-gray-100 shadow-sm space-y-2">
+        <form onSubmit={handleGlobalSearchSubmit} className="space-y-2">
+          <div className="relative">
+            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="جستجوی مشاغل و آگهی‌ها..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              className="w-full pr-9 pl-3 py-2 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-gray-400 transition-all text-right"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none px-1">
+            <input
+              type="checkbox"
+              checked={searchAllCategories}
+              onChange={(e) => handleToggleSearchAll(e.target.checked)}
+              className="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary/30 accent-primary cursor-pointer"
+            />
+            <span className="text-[11px] text-gray-600 font-medium hover:text-gray-900 transition-colors">
+              جستجو در همه دسته‌های شغلی
+            </span>
+          </label>
         </form>
       </div>
     </div>

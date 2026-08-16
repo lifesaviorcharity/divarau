@@ -134,9 +134,9 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: a
               </tr>
             </thead>
             <tbody>
-              {filteredPayments.map((pay) => (
+              {filteredPayments.map((pay, index) => (
                 <tr key={pay.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-4 py-3 text-gray-400">{pay.id}</td>
+                  <td className="px-4 py-3 text-gray-400">{index + 1}</td>
                   <td className="px-4 py-3">
                     <p className="font-semibold text-gray-800">{pay.user}</p>
                   </td>

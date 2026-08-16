@@ -151,7 +151,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
                         : "border-gray-50 hover:bg-gray-50/50"
                       }`}
                   >
-                    <td className="px-4 py-3 text-gray-400">{user.id}</td>
+                    <td className="px-4 py-3 text-gray-400">{index + 1}</td>
                     <td className="px-4 py-3 text-gray-800 font-mono text-xs" dir="ltr">
                       <span>{user.mobile}</span>
                     </td>

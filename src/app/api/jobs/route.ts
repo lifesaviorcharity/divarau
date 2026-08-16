@@ -45,8 +45,8 @@ export async function GET(request: Request) {
 
     if (cityId) where.cityId = parseInt(cityId);
 
-    if (categoryId && !subCategoryId) {
-      // In the main category view (without subcategory), only VIP jobs of this category are displayed
+    if (categoryId && !subCategoryId && !q) {
+      // In the main category view (without subcategory and without search query), only VIP jobs of this category are displayed
       where.categoryId = parseInt(categoryId);
       if (isVip === null) {
         where.isVip = true;

@@ -252,7 +252,7 @@ export default function AdsClient({ initialAds }: { initialAds: any[] }) {
                         : "border-gray-50 hover:bg-gray-50/50"
                     }`}
                   >
-                    <td className="px-4 py-3 text-gray-400">{ad.id}</td>
+                    <td className="px-4 py-3 text-gray-400">{index + 1}</td>
                     <td className="px-4 py-3 font-semibold text-gray-800">
                       <span>{ad.title}</span>
                     </td>

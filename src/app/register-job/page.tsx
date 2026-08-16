@@ -123,7 +123,7 @@ export default function RegisterJobPage() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedCity) { openCityModal(); return; }
+    if (!selectedCity || !selectedCity.id || selectedCity.id === 0) { openCityModal(); return; }
     if (!isLoggedIn) return;
 
     const formattedPhones = phoneList

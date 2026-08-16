@@ -147,7 +147,7 @@ function JobsContent() {
         setIsLoadingAds(false);
       })
       .catch(() => setIsLoadingAds(false));
-  }, [searchQuery, categoryParam, isCategoriesLoading, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
+  }, [searchQuery, categoryParam, subCategoryParam, isCategoriesLoading, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
   // Persistent category/subcategory memory (localStorage)
   useEffect(() => {
@@ -328,15 +328,32 @@ function JobsContent() {
         {searchQuery && (
           <div className="flex items-center justify-between bg-white rounded-xl border border-primary/20 px-4 py-3 mb-4 shadow-sm">
             <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Search size={16} className="text-primary" />
-              <span>نتایج جستجو برای: <strong className="text-primary">«{searchQuery}»</strong></span>
+              <Search size={16} className="text-primary flex-shrink-0" />
+              <span>
+                نتایج جستجو برای: <strong className="text-primary">«{searchQuery}»</strong>
+                {selectedCategory ? (
+                  <span className="text-xs text-gray-500 mr-2">
+                    (محدود به دسته‌بندی: <strong className="text-gray-700">{selectedCategory.name}</strong>
+                    {selectedSubCategory ? ` > ${selectedSubCategory.name}` : ""})
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-500 mr-2">
+                    (در تمامی دسته‌های شغلی)
+                  </span>
+                )}
+              </span>
             </div>
             <button
-              onClick={() => router.push('/jobs')}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-500 transition-colors"
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete("q");
+                const qs = params.toString();
+                router.push(qs ? `/jobs?${qs}` : "/jobs", { scroll: false });
+              }}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
             >
               <X size={14} />
-              پاک کردن
+              پاک کردن جستجو
             </button>
           </div>
         )}

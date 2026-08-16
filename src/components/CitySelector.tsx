@@ -33,13 +33,51 @@ export default function CitySelector() {
       });
   }, []);
 
+  const cleanTerm = searchTerm.toLowerCase().trim();
+
+  const isAllCitiesMatched =
+    cleanTerm === "" ||
+    "همه شهرها سراسر استرالیا all cities".includes(cleanTerm) ||
+    cleanTerm.includes("همه") ||
+    cleanTerm.includes("سراسر") ||
+    cleanTerm.includes("all");
+
   const filteredCities = (Array.isArray(cities) ? cities : []).filter((city) => {
-    const term = searchTerm.toLowerCase().trim();
+    if (!cleanTerm) return true;
     return (
-      city.name.toLowerCase().includes(term) ||
-      (city.slug && city.slug.toLowerCase().includes(term))
+      city.name.toLowerCase().includes(cleanTerm) ||
+      (city.slug && city.slug.toLowerCase().includes(cleanTerm))
     );
   });
+
+  const isAllSelected = !selectedCity || selectedCity.id === 0 || selectedCity.slug === "all";
+
+  const handleSelectAllCities = () => {
+    setSelectedCity({ id: 0, name: "همه شهرها", slug: "all" });
+  };
+
+  const handleSelectCity = (city: City) => {
+    setSelectedCity(city);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cleanTerm) {
+      handleSelectAllCities();
+      return;
+    }
+    if (isAllCitiesMatched && (filteredCities.length === 0 || cleanTerm.includes("همه") || cleanTerm.includes("all"))) {
+      handleSelectAllCities();
+      return;
+    }
+    if (filteredCities.length > 0) {
+      handleSelectCity(filteredCities[0]);
+      return;
+    }
+    if (isAllCitiesMatched) {
+      handleSelectAllCities();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -66,7 +104,7 @@ export default function CitySelector() {
         </div>
 
         {/* Search */}
-        <div className="px-5 py-3">
+        <form onSubmit={handleSearchSubmit} className="px-5 py-3">
           <div className="relative">
             <Search
               size={18}
@@ -74,14 +112,14 @@ export default function CitySelector() {
             />
             <input
               type="text"
-              placeholder="جستجوی شهر..."
+              placeholder="جستجوی شهر یا «همه شهرها»..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pr-10 pl-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               autoFocus
             />
           </div>
-        </div>
+        </form>
 
         {/* City List */}
         <div className="px-3 pb-4 max-h-[350px] overflow-y-auto city-dropdown">
@@ -89,34 +127,38 @@ export default function CitySelector() {
             <div className="flex justify-center items-center py-10">
               <Loader2 className="animate-spin text-primary" size={24} />
             </div>
-          ) : filteredCities.length === 0 ? (
+          ) : !isAllCitiesMatched && filteredCities.length === 0 ? (
             <div className="text-center py-8 text-gray-400 text-sm">
               شهری یافت نشد
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-1.5">
               {/* All Cities Option */}
-              <button
-                onClick={() => setSelectedCity(null)}
-                className={`col-span-2 flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1 cursor-pointer ${
-                  selectedCity === null
-                    ? "bg-primary text-white shadow-md shadow-primary/25"
-                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-primary"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <Globe size={16} />
-                  <span>همه شهرها (سراسر استرالیا)</span>
-                </span>
-                {selectedCity === null && <Check size={16} />}
-              </button>
+              {isAllCitiesMatched && (
+                <button
+                  type="button"
+                  onClick={handleSelectAllCities}
+                  className={`col-span-2 flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1 cursor-pointer ${
+                    isAllSelected
+                      ? "bg-primary text-white shadow-md shadow-primary/25"
+                      : "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-primary"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Globe size={16} />
+                    <span>همه شهرها (سراسر استرالیا)</span>
+                  </span>
+                  {isAllSelected && <Check size={16} />}
+                </button>
+              )}
 
               {filteredCities.map((city) => {
                 const isSelected = selectedCity?.slug === city.slug;
                 return (
                   <button
+                    type="button"
                     key={city.slug}
-                    onClick={() => setSelectedCity(city)}
+                    onClick={() => handleSelectCity(city)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isSelected
                         ? "bg-primary text-white shadow-md shadow-primary/25"
                         : "text-gray-700 hover:bg-gray-50 hover:text-primary"
@@ -125,11 +167,6 @@ export default function CitySelector() {
                     <span className="flex items-center gap-2">
                       <MapPin size={14} />
                       <span>{city.name}</span>
-                      {/* {city.slug && (
-                        <span className={`text-[11px] font-mono dir-ltr ${isSelected ? "text-white/80" : "text-gray-400"}`}>
-                          ({city.slug})
-                        </span>
-                      )} */}
                     </span>
                     {isSelected && <Check size={16} />}
                   </button>

@@ -63,9 +63,7 @@ export default function HomePage() {
               <span className="flex items-center gap-2 text-gray-500 group-hover:text-primary transition-colors">
                 <MapPin size={20} className="text-primary" />
                 <span className="text-sm font-medium">
-                  {selectedCity
-                    ? selectedCity.name
-                    : "شهر خود را انتخاب کنید..."}
+                  {selectedCity?.name || "همه شهرها"}
                 </span>
               </span>
               <ChevronDown
