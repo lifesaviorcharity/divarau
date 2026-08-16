@@ -34,9 +34,18 @@ function JobsContent() {
   const searchQuery = searchParams.get("q") || "";
   const subCategoryParam = searchParams.get("sub");
 
+  // Synchronously resolve effective category/sub from URL or localStorage to prevent race conditions
+  const effectiveCategoryParam = categoryParam !== null
+    ? categoryParam
+    : (!searchQuery && typeof window !== "undefined" ? localStorage.getItem("last_selected_category") : null);
+
+  const effectiveSubCategoryParam = subCategoryParam !== null
+    ? subCategoryParam
+    : (!searchQuery && typeof window !== "undefined" ? localStorage.getItem("last_selected_sub") : null);
+
   const selectedCategoryIndex = useMemo(() => {
-    if (!categoryParam || jobCategories.length === 0) return null;
-    const num = parseInt(categoryParam, 10);
+    if (!effectiveCategoryParam || jobCategories.length === 0) return null;
+    const num = parseInt(effectiveCategoryParam, 10);
     if (!isNaN(num)) {
       // Check if it matches a category ID directly
       const byId = jobCategories.findIndex((c) => c.id === num);
@@ -46,13 +55,13 @@ function JobsContent() {
     }
     // Check by slug or name
     const bySlug = jobCategories.findIndex(
-      (c) => (c as any).slug === categoryParam || c.name === categoryParam
+      (c) => (c as any).slug === effectiveCategoryParam || c.name === effectiveCategoryParam
     );
     if (bySlug !== -1) return bySlug;
     return null;
-  }, [categoryParam, jobCategories]);
+  }, [effectiveCategoryParam, jobCategories]);
 
-  const selectedSubCategorySlug = subCategoryParam;
+  const selectedSubCategorySlug = effectiveSubCategoryParam;
   const [activeAdTab, setActiveAdTab] = useState<"commercial" | "employment" | "job_seeker">("commercial");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
@@ -91,8 +100,8 @@ function JobsContent() {
     if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
     if (selectedCity?.id) url += `&cityId=${selectedCity.id}`;
 
-    const catVal = selectedCategory?.id || (categoryParam ? parseInt(categoryParam, 10) || categoryParam : undefined);
-    const subVal = selectedSubCategory?.id || subCategoryParam;
+    const catVal = selectedCategory?.id || (effectiveCategoryParam ? parseInt(effectiveCategoryParam, 10) || effectiveCategoryParam : undefined);
+    const subVal = selectedSubCategory?.id || effectiveSubCategoryParam;
 
     if (catVal) url += `&category=${encodeURIComponent(catVal)}`;
     if (subVal) url += `&sub=${encodeURIComponent(subVal)}`;
@@ -108,45 +117,26 @@ function JobsContent() {
       setJobsTotal(data.total);
       setJobsHasMore(data.hasMore);
     }
-  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id, categoryParam, subCategoryParam]);
+  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id, effectiveCategoryParam, effectiveSubCategoryParam]);
 
-  // Check if we need to restore category from localStorage before fetching
-  const isRestoringFromStorage = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const hasCat = searchParams.has("category");
-    const hasSub = searchParams.has("sub");
-    const hasQ = searchParams.has("q");
-    if (!hasCat && !hasSub && !hasQ) {
-      const savedCat = localStorage.getItem("last_selected_category");
-      return !!savedCat;
-    }
-    return false;
-  }, [searchParams]);
-
-  // Initial load
+  // Initial load / on param change
   useEffect(() => {
-    // If returning to /jobs without params but localStorage has saved category, wait for router.replace to restore params
-    if (isRestoringFromStorage) return;
-
     setIsLoadingJobs(true);
     setJobsData([]);
     setAutoScrollEnabled(true);
     setLoadMoreClicked(false);
     fetchJobs(0, INITIAL_LOAD, true).finally(() => setIsLoadingJobs(false));
-  }, [searchQuery, categoryParam, subCategoryParam, selectedCity?.id, isRestoringFromStorage, fetchJobs]);
+  }, [searchQuery, effectiveCategoryParam, effectiveSubCategoryParam, selectedCity?.id, fetchJobs]);
 
   // Load ads
   useEffect(() => {
-    // If returning to /jobs without params but localStorage has saved category, wait for router.replace to restore params
-    if (isRestoringFromStorage) return;
-
     setIsLoadingAds(true);
     let url = `/api/ads?`;
     if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
     if (selectedCity?.id) url += `cityId=${selectedCity.id}&`;
 
-    const catVal = selectedCategory?.id || (categoryParam ? parseInt(categoryParam, 10) || categoryParam : undefined);
-    const subVal = selectedSubCategory?.id || subCategoryParam;
+    const catVal = selectedCategory?.id || (effectiveCategoryParam ? parseInt(effectiveCategoryParam, 10) || effectiveCategoryParam : undefined);
+    const subVal = selectedSubCategory?.id || effectiveSubCategoryParam;
 
     if (catVal) url += `category=${encodeURIComponent(catVal)}&`;
     if (subVal) url += `sub=${encodeURIComponent(subVal)}&`;
@@ -170,9 +160,9 @@ function JobsContent() {
         setIsLoadingAds(false);
       })
       .catch(() => setIsLoadingAds(false));
-  }, [searchQuery, categoryParam, subCategoryParam, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id, isRestoringFromStorage]);
+  }, [searchQuery, effectiveCategoryParam, effectiveSubCategoryParam, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
 
-  // Persistent category/subcategory memory (localStorage)
+  // Keep localStorage and URL in sync
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -181,7 +171,6 @@ function JobsContent() {
     const hasQInUrl = searchParams.has("q");
 
     if (!hasCatInUrl && !hasSubInUrl && !hasQInUrl) {
-      // User arrived at /jobs from another page without query params: restore last saved selection if present
       const savedCategory = localStorage.getItem("last_selected_category");
       const savedSub = localStorage.getItem("last_selected_sub");
 
@@ -189,10 +178,9 @@ function JobsContent() {
         const params = new URLSearchParams();
         params.set("category", savedCategory);
         if (savedSub) params.set("sub", savedSub);
-        router.replace(`/jobs?${params.toString()}`, { scroll: false });
+        window.history.replaceState(null, "", `/jobs?${params.toString()}`);
       }
     } else if (hasCatInUrl || hasSubInUrl) {
-      // URL has category/sub query params: keep localStorage in sync
       if (categoryParam !== null) {
         localStorage.setItem("last_selected_category", categoryParam.toString());
       } else {
@@ -205,7 +193,7 @@ function JobsContent() {
         localStorage.removeItem("last_selected_sub");
       }
     }
-  }, [searchParams, categoryParam, subCategoryParam, router]);
+  }, [searchParams, categoryParam, subCategoryParam]);
 
   const handleCategorySelect = useCallback((i: number | null) => {
     if (typeof window !== "undefined") {
