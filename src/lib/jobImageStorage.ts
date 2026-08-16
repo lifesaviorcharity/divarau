@@ -20,15 +20,20 @@ export async function saveJobImageToDisk(dataUrl: string): Promise<string> {
     await mkdir(UPLOAD_DIR, { recursive: true });
   }
 
-  // Parse base64 data URI
-  const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
-  if (!matches) {
+  // Parse base64 data URI safely
+  const commaIdx = dataUrl.indexOf(",");
+  if (commaIdx === -1) {
     throw new Error("Invalid image data URI");
   }
 
-  let ext = matches[1];
+  const meta = dataUrl.slice(0, commaIdx);
+  const base64Data = dataUrl.slice(commaIdx + 1);
+
+  const mimeMatch = meta.match(/data:image\/([a-zA-Z0-9\+\-\.]+)/i);
+  let ext = mimeMatch ? mimeMatch[1].toLowerCase() : "jpg";
   if (ext === "jpeg") ext = "jpg";
-  const base64Data = matches[2];
+  else if (ext === "svg+xml") ext = "svg";
+
   const buffer = Buffer.from(base64Data, "base64");
 
   // Generate unique filename

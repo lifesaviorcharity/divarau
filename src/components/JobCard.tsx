@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Star, Eye, Clock, TrendingUp } from "lucide-react";
 
 export interface JobCardData {
@@ -23,6 +24,8 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, onClick }: JobCardProps) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <button
       onClick={() => onClick?.(job.id)}
@@ -31,10 +34,11 @@ export default function JobCard({ job, onClick }: JobCardProps) {
       <div className="flex flex-row-reverse gap-3 p-3">
         {/* Image */}
         <div className="w-32 h-32 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative">
-          {job.imageUrl ? (
+          {job.imageUrl && !imgError ? (
             <img
               src={job.imageUrl}
               alt={job.title}
+              onError={() => setImgError(true)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (

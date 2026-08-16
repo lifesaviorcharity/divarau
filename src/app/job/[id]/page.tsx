@@ -262,6 +262,9 @@ export default function JobDetailPage() {
                   <img
                     src={job.images[currentImage]?.url}
                     alt={job.title}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
                     className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
                   />
 

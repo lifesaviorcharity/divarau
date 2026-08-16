@@ -594,6 +594,9 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                     <img
                       src={viewJobImages[viewModalImageIndex]?.url}
                       alt={viewJob.title}
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.opacity = '0.3';
+                      }}
                       className="w-full h-full object-contain"
                     />
                     {viewJobImages[viewModalImageIndex]?.isMain && (
