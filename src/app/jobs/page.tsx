@@ -90,8 +90,12 @@ function JobsContent() {
     let url = `/api/jobs?take=${take}&skip=${skip}`;
     if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
     if (selectedCity?.id) url += `&cityId=${selectedCity.id}`;
-    if (selectedCategory?.id) url += `&categoryId=${selectedCategory.id}`;
-    if (selectedSubCategory?.id) url += `&subCategoryId=${selectedSubCategory.id}`;
+
+    const catVal = selectedCategory?.id || (categoryParam ? parseInt(categoryParam, 10) || categoryParam : undefined);
+    const subVal = selectedSubCategory?.id || subCategoryParam;
+
+    if (catVal) url += `&category=${encodeURIComponent(catVal)}`;
+    if (subVal) url += `&sub=${encodeURIComponent(subVal)}`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -104,29 +108,48 @@ function JobsContent() {
       setJobsTotal(data.total);
       setJobsHasMore(data.hasMore);
     }
-  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
+  }, [searchQuery, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id, categoryParam, subCategoryParam]);
 
-  // Initial load: wait for categories to be available if category/subcategory is specified to avoid fetching unfiltered jobs
+  // Check if we need to restore category from localStorage before fetching
+  const isRestoringFromStorage = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const hasCat = searchParams.has("category");
+    const hasSub = searchParams.has("sub");
+    const hasQ = searchParams.has("q");
+    if (!hasCat && !hasSub && !hasQ) {
+      const savedCat = localStorage.getItem("last_selected_category");
+      return !!savedCat;
+    }
+    return false;
+  }, [searchParams]);
+
+  // Initial load
   useEffect(() => {
-    if ((categoryParam || subCategoryParam) && isCategoriesLoading) return;
+    // If returning to /jobs without params but localStorage has saved category, wait for router.replace to restore params
+    if (isRestoringFromStorage) return;
 
     setIsLoadingJobs(true);
     setJobsData([]);
     setAutoScrollEnabled(true);
     setLoadMoreClicked(false);
     fetchJobs(0, INITIAL_LOAD, true).finally(() => setIsLoadingJobs(false));
-  }, [searchQuery, categoryParam, subCategoryParam, isCategoriesLoading, fetchJobs]);
+  }, [searchQuery, categoryParam, subCategoryParam, selectedCity?.id, isRestoringFromStorage, fetchJobs]);
 
-  // Load ads: also wait for category resolution
+  // Load ads
   useEffect(() => {
-    if ((categoryParam || subCategoryParam) && isCategoriesLoading) return;
+    // If returning to /jobs without params but localStorage has saved category, wait for router.replace to restore params
+    if (isRestoringFromStorage) return;
 
     setIsLoadingAds(true);
     let url = `/api/ads?`;
     if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
     if (selectedCity?.id) url += `cityId=${selectedCity.id}&`;
-    if (selectedCategory?.id) url += `categoryId=${selectedCategory.id}&`;
-    if (selectedSubCategory?.id) url += `subCategoryId=${selectedSubCategory.id}&`;
+
+    const catVal = selectedCategory?.id || (categoryParam ? parseInt(categoryParam, 10) || categoryParam : undefined);
+    const subVal = selectedSubCategory?.id || subCategoryParam;
+
+    if (catVal) url += `category=${encodeURIComponent(catVal)}&`;
+    if (subVal) url += `sub=${encodeURIComponent(subVal)}&`;
 
     fetch(url)
       .then(res => res.json())
@@ -147,7 +170,7 @@ function JobsContent() {
         setIsLoadingAds(false);
       })
       .catch(() => setIsLoadingAds(false));
-  }, [searchQuery, categoryParam, subCategoryParam, isCategoriesLoading, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id]);
+  }, [searchQuery, categoryParam, subCategoryParam, selectedCity?.id, selectedCategory?.id, selectedSubCategory?.id, isRestoringFromStorage]);
 
   // Persistent category/subcategory memory (localStorage)
   useEffect(() => {

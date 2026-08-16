@@ -9,8 +9,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const cityId = searchParams.get("cityId");
-    const categoryId = searchParams.get("categoryId");
-    const subCategoryId = searchParams.get("subCategoryId");
+    const categoryParam = searchParams.get("categoryId") || searchParams.get("category");
+    const subCategoryParam = searchParams.get("subCategoryId") || searchParams.get("subCategory") || searchParams.get("sub");
     const type = searchParams.get("type"); // EMPLOYMENT, JOB_SEEKER, COMMERCIAL
     const status = searchParams.get("status") || "FINAL";
     const q = searchParams.get("q");
@@ -18,8 +18,20 @@ export async function GET(request: Request) {
     const where: any = { status };
 
     if (cityId) where.cityId = parseInt(cityId);
-    if (categoryId) where.categoryId = parseInt(categoryId);
-    if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
+    
+    if (categoryParam) {
+      const parsed = parseInt(categoryParam, 10);
+      if (!isNaN(parsed)) where.categoryId = parsed;
+    }
+
+    if (subCategoryParam) {
+      const parsed = parseInt(subCategoryParam, 10);
+      if (!isNaN(parsed)) {
+        where.subCategoryId = parsed;
+      } else {
+        where.subCategory = { slug: subCategoryParam };
+      }
+    }
     if (type) where.type = type;
     if (q) {
       where.OR = [

@@ -24,8 +24,8 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const cityId = searchParams.get("cityId");
-    const categoryId = searchParams.get("categoryId");
-    const subCategoryId = searchParams.get("subCategoryId");
+    const categoryParam = searchParams.get("categoryId") || searchParams.get("category");
+    const subCategoryParam = searchParams.get("subCategoryId") || searchParams.get("subCategory") || searchParams.get("sub");
     const statusParam = searchParams.get("status");
     let statusWhere: any;
     if (statusParam) {
@@ -45,17 +45,38 @@ export async function GET(request: Request) {
 
     if (cityId) where.cityId = parseInt(cityId);
 
-    if (categoryId && !subCategoryId && !q) {
+    let categoryIdNum: number | undefined;
+    if (categoryParam) {
+      const parsed = parseInt(categoryParam, 10);
+      if (!isNaN(parsed)) categoryIdNum = parsed;
+    }
+
+    let subCategoryIdNum: number | undefined;
+    let subCategorySlug: string | undefined;
+    if (subCategoryParam) {
+      const parsed = parseInt(subCategoryParam, 10);
+      if (!isNaN(parsed)) {
+        subCategoryIdNum = parsed;
+      } else {
+        subCategorySlug = subCategoryParam;
+      }
+    }
+
+    if (categoryIdNum && !subCategoryIdNum && !subCategorySlug && !q) {
       // In the main category view (without subcategory and without search query), only VIP jobs of this category are displayed
-      where.categoryId = parseInt(categoryId);
+      where.categoryId = categoryIdNum;
       if (isVip === null) {
         where.isVip = true;
       } else {
         where.isVip = isVip === "true";
       }
     } else {
-      if (categoryId) where.categoryId = parseInt(categoryId);
-      if (subCategoryId) where.subCategoryId = parseInt(subCategoryId);
+      if (categoryIdNum) where.categoryId = categoryIdNum;
+      if (subCategoryIdNum) {
+        where.subCategoryId = subCategoryIdNum;
+      } else if (subCategorySlug) {
+        where.subCategory = { slug: subCategorySlug };
+      }
       if (isVip !== null) where.isVip = isVip === "true";
     }
 
