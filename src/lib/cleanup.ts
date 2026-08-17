@@ -30,7 +30,7 @@ export async function runJobsCleanup() {
     where: {
       isBoosted: true,
       boostExpiresAt: { lt: now }
-    },
+    } as any,
     data: {
       isBoosted: false
     }

@@ -13,11 +13,11 @@ export async function GET(request: Request) {
     // Auto-expire past boosts & subscriptions in real-time
     await Promise.all([
       prisma.job.updateMany({
-        where: { isBoosted: true, boostExpiresAt: { lt: now } },
+        where: { isBoosted: true, boostExpiresAt: { lt: now } } as any,
         data: { isBoosted: false }
       }),
       prisma.job.updateMany({
-        where: { status: { in: ["FINAL", "APPROVED", "PAID"] }, expiresAt: { lt: now } },
+        where: { status: { in: ["FINAL", "APPROVED", "PAID"] }, expiresAt: { lt: now } } as any,
         data: { status: "EXPIRED", isBoosted: false }
       })
     ]).catch((e) => console.error("Realtime cleanup error:", e));
