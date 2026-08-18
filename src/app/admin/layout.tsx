@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   LayoutDashboard,
@@ -23,6 +23,7 @@ import {
   Clock,
   User,
   Loader2,
+  ShieldAlert,
 } from "lucide-react";
 import { formatPersianNumber } from "@/lib/utils";
 
@@ -53,15 +54,27 @@ const sidebarItems: {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loadingHref, setLoadingHref] = useState<string | null>(null);
   const [badgeCounts, setBadgeCounts] = useState<{
     messages?: number;
     reviews?: number;
   }>({});
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  // Redirect non-admins or unauthenticated users immediately
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      router.replace("/auth/login?callbackUrl=" + encodeURIComponent(pathname));
+    } else if (session.user.role !== "ADMIN") {
+      router.replace("/");
+    }
+  }, [session, status, router, pathname]);
 
   const fetchBadgeCounts = useCallback(async () => {
+    if (!pathname.startsWith("/admin") || session?.user?.role !== "ADMIN") return;
     try {
       if (typeof document !== "undefined" && document.hidden) return;
       const res = await fetch("/api/admin/stats");
@@ -82,10 +95,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     } catch (err) {
       console.error("Failed to fetch badge counts:", err);
     }
-  }, []);
+  }, [pathname, session?.user?.role]);
 
   // Fetch immediately on mount and set up 30s interval + visibility / custom event listeners
   useEffect(() => {
+    if (!pathname.startsWith("/admin") || session?.user?.role !== "ADMIN") return;
+
     fetchBadgeCounts();
 
     const interval = setInterval(() => {
@@ -112,13 +127,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       window.removeEventListener("admin-stats-update", handleStatsUpdate);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [fetchBadgeCounts]);
+  }, [pathname, session?.user?.role, fetchBadgeCounts]);
 
   // Reset loading state and refresh counts when pathname changes
   useEffect(() => {
     setLoadingHref(null);
-    fetchBadgeCounts();
-  }, [pathname, fetchBadgeCounts]);
+    if (pathname.startsWith("/admin") && session?.user?.role === "ADMIN") {
+      fetchBadgeCounts();
+    }
+  }, [pathname, session?.user?.role, fetchBadgeCounts]);
 
   // Safety fallback: reset loading state after 8 seconds if navigation stalled
   useEffect(() => {
@@ -128,6 +145,39 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }, 8000);
     return () => clearTimeout(timer);
   }, [loadingHref]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm font-semibold text-gray-500">در حال بررسی سطح دسترسی...</p>
+      </div>
+    );
+  }
+
+  if (!session || session.user.role !== "ADMIN") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-red-100 max-w-md w-full text-center space-y-4 animate-scale-in">
+          <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
+            <ShieldAlert size={28} />
+          </div>
+          <h2 className="text-lg font-bold text-gray-800">عدم دسترسی به پنل مدیریت</h2>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            حساب کاربری شما مجوز دسترسی به بخش مدیریت را ندارد.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="inline-block px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-sm"
+            >
+              بازگشت به صفحه اصلی
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const userInitial = session?.user?.name
     ? session.user.name.charAt(0).toUpperCase()

@@ -1,10 +1,17 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import JobEditClient from "./JobEditClient";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminJobEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/auth/login?callbackUrl=/admin/jobs");
+  }
+
   const { id } = await params;
   const jobId = parseInt(id);
 

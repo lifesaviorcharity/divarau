@@ -1,10 +1,18 @@
 import prisma from "@/lib/prisma";
 import PaymentsClient from "./PaymentsClient";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdminPaymentsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/auth/login?callbackUrl=/admin/payments");
+  }
+
   const payments = await prisma.payment.findMany({
     include: {
       user: true,

@@ -1,10 +1,18 @@
 import { Briefcase, FileText, Users, CreditCard, TrendingUp, Clock } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { formatPrice, toJalali, formatPersianNumber } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/auth/login?callbackUrl=/admin");
+  }
+
   const [
     totalUsers,
     totalJobs,
