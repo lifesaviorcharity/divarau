@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -15,13 +17,17 @@ export async function GET() {
       totalJobs,
       totalAds,
       pendingJobs,
-      pendingAds
+      pendingAds,
+      pendingReviews,
+      openTickets,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.job.count({ where: { status: 'FINAL' } }),
       prisma.ad.count({ where: { status: 'FINAL' } }),
       prisma.job.count({ where: { status: 'PENDING' } }),
       prisma.ad.count({ where: { status: 'PENDING' } }),
+      prisma.review.count({ where: { isApproved: false } }),
+      prisma.ticket.count({ where: { status: 'OPEN' } }),
     ]);
 
     return NextResponse.json({
@@ -29,7 +35,9 @@ export async function GET() {
       totalJobs,
       totalAds,
       pendingJobs,
-      pendingAds
+      pendingAds,
+      pendingReviews,
+      openTickets,
     });
   } catch (error) {
     console.error("Admin Stats API Error:", error);

@@ -30,6 +30,31 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
     (t) => statusFilter === "ALL" || t.status === statusFilter
   );
 
+  const handleSelectTicket = async (ticket: any) => {
+    setSelectedTicket(ticket);
+    // If the ticket is currently OPEN (unread), viewing it marks it as read/in-progress and decrements the unread badge
+    if (ticket.status === "OPEN") {
+      try {
+        const res = await fetch(`/api/admin/tickets/${ticket.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "IN_PROGRESS" })
+        });
+        if (res.ok) {
+          setTickets((prev) =>
+            prev.map((t) => (t.id === ticket.id ? { ...t, status: "IN_PROGRESS" } : t))
+          );
+          setSelectedTicket((prev: any) =>
+            prev && prev.id === ticket.id ? { ...prev, status: "IN_PROGRESS" } : prev
+          );
+          window.dispatchEvent(new CustomEvent("admin-stats-update"));
+        }
+      } catch (err) {
+        console.error("Failed to mark ticket as viewed:", err);
+      }
+    }
+  };
+
   const handleReply = async () => {
     if (!replyText.trim() || !selectedTicket || isReplying) return;
     setIsReplying(true);
@@ -61,6 +86,7 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
         setTickets((prev) => prev.map((t) => (t.id === selectedTicket.id ? formattedTicket : t)));
         setSelectedTicket(formattedTicket);
         setReplyText("");
+        window.dispatchEvent(new CustomEvent("admin-stats-update"));
       }
     } catch (err) {
       console.error("Reply Error:", err);
@@ -83,6 +109,7 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
         if (selectedTicket?.id === id) {
           setSelectedTicket((prev: any) => (prev ? { ...prev, status: "CLOSED" } : null));
         }
+        window.dispatchEvent(new CustomEvent("admin-stats-update"));
       }
     } catch (err) {
       console.error("Close Ticket Error:", err);
@@ -120,7 +147,7 @@ export default function MessagesClient({ initialTickets }: { initialTickets: any
             filteredTickets.map((ticket) => (
               <button
                 key={ticket.id}
-                onClick={() => setSelectedTicket(ticket)}
+                onClick={() => handleSelectTicket(ticket)}
                 className={`w-full text-right bg-white rounded-xl border p-4 transition-all hover:shadow-md ${selectedTicket?.id === ticket.id ? "border-primary shadow-md" : "border-gray-200"
                   }`}
               >

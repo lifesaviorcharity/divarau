@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,14 +21,21 @@ import {
   X,
   MapPin,
   Clock,
-  User
+  User,
+  Loader2,
 } from "lucide-react";
+import { formatPersianNumber } from "@/lib/utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-const sidebarItems = [
+const sidebarItems: {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  badgeKey?: "messages" | "reviews";
+}[] = [
   { label: "داشبورد", href: "/admin", icon: <LayoutDashboard size={18} /> },
   { label: "مدیریت مشاغل", href: "/admin/jobs", icon: <Briefcase size={18} /> },
   { label: "مدیریت آگهی ها", href: "/admin/ads", icon: <FileText size={18} /> },
@@ -37,8 +44,8 @@ const sidebarItems = [
   { label: "مدیریت کاربران", href: "/admin/users", icon: <Users size={18} /> },
   { label: "مدیریت بنرها", href: "/admin/banners", icon: <ImageIcon size={18} /> },
   { label: "مدیریت پرداخت ها", href: "/admin/payments", icon: <CreditCard size={18} /> },
-  { label: "مدیریت نظرات", href: "/admin/reviews", icon: <Star size={18} /> },
-  { label: "پیام‌ها و تیکت ها", href: "/admin/messages", icon: <MessageSquare size={18} /> },
+  { label: "مدیریت نظرات", href: "/admin/reviews", icon: <Star size={18} />, badgeKey: "reviews" },
+  { label: "پیام‌ها و تیکت ها", href: "/admin/messages", icon: <MessageSquare size={18} />, badgeKey: "messages" },
   { label: "گزارش ها", href: "/admin/reports", icon: <BarChart3 size={18} /> },
   { label: "گزارش انقضا", href: "/admin/expiring", icon: <Clock size={18} /> },
   { label: "تنظیمات", href: "/admin/settings", icon: <Settings size={18} /> },
@@ -47,7 +54,80 @@ const sidebarItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [loadingHref, setLoadingHref] = useState<string | null>(null);
+  const [badgeCounts, setBadgeCounts] = useState<{
+    messages?: number;
+    reviews?: number;
+  }>({});
   const { data: session } = useSession();
+
+  const fetchBadgeCounts = useCallback(async () => {
+    try {
+      if (typeof document !== "undefined" && document.hidden) return;
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setBadgeCounts((prev) => {
+          const newMsg = data.openTickets || 0;
+          const newRev = data.pendingReviews || 0;
+          if (prev.messages === newMsg && prev.reviews === newRev) {
+            return prev; // Skip re-render if data is identical
+          }
+          return {
+            messages: newMsg,
+            reviews: newRev,
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch badge counts:", err);
+    }
+  }, []);
+
+  // Fetch immediately on mount and set up 30s interval + visibility / custom event listeners
+  useEffect(() => {
+    fetchBadgeCounts();
+
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchBadgeCounts();
+      }
+    }, 30000);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchBadgeCounts();
+      }
+    };
+
+    const handleStatsUpdate = () => {
+      fetchBadgeCounts();
+    };
+
+    window.addEventListener("admin-stats-update", handleStatsUpdate);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("admin-stats-update", handleStatsUpdate);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchBadgeCounts]);
+
+  // Reset loading state and refresh counts when pathname changes
+  useEffect(() => {
+    setLoadingHref(null);
+    fetchBadgeCounts();
+  }, [pathname, fetchBadgeCounts]);
+
+  // Safety fallback: reset loading state after 8 seconds if navigation stalled
+  useEffect(() => {
+    if (!loadingHref) return;
+    const timer = setTimeout(() => {
+      setLoadingHref(null);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [loadingHref]);
 
   const userInitial = session?.user?.name
     ? session.user.name.charAt(0).toUpperCase()
@@ -79,17 +159,46 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+            const isLoading = loadingHref === item.href;
+            const badgeCount = item.badgeKey ? badgeCounts[item.badgeKey] || 0 : 0;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
+                onClick={() => {
+                  if (pathname !== item.href) {
+                    setLoadingHref(item.href);
+                  }
+                }}
+                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+                  isLoading
+                    ? "bg-gray-800 text-amber-400 ring-1 ring-amber-500/50 shadow-inner"
+                    : isActive
+                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800"
+                }`}
               >
-                {item.icon}
-                {item.label}
+                <div className="flex items-center gap-3">
+                  {isLoading ? (
+                    <Loader2 size={18} className="animate-spin text-amber-400 shrink-0" />
+                  ) : (
+                    item.icon
+                  )}
+                  <span className={isLoading ? "text-amber-300 font-semibold" : ""}>{item.label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {badgeCount > 0 && (
+                    <span
+                      className="bg-white text-gray-900 font-bold text-[11px] px-2 py-0.5 rounded-full shadow-xs shrink-0 flex items-center justify-center min-w-[22px] h-[18px] leading-none"
+                      title={`${badgeCount} مورد جدید`}
+                    >
+                      {badgeCount > 99 ? "۹۹+" : formatPersianNumber(badgeCount)}
+                    </span>
+                  )}
+                  {isLoading && (
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  )}
+                </div>
               </Link>
             );
           })}
@@ -138,18 +247,47 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
               {sidebarItems.map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                const isLoading = loadingHref === item.href;
+                const badgeCount = item.badgeKey ? badgeCounts[item.badgeKey] || 0 : 0;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                      ? "bg-primary text-white shadow-md shadow-primary/20"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800"
-                      }`}
+                    onClick={() => {
+                      if (pathname !== item.href) {
+                        setLoadingHref(item.href);
+                      }
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+                      isLoading
+                        ? "bg-gray-800 text-amber-400 ring-1 ring-amber-500/50 shadow-inner"
+                        : isActive
+                        ? "bg-primary text-white shadow-md shadow-primary/20"
+                        : "text-gray-400 hover:text-white hover:bg-gray-800"
+                    }`}
                   >
-                    {item.icon}
-                    {item.label}
+                    <div className="flex items-center gap-3">
+                      {isLoading ? (
+                        <Loader2 size={18} className="animate-spin text-amber-400 shrink-0" />
+                      ) : (
+                        item.icon
+                      )}
+                      <span className={isLoading ? "text-amber-300 font-semibold" : ""}>{item.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {badgeCount > 0 && (
+                        <span
+                          className="bg-white text-gray-900 font-bold text-[11px] px-2 py-0.5 rounded-full shadow-xs shrink-0 flex items-center justify-center min-w-[22px] h-[18px] leading-none"
+                          title={`${badgeCount} مورد جدید`}
+                        >
+                          {badgeCount > 99 ? "۹۹+" : formatPersianNumber(badgeCount)}
+                        </span>
+                      )}
+                      {isLoading && (
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                      )}
+                    </div>
                   </Link>
                 );
               })}

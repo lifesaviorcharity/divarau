@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, Mail, Phone, MessageCircle, Send, Headphones } from "lucide-react";
 
 export default function SupportPage() {
@@ -8,6 +8,18 @@ export default function SupportPage() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [contactEmail, setContactEmail] = useState("info@auir.com.au");
+  const [contactPhone, setContactPhone] = useState("+61 000 000 000");
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.contactEmail) setContactEmail(data.contactEmail);
+        if (data.contactPhone) setContactPhone(data.contactPhone);
+      })
+      .catch((err) => console.error("Failed to load settings:", err));
+  }, []);
 
   const handleSubmit = () => {
     if (!name || !email || !subject || !message) {
@@ -16,6 +28,35 @@ export default function SupportPage() {
     }
     alert("پیام شما با موفقیت ارسال شد. تیم پشتیبانی در اسرع وقت پاسخ شما را خواهد داد.");
   };
+
+  const contactCards = [
+    {
+      icon: <Mail size={24} />,
+      title: "ایمیل",
+      desc: contactEmail,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      isLtr: true,
+      href: `mailto:${contactEmail}`,
+    },
+    {
+      icon: <Phone size={24} />,
+      title: "تلفن",
+      desc: contactPhone,
+      color: "text-green-600",
+      bg: "bg-green-50",
+      isLtr: true,
+      href: `tel:${contactPhone.replace(/\s+/g, "")}`,
+    },
+    {
+      icon: <MessageCircle size={24} />,
+      title: "چت آنلاین",
+      desc: "پشتیبانی در ساعات اداری",
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      isLtr: false,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -38,39 +79,30 @@ export default function SupportPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {/* Contact Cards */}
-          {[
-            {
-              icon: <Mail size={24} />,
-              title: "ایمیل",
-              desc: "info@auir.com.au",
-              color: "text-blue-600",
-              bg: "bg-blue-50",
-            },
-            {
-              icon: <Phone size={24} />,
-              title: "تلفن",
-              desc: "+61 000 000 000",
-              color: "text-green-600",
-              bg: "bg-green-50",
-            },
-            {
-              icon: <MessageCircle size={24} />,
-              title: "چت آنلاین",
-              desc: "پشتیبانی در ساعات اداری",
-              color: "text-purple-600",
-              bg: "bg-purple-50",
-            },
-          ].map((card, i) => (
-            <div
-              key={i}
-              className={`${card.bg} rounded-2xl p-6 text-center card-hover animate-fade-in`}
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              <div className={`${card.color} flex justify-center mb-3`}>{card.icon}</div>
-              <h3 className="text-sm font-bold text-gray-800 mb-1">{card.title}</h3>
-              <p className="text-xs text-gray-500">{card.desc}</p>
-            </div>
-          ))}
+          {contactCards.map((card, i) => {
+            const ContentWrapper = card.href ? "a" : "div";
+            return (
+              <ContentWrapper
+                key={i}
+                {...(card.href ? { href: card.href } : {})}
+                className={`${card.bg} rounded-2xl p-6 text-center card-hover animate-fade-in block transition-all ${
+                  card.href ? "hover:shadow-md cursor-pointer" : ""
+                }`}
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                <div className={`${card.color} flex justify-center mb-3`}>{card.icon}</div>
+                <h3 className="text-sm font-bold text-gray-800 mb-1">{card.title}</h3>
+                <p className="text-xs text-gray-500">
+                  <span
+                    dir={card.isLtr ? "ltr" : "rtl"}
+                    className={card.isLtr ? "inline-block font-sans font-medium hover:underline" : ""}
+                  >
+                    {card.desc}
+                  </span>
+                </p>
+              </ContentWrapper>
+            );
+          })}
         </div>
 
         {/* Contact Form */}

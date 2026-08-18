@@ -49,7 +49,7 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
       if (res.ok) {
         setReviews(reviews.map(r => r.id === id ? { ...r, isApproved: true } : r));
         setSelectedReview(null);
-        // Removed success alert
+        window.dispatchEvent(new CustomEvent("admin-stats-update"));
       } else {
         alert("خطا در تایید دیدگاه");
       }
@@ -67,7 +67,7 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
       if (res.ok) {
         setReviews(reviews.filter(r => r.id !== id));
         setSelectedReview(null);
-        // Removed success alert
+        window.dispatchEvent(new CustomEvent("admin-stats-update"));
       } else {
         alert("خطا در حذف دیدگاه");
       }
@@ -91,7 +91,6 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
         body: JSON.stringify({ type: bulkFilterType, id: parseInt(bulkFilterValue) })
       });
       if (res.ok) {
-        // Removed success alert
         // Optimistically remove from state
         setReviews(reviews.filter(r => {
           if (!r.isApproved) return true;
@@ -101,6 +100,7 @@ export default function ReviewsClient({ initialReviews }: { initialReviews: Revi
           return true;
         }));
         setBulkFilterValue("");
+        window.dispatchEvent(new CustomEvent("admin-stats-update"));
       } else {
         alert("خطا در حذف گروهی");
       }
