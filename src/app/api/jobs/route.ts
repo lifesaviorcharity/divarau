@@ -163,6 +163,19 @@ export async function POST(request: Request) {
     const userId = parseInt(session.user.id as string, 10);
 
 
+    let boostPeriod: "ONE_DAY" | "THREE_DAYS" | "SEVEN_DAYS" | null = null;
+    const isBoosted = Boolean(data.isBoosted);
+    if (isBoosted) {
+      const bp = String(data.boostPeriod || "");
+      if (bp === "SEVEN_DAYS" || bp === "7_DAYS" || bp === "7") {
+        boostPeriod = "SEVEN_DAYS";
+      } else if (bp === "THREE_DAYS" || bp === "3_DAYS" || bp === "3") {
+        boostPeriod = "THREE_DAYS";
+      } else {
+        boostPeriod = "ONE_DAY";
+      }
+    }
+
     const job = await prisma.job.create({
       data: {
         userId: userId,
@@ -178,10 +191,10 @@ export async function POST(request: Request) {
         telegram: data.telegram,
         whatsapp: data.whatsapp,
         workHours: data.workingHours,
-        subscriptionType: data.subscriptionType || 'SIX_MONTHS',
-        isVip: data.isVip || false,
-        isBoosted: data.isBoosted || false,
-        boostPeriod: data.boostPeriod,
+        subscriptionType: data.subscriptionType === "TWELVE_MONTHS" ? "TWELVE_MONTHS" : "SIX_MONTHS",
+        isVip: Boolean(data.isVip),
+        isBoosted: isBoosted,
+        boostPeriod: boostPeriod,
         status: 'PENDING',
       }
     });

@@ -201,7 +201,13 @@ export default function RegisterJobPage() {
           subscriptionType: subscriptionType === "6" ? "SIX_MONTHS" : "TWELVE_MONTHS",
           isVip,
           isBoosted,
-          boostPeriod: isBoosted ? `${boostPeriod}_DAYS` : null,
+          boostPeriod: isBoosted
+            ? boostPeriod === "7"
+              ? "SEVEN_DAYS"
+              : boostPeriod === "3"
+              ? "THREE_DAYS"
+              : "ONE_DAY"
+            : null,
           images: imagePayloads,
         })
       });

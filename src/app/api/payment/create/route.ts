@@ -56,6 +56,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "شغل باید در وضعیت تأیید اولیه یا منقضی باشد." }, { status: 400 });
       }
       amount = job.subscriptionType === "TWELVE_MONTHS" ? price12Month : price6Month;
+      if (job.isVip) amount += priceVip;
+      if (job.isBoosted) {
+        const periodStr = String(job.boostPeriod || "");
+        if (periodStr === "SEVEN_DAYS" || periodStr === "7") {
+          amount += priceBoost7;
+        } else if (periodStr === "THREE_DAYS" || periodStr === "3") {
+          amount += priceBoost3;
+        } else {
+          amount += priceBoost1;
+        }
+      }
       description = `Payment for Job Listing (${job.subscriptionType === "TWELVE_MONTHS" ? "12 Months" : "6 Months"}): ${job.title}`;
     } else if (type === "job_boost") {
       const job = await prisma.job.findUnique({ where: { id: itemId } });
